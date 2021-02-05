@@ -1,0 +1,66 @@
+repository: aecorn/ssb_fellesfunksjoner_360
+output: web
+topnav_title: ssb_fellesfunksjoner_360
+site_title: ssb_fellesfunksjoner_360
+company_name: Put your copyright information here
+description: Her testes en metode for å gjøre om ett jupyter-notebook-repo om til en modul via nbdev. Dette som delingsmetode for å bruke disse funksjonen på tvers av våre produksjonsløp.
+# Set to false to disable KaTeX math
+use_math: true
+# Add Google analytics id if you have one and want to use it here
+google_analytics:
+# See http://nbdev.fast.ai/search for help with adding Search
+google_search:
+
+host: 127.0.0.1
+# the preview server used. Leave as is.
+port: 4000
+# the port where the preview is rendered.
+
+exclude:
+  - .idea/
+  - .gitignore
+  - vendor
+ 
+exclude: [vendor]
+
+highlighter: rouge
+markdown: kramdown
+kramdown:
+ input: GFM
+ auto_ids: true
+ hard_wrap: false
+ syntax_highlighter: rouge
+
+collections:
+  tooltips:
+    output: false
+
+defaults:
+  -
+    scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "page"
+      comments: true
+      search: true
+      sidebar: home_sidebar
+      topnav: topnav
+  -
+    scope:
+      path: ""
+      type: "tooltips"
+    values:
+      layout: "page"
+      comments: true
+      search: true
+      tooltip: true
+
+sidebars:
+- home_sidebar
+
+plugins:
+    - jekyll-remote-theme
+    
+remote_theme: fastai/nbdev-jekyll-theme
+baseurl: /ssb_fellesfunksjoner_360/ssb_fellesfunksjoner_360/
