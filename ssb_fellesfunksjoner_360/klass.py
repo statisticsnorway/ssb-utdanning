@@ -11,5 +11,3 @@ def get_pandas(URL, level):
     r = json.loads(r)
     r = pd.json_normalize(r[level])
     return r
-
-# Cell
