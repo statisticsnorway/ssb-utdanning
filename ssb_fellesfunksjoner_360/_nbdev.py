@@ -6,7 +6,7 @@ index = {"get_pandas": "00_klass.ipynb"}
 
 modules = ["klass.py"]
 
-doc_url = "https://pages.github.statisticsnorway.com./ssb_fellesfunksjoner_360/ssb_fellesfunksjoner_360/"
+doc_url = "https://statisticsnorway.github.io/ssb_fellesfunksjoner_360//ssb_fellesfunksjoner_360/ssb_fellesfunksjoner_360/"
 
 git_url = "https://github.statisticsnorway.com/ssb_fellesfunksjoner_360/tree/Prod/"
 
