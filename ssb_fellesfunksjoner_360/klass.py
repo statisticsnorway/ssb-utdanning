@@ -3,21 +3,22 @@
 __all__ = ['get_pandas']
 
 # Cell
-# Med "export"-kommentaren over så blir koden med i både modulen som eksporteres og dokumentasjonen.
+# Med "exports"-kommentaren over så blir koden med i både modulen som eksporteres og dokumentasjonen.
+# Med "export"- kommentaren blir ikke kildekoden med i docsene
 def get_pandas(URL, level):
     """
     Get pandas dataframe from the KLASS-API
 
     Parameters
     ----------
-    URL : str
-        url to the API-endpoint you are interested in
-    level : str
-        level of the json to convert, for example 'classificationItems' or 'correspondenceMaps'
+    URL : str \n
+        url to the API-endpoint you are interested in \n
+    level : str \n
+        level of the json to convert, for example 'classificationItems' or 'correspondenceMaps' \n
 
     Returns
     -------
-    pandas.DataFrame()
+    pandas.DataFrame() \n
         The returned json at the level requested, converted to a pandas dataframe
 
 
