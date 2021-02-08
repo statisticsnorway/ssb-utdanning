@@ -12,6 +12,9 @@ entries:
     - output: web,pdf
       title: KLASS-funksjoner
       url: klass.html
+    - output: web,pdf
+      title: "Sp\xF8rreunders\xF8kelsesfunksjoner"
+      url: sporre.html
     output: web
     title: ssb_fellesfunksjoner_360
   output: web

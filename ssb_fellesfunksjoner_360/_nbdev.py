@@ -2,9 +2,11 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"get_pandas": "00_klass.ipynb"}
+index = {"get_pandas": "00_klass.ipynb",
+         "avled_tverrvar": "03_sporre.ipynb"}
 
-modules = ["klass.py"]
+modules = ["klass.py",
+           "sporre.py"]
 
 doc_url = "https://statisticsnorway.github.io/ssb_fellesfunksjoner_360//ssb_fellesfunksjoner_360/"
 

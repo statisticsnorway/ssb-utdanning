@@ -12,15 +12,14 @@ def get_pandas(URL, level):
     Parameters
     ----------
     URL : str \n
-        url to the API-endpoint you are interested in \n
+        url to the API-endpoint you are interested in
     level : str \n
-        level of the json to convert, for example 'classificationItems' or 'correspondenceMaps' \n
+        level of the json to convert, for example 'classificationItems' or 'correspondenceMaps'
 
     Returns
     -------
     pandas.DataFrame() \n
         The returned json at the level requested, converted to a pandas dataframe
-
 
     Further Development
     -------
