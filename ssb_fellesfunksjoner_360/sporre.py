@@ -7,11 +7,7 @@ import pandas as pd
 
 # Cell
 #dapla
-def avled_tverrvar(codeprefix: str,
-                   coderange:  int,
-                   lettercodes: dict,
-                   df: pd.DataFrame()
-                  ) -> pd.DataFrame:
+def avled_tverrvar(codeprefix, coderange, lettercodes, df):
 
     """
     Denne funksjonen genererer sjekker en bred range av kode-kolonner, og slår disse sammen til en oppsummeringskolonne.\n
