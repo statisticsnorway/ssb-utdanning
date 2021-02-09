@@ -2,7 +2,7 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"get_pandas": "00_klass.ipynb",
+index = {"get_pandas": "01_klass.ipynb",
          "avled_tverrvar": "03_sporre.ipynb"}
 
 modules = ["klass.py",
