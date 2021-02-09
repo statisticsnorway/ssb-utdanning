@@ -3,9 +3,6 @@
 __all__ = ['avled_tverrvar']
 
 # Cell
-import pandas as pd
-
-# Cell
 #dapla
 def avled_tverrvar(codeprefix, coderange, lettercodes, df):
 
@@ -41,6 +38,9 @@ def avled_tverrvar(codeprefix, coderange, lettercodes, df):
         Om noen av kolonnene det letes i, ikke finnes.
     """
 
+    # Imports, do we trust the user?
+    import pandas as pd
+
     # Typechecking
     if not isinstance(codeprefix, str):
         raise ValueError('Første variabel må være en string som er prefikset til koden, feks "fje10_"')
@@ -57,30 +57,19 @@ def avled_tverrvar(codeprefix, coderange, lettercodes, df):
 
     # Loop gjennom dictionary av koder -> variabel
     for key, item in lettercodes.items():
-        # Lag en tom liste
-        check = []
-        # For hver av nummerene i rangen
-        for i in range(1, coderange+1):
-            # Legg til en kode formatert med range-nummer og bokstavnøkkel i listen vi initierte over
-            check.append(f'{codeprefix}{i}{key}')
+        # Lag en liste for hver av nummerene i rangen, legg til en kode formatert med range-nummer og bokstavnøkkel i listen vi initierte over
+        check = [f'{codeprefix}{i}{key}' for i in range(1, coderange+1)]
 
         # Sjekk om alle kolonnene vi skal se i faktisk er i dataframen
-        for x in check:
-            if not x in df.columns:
-                raise KeyError(f'Finner ikke kolonnen {x} i dataframe.')
+        if not all(elem in df.columns for elem in check):
+            raise KeyError(f'Finner ikke alle kolonnen i listen i dataframen:\n{check}')
 
         # Potensiell kode for å sjekke noen av kolonnene inneholder True,
         # om de gjør det, sett ny kolonne samme som "item" (tvsport feks) til True
         df.loc[df[check].any(), item] = True
 
-        # Print hele listen vi har appendet til
-        #print(check)
-        # Print koden vi skal skrive til basert på logikk (kommer senere)
-        #print(item)
-        # Print skille mellom koder
-        #print('-' * 50)
-
     # Test at alle kolonnene i dict-items er nå i dataframen?
-
+    if not all(elem in df.columns for elem in lettercodes.values()):
+        raise KeyError(f'Finner ikke igjen alle kolonnene som nå burde ligget i dataframen:\n{lettercodes.values()}')
 
     return df
