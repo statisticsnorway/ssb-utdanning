@@ -7,35 +7,37 @@ __all__ = ['avled_tverrvar']
 def avled_tverrvar(codeprefix, coderange, lettercodes, df):
 
     """
-    Denne funksjonen genererer sjekker en bred range av kode-kolonner, og slår disse sammen til en oppsummeringskolonne.\n
-    Forutsetningen er at det er lignende svaralternativer på ulike spørsmål som man skal gå gjennom.\n
+    Denne funksjonen sjekker en bred range av kode-kolonner, og slår disse sammen til en oppsummeringskolonne.\n
+    Forutsetningen er at det er lignende svaralternativer på ulike spørsmål som man skal gå gjennom og at de "Or-es", dvs True på 1 er True på den avledete variabelen.\n
     F.eks. 17 spørsmål om fjernsynskanaler, hvor man spør etter 21 ulike programtyper. Og man ønsker å svare på: 'Så denne personen på denne typen program i det hele tatt?'\n
 
 
     Parameters
     ----------
-    first : string\n
+    first "codeprefix" : string\n
         Første parameter er en string som er prefikset til kolonnene, feks. 'fje10_'
-    second : integer\n
+    second "coderange" : integer\n
         Andre parameter er ett tall som sier hvor mange kolonner som er nummerert.
         Om du sender 17 så vil den ta alle tallene som er 1-17 og da lage kolonneheadere som 'fje10_17x'
-    third : dict\n
+    third "lettercodes" : dict\n
         Det tredje parameteret skal være en dict, som forteller om hvilket svaralternativ skal bli til hvilken nye kolonne.
         feks. 'a' : 'tvsport', hvor svaralternativ 'a' på alle kanaler, skal bli 'eller'-t til en avledet variabelkolonne 'tvsport'
-    fourt : Pandas Dataframe\n
+    fourth "df" : Pandas Dataframe\n
         Det fjerde parameteret skal være dataframen som vi opererer på.
 
     Returns
     -------
-    DataFrame
+    DataFrame\n
         Returnerer dataframen som kom inn, med ny avledet kolonne.
 
     Raises
     ------
     ValueError\n
         Om noen av variablene inn ikke stemmer med forventede typer.
+        Om dataframen er 0 rader lang.
     KeyError\n
         Om noen av kolonnene det letes i, ikke finnes.
+        Om noen av kolonnene som burde vært opprettet, ikke er der på slutten av funksjonen.
     """
 
     # Imports, do we trust the user?

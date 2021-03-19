@@ -40,39 +40,44 @@ nb_path: "03_sporre.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="avled_tverrvar" class="doc_header"><code>avled_tverrvar</code><a href="https://github.com/statisticsnorway.com/ssb_fellesfunksjoner_360/tree/Merge-nbdev-template/ssb_fellesfunksjoner_360/sporre.py#L10" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>avled_tverrvar</code>(<strong><code>codeprefix</code></strong>, <strong><code>coderange</code></strong>, <strong><code>lettercodes</code></strong>, <strong><code>df</code></strong>)</p>
+<h4 id="avled_tverrvar" class="doc_header"><code>avled_tverrvar</code><a href="https://github.com/statisticsnorway.com/ssb_fellesfunksjoner_360/tree/Merge-nbdev-template/ssb_fellesfunksjoner_360/sporre.py#L7" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>avled_tverrvar</code>(<strong><code>codeprefix</code></strong>, <strong><code>coderange</code></strong>, <strong><code>lettercodes</code></strong>, <strong><code>df</code></strong>)</p>
 </blockquote>
-<p>Denne funksjonen genererer sjekker en bred range av kode-kolonner, og slår disse sammen til en oppsummeringskolonne.</p>
-<p>Forutsetningen er at det er lignende svaralternativer på ulike spørsmål som man skal gå gjennom.</p>
+<p>Denne funksjonen sjekker en bred range av kode-kolonner, og slår disse sammen til en oppsummeringskolonne.</p>
+<p>Forutsetningen er at det er lignende svaralternativer på ulike spørsmål som man skal gå gjennom og at de "Or-es", dvs True på 1 er True på den avledete variabelen.</p>
 <p>F.eks. 17 spørsmål om fjernsynskanaler, hvor man spør etter 21 ulike programtyper. Og man ønsker å svare på: 'Så denne personen på denne typen program i det hele tatt?'</p>
-<h2 id="Parameters">Parameters<a class="anchor-link" href="#Parameters"> </a></h2><p>first : string</p>
+<h2 id="Parameters">Parameters<a class="anchor-link" href="#Parameters"> </a></h2><p>first "codeprefix" : string</p>
 
 <pre><code>Første parameter er en string som er prefikset til kolonnene, feks. 'fje10_'
 </code></pre>
-<p>second : integer</p>
+<p>second "coderange" : integer</p>
 
 <pre><code>Andre parameter er ett tall som sier hvor mange kolonner som er nummerert.
 Om du sender 17 så vil den ta alle tallene som er 1-17 og da lage kolonneheadere som 'fje10_17x'
 </code></pre>
-<p>third : dict</p>
+<p>third "lettercodes" : dict</p>
 
 <pre><code>Det tredje parameteret skal være en dict, som forteller om hvilket svaralternativ skal bli til hvilken nye kolonne.
 feks. 'a' : 'tvsport', hvor svaralternativ 'a' på alle kanaler, skal bli 'eller'-t til en avledet variabelkolonne 'tvsport'
 </code></pre>
-<p>fourt : Pandas Dataframe</p>
+<p>fourth "df" : Pandas Dataframe</p>
 
 <pre><code>Det fjerde parameteret skal være dataframen som vi opererer på.
 
 </code></pre>
-<h2 id="Returns">Returns<a class="anchor-link" href="#Returns"> </a></h2><p>DataFrame
-    Returnerer dataframen som kom inn, med ny avledet kolonne.</p>
+<h2 id="Returns">Returns<a class="anchor-link" href="#Returns"> </a></h2><p>DataFrame</p>
+
+<pre><code>Returnerer dataframen som kom inn, med ny avledet kolonne.
+
+</code></pre>
 <h2 id="Raises">Raises<a class="anchor-link" href="#Raises"> </a></h2><p>ValueError</p>
 
 <pre><code>Om noen av variablene inn ikke stemmer med forventede typer.
+Om dataframen er 0 rader lang.
 </code></pre>
 <p>KeyError</p>
 
-<pre><code>Om noen av kolonnene det letes i, ikke finnes.</code></pre>
+<pre><code>Om noen av kolonnene det letes i, ikke finnes.
+Om noen av kolonnene som burde vært opprettet, ikke er der på slutten av funksjonen.</code></pre>
 
 </div>
 

@@ -3,6 +3,9 @@
 __all__ = ['get_pandas']
 
 # Cell
+import requests, json, pandas as pd
+
+# Cell
 # Med "exports"-kommentaren over så blir koden med i både modulen som eksporteres og dokumentasjonen.
 # Med "export"- kommentaren blir ikke kildekoden med i docsene
 def get_pandas(URL, level):
@@ -26,7 +29,7 @@ def get_pandas(URL, level):
     Error catching when "level" is not found in the returned json, show the top level json-keys then?
 
     """
-    import requests, json, pandas as pd
+
     r = requests.get(URL)
     r = r.content.decode('utf8').replace("'", '"')
     r = json.loads(r)
