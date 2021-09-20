@@ -27,7 +27,7 @@ help(sporre)
 Etter å ha importert modulen, så kan du feks bruke denne funksjonen for å hente noe fra KLASS-apiet som en pandas dataframe.
 
 ```python
-gjeld_fylke = klass.get_pandas('http://data.ssb.no/api/klass/v1/versions/1158', 'classificationItems')
+gjeld_fylke = klass.get_pandas(r'http://data.ssb.no/api/klass/v1/versions/1158', 'classificationItems')
 gjeld_fylke
 ```
 

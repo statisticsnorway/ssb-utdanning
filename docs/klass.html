@@ -47,7 +47,7 @@ nb_path: "01_klass.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="get_pandas" class="doc_header"><code>get_pandas</code><a href="https://github.com/statisticsnorway.com/ssb_fellesfunksjoner_360/tree/Merge-nbdev-template/ssb_fellesfunksjoner_360/klass.py#L11" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>get_pandas</code>(<strong><code>URL</code></strong>, <strong><code>level</code></strong>)</p>
+<h4 id="get_pandas" class="doc_header"><code>get_pandas</code><a href="https://github.com/statisticsnorway/ssb_fellesfunksjoner_360/ssb_fellesfunksjoner_360/klass.py#L11" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>get_pandas</code>(<strong><code>URL</code></strong>, <strong><code>level</code></strong>)</p>
 </blockquote>
 <p>Get pandas dataframe from the KLASS-API</p>
 <h2 id="Parameters">Parameters<a class="anchor-link" href="#Parameters"> </a></h2><p>URL : str</p>
@@ -96,7 +96,7 @@ nb_path: "01_klass.ipynb"
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">gjeld_fylke</span> <span class="o">=</span> <span class="n">get_pandas</span><span class="p">(</span><span class="s1">&#39;http://data.ssb.no/api/klass/v1/versions/1158&#39;</span><span class="p">,</span> <span class="s1">&#39;classificationItems&#39;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">gjeld_fylke</span> <span class="o">=</span> <span class="n">get_pandas</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;http://data.ssb.no/api/klass/v1/versions/1158&#39;</span><span class="p">,</span> <span class="s1">&#39;classificationItems&#39;</span><span class="p">)</span>
 <span class="n">gjeld_fylke</span>
 </pre></div>
 
