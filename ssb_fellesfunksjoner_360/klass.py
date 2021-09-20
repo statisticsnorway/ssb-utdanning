@@ -31,7 +31,7 @@ def get_pandas(URL, level):
     """
 
     r = requests.get(URL)
-    r = r.content.decode('utf8').replace("'", '"')
+    r = r.content.decode('utf8').replace("\'", '')
     r = json.loads(r)
     r = pd.json_normalize(r[level])
     return r

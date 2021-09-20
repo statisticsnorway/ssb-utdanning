@@ -4,6 +4,7 @@ __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
 index = {"get_pandas": "01_klass.ipynb",
          "avled_tverrvar": "03_sporre.ipynb",
+         "df": "04_proc.ipynb",
          "freq": "04_proc.ipynb"}
 
 modules = ["klass.py",
