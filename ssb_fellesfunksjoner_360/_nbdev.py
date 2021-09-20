@@ -2,12 +2,17 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"get_pandas": "00_klass.ipynb"}
+index = {"get_pandas": "01_klass.ipynb",
+         "avled_tverrvar": "03_sporre.ipynb",
+         "df": "04_proc.ipynb",
+         "freq": "04_proc.ipynb"}
 
-modules = ["klass.py"]
+modules = ["klass.py",
+           "sporre.py",
+           "proc.py"]
 
-doc_url = "https://statisticsnorway.github.io/ssb_fellesfunksjoner_360//ssb_fellesfunksjoner_360/ssb_fellesfunksjoner_360/"
+doc_url = "https://statisticsnorway.github.io/ssb_fellesfunksjoner_360//ssb_fellesfunksjoner_360/"
 
-git_url = "https://github.statisticsnorway.com/ssb_fellesfunksjoner_360/tree/Prod/"
+git_url = "https://github.com/statisticsnorway/ssb_fellesfunksjoner_360/"
 
 def custom_doc_links(name): return None

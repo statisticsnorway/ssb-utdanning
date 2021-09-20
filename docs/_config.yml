@@ -63,4 +63,4 @@ plugins:
     - jekyll-remote-theme
     
 remote_theme: fastai/nbdev-jekyll-theme
-baseurl: /ssb_fellesfunksjoner_360/ssb_fellesfunksjoner_360/
+baseurl: /ssb_fellesfunksjoner_360/
