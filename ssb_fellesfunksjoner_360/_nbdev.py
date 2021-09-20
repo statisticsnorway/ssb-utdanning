@@ -12,6 +12,6 @@ modules = ["klass.py",
 
 doc_url = "https://statisticsnorway.github.io/ssb_fellesfunksjoner_360//ssb_fellesfunksjoner_360/"
 
-git_url = "https://github.com/statisticsnorway.com/ssb_fellesfunksjoner_360/tree/Merge-nbdev-template/"
+git_url = "https://github.com/statisticsnorway/ssb_fellesfunksjoner_360/"
 
 def custom_doc_links(name): return None
