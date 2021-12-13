@@ -142,7 +142,7 @@ pyzmq==19.0.2
 regex==2020.7.14
 requests @ file:///home/conda/feedstock_root/build_artifacts/requests_1592425495151/work
 requests-oauthlib==1.3.0
-rsa==4.6
+rsa==4.7
 ruamel-yaml==0.15.80
 ruamel.yaml.clib==0.2.0
 scikit-image==0.17.2
