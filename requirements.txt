@@ -137,7 +137,7 @@ python-editor==1.0.4
 python-json-logger==0.1.11
 pytz==2020.1
 PyWavelets==1.1.1
-PyYAML==5.3.1
+PyYAML==5.4
 pyzmq==19.0.2
 regex==2020.7.14
 requests @ file:///home/conda/feedstock_root/build_artifacts/requests_1592425495151/work
