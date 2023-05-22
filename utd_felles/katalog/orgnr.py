@@ -1,0 +1,1 @@
+import skoleregisteret # De som mangler herfra er gjerne de vil "fikse på"
