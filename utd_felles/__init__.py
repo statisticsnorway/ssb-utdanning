@@ -7,6 +7,8 @@ __all__ = []
 # Everything we want to be directly importable from under "klass"-package
 local_imports = {
     "fellesfunksjoner_config": ["UtdFellesConfig"],
+    "format.nuskat" : ["nuskat_dict"],
+    "format.apply" : ["apply_format"],
 }
 
 # Loop that imports local files into this namespace and appends to __all__ for star imports

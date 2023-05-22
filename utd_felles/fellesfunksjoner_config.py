@@ -18,7 +18,7 @@ class UtdFellesConfig(Singleton):
 
     @staticmethod
     def sjekk_miljo() -> str:
-        if os.uname()[1].startswith("sl-"):
+        if "FELLES" in os.environ.keys():
             miljo = "PROD"
         elif "dapla" in str(dict(os.environ).values()):
             miljo = "DAPLA"
