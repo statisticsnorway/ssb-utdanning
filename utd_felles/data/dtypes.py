@@ -5,6 +5,28 @@ Downcasts ints to smalles size. Changes possible columns to categoricals."""
 
 import pandas as pd
 import gc
+import json
+
+def dtype_set_from_json(df: pd.DataFrame,
+                       json_path: str) -> pd.DataFrame:
+    with open(json_path, "r") as json_file:
+        json_dtypes = json.load(json_file)
+    for col, dtypes in json_dtypes.items():
+        if dtypes["secondary_dtype"]:
+            df[col] = df[col].astype(dtypes["secondary_dtype"])
+        df[col] = df[col].astype(dtypes["dtype"])
+
+def dtype_store_json(df: pd.DataFrame,
+                    json_path: str) -> None:
+    dtype_metadata = {}
+    for col, dtype in df.dtypes.items():
+        second_dtype = None
+        if dtype == "category":
+            second_dtype = str(df[col].cat.categories.dtype)
+        dtype = str(dtype)
+        dtype_metadata[col] = {"dtype": dtype, "secondary_dtype": second_dtype}
+    with open(json_path, "w") as json_file:
+        json.dump(dtype_metadata, json_file)
 
 def auto_dtype(df: pd.DataFrame,
                      cardinality_threshold: int = 0,

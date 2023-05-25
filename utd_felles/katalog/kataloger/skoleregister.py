@@ -6,11 +6,11 @@ from functools import lru_cache
 
 from utd_felles.utd_felles_config import UtdFellesConfig
 from utd_felles.katalog.katalog import UtdKatalog
-from utd_felles.data.auto_dtype import auto_dtype
+from utd_felles.data.dtypes import auto_dtype
 
 
 @lru_cache(50)
-def skoleregister(year: str = "") -> pd.DataFrame:
+def get_skoleregister(year: str = "") -> pd.DataFrame:
     skolereg_years = skoleregister_years()
     if not year:
         year = sorted(skolereg_years.keys())[-1]

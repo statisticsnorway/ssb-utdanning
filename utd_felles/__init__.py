@@ -7,8 +7,8 @@ __all__ = []
 # Everything we want to be directly importable from under "klass"-package
 local_imports = {
     "utd_felles_config": ["UtdFellesConfig"],
-    "katalog.nuskat": ["nuskat"],
-    "katalog.skoleregister": ["skoleregister", "skoleregister_years"],
+    "katalog.kataloger.nuskat": ["get_nuskat"],
+    "katalog.kataloger.skoleregister": ["get_skoleregister", "skoleregister_years"],
     "katalog.katalog": ["UtdKatalog"],
 }
 
