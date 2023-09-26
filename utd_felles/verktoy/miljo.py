@@ -1,7 +1,7 @@
 import os
 
 def sjekk_miljo() -> str:
-    if os.uname()[1].startswith("sl-"):
+    if os.path.isdir("/ssb/bruker/felles"):
         miljo = "PROD"
     elif "dapla" in str(dict(os.environ).values()):
         miljo = "DAPLA"

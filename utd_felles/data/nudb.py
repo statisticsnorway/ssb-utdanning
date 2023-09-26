@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 from ..verktoy.miljo import sjekk_miljo
 
+
 def hent_nudb(query: str) -> pd.DataFrame:
     miljo = sjekk_miljo()
     if miljo == "DAPLA":
