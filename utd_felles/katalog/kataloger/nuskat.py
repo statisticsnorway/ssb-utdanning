@@ -8,11 +8,13 @@ from utd_felles.data.dtypes import auto_dtype
 
 
 @lru_cache(1)
-def get_nuskat():
+def get_nuskat(path: str = "", from_date: str = "") -> UtdKatalog:
     if UtdFellesConfig().MILJO == "PROD":
-        path = "/ssb/stamme01/utd/nuskat/wk16/nus2000/nus2000.sas7bdat"
+        if not path:
+            path = "/ssb/stamme01/utd/nuskat/wk16/nus2000/nus2000.sas7bdat"
         nuskat = auto_dtype(pd.read_sas(path))
     elif UtdFellesConfig().MILJO == "DAPLA":
-        path = ""  # Fix later
+        if not path:
+            path = ""  # Fix later,use from_date if versioned
         nuskat = dp.read_pandas(path)
     return UtdKatalog(nuskat, key_col="nus2000", path=path)

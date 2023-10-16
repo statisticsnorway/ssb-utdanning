@@ -10,26 +10,26 @@ from utd_felles.data.dtypes import auto_dtype
 
 
 @lru_cache(50)
-def get_skoleregister(year: str = "") -> pd.DataFrame:
-    skolereg_years = skoleregister_years()
-    if not year:
-        year = sorted(skolereg_years.keys())[-1]
+def get_skoleregister(from_date: str = "") -> UtdKatalog:
+    skolereg_dates = skoleregister_dates()
+    if not from_date:
+        from_date = sorted(skolereg_dates.keys())[-1]
 
     if UtdFellesConfig().MILJO == "PROD":
-        df = auto_dtype(pd.read_sas(skolereg_years[year]))
+        df = auto_dtype(pd.read_sas(skolereg_dates[year]))
     elif UtdFellesConfig().MILJO == "DAPLA":
         return  # Write later
 
-    return UtdKatalog(df, key_col="orgnr", year=year, path=skolereg_years[year])
+    return UtdKatalog(df, key_col="orgnr", year=year, path=skolereg_dates[year])
 
 
-def skoleregister_years() -> dict:
+def skoleregister_dates() -> dict:
     if UtdFellesConfig().MILJO == "PROD":
-        PATH = "/ssb/stamme01/utd/kat/skolereg/"
-        paths = [Path(x) for x in glob.glob(PATH + "*.sas7bdat")]
-        year_paths = sorted([x for x in paths if x.stem[1:].isdigit()])
-        year_paths_dict = {x.stem[1:5]: x for x in year_paths}
+        base_path = "/ssb/stamme01/utd/kat/skolereg/"
+        paths = [Path(x) for x in glob.glob(base_path + "*.sas7bdat")]
+        date_paths = sorted([x for x in paths if x.stem[1:].isdigit()])
+        date_paths_dict = {x.stem[1:5]: x for x in date_paths}
         #print(year_paths_dict.keys())
-        return year_paths_dict
+        return date_paths_dict
     elif UtdFellesConfig().MILJO == "DAPLA":
         return  # Write later
