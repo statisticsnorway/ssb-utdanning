@@ -2,15 +2,19 @@
 from pathlib import Path
 import os
 import glob
-from datetime import datetime
 import json
 from io import StringIO
+import getpass
+from datetime import datetime
 # External packages
 import pandas as pd
 import dapla as dp
 # Local imports
 from utd_felles.utd_felles_config import UtdFellesConfig
 from utd_felles.data.dtypes import auto_dtype
+
+
+REQUIRED_COLS = ["username", "edited_time", "expiry_date", "validity"]
 
 
 class UtdKatalog:
@@ -24,8 +28,9 @@ class UtdKatalog:
         self.path = path
         self.key_col = key_col
         self.versioned = versioned
-        self.data, self.metadata = self.get_data(self.path, version=version)
-        self.metadata = self.metadata | metadata
+        self.metadata = metadata
+        self.get_data(self.path, version=version)
+        
         # Make metadata available directly below object
         #for key, value in self.metadata.items():
         #    setattr(self, key, value)
@@ -41,6 +46,19 @@ class UtdKatalog:
         result += buf.getvalue()
         return result
 
+    def _update_metadata(self, metadata: dict = None):
+        new_metadata = {}
+        if hasattr(self, "metadata"):
+            new_metadata = new_metadata | self.metadata
+        if metadata:
+            new_metadata = new_metadata | metadata
+        new_metadata = new_metadata | {"path": self.path,
+                                       "key_col": self.key_col,
+                                       "versioned": self.versioned}
+        #print(f"updating metadata {new_metadata}")
+        self.metadata = new_metadata
+        return new_metadata
+    
     
     def get_data(self, path: str = "", version: str = "newest") -> tuple[pd.DataFrame, dict]:
         """Get the data and metadata for the catalogue, dependant on the environment we are in"""
@@ -59,7 +77,6 @@ class UtdKatalog:
                 df = auto_dtype(pd.read_sas(path_kat))
             else:
                 raise OSError(f"Can only open parquet and sas7bdat, you gave me {path_kat.suffix}")
-            return df, metadata
         elif UtdFellesConfig().MILJO == "DAPLA":
             path_metadata = path.replace(".parquet", "_META.json")
             try:
@@ -67,8 +84,19 @@ class UtdKatalog:
                     metadata = json.load(metafile)
             except:
                 metadata = {}
-            return dp.read_pandas(path), metadata
-    
+            df = dp.read_pandas(path)
+        
+        # Insert missing columns into dataframe?
+        for col in REQUIRED_COLS:
+            if col not in df.columns:
+                df[col] = ""
+                df[col] = df[col].astype("string[pyarrow]")
+                
+        self._update_metadata(metadata)
+        self.data = df
+
+
+
     @staticmethod
     def _split_path(path:str) -> tuple[str, str, str, str]:
         parent = os.path.split(path)[0]
@@ -151,13 +179,26 @@ class UtdKatalog:
         # Reset the classes path, as when we write somewhere, thats were we should open it from again...
         self.path = path
         
+        # Make sure metadata attr is updated
+        self._update_metadata()
+        
+        # Fill empty cells in required columns with data
+        self.data["username"] = getpass.getuser()
+        self.data["edited_time"] = datetime.now().isoformat("T", "seconds")
+        # Expiry?
+        # Validity?
+        
+        path_metadata = ""
         if UtdFellesConfig().MILJO == "PROD":
             self.data.to_parquet(path)
             path_kat = Path(path)
             if self.metadata:
+                #print("storing metadata in prod")
                 path_metadata = (path_kat.parent / (str(path_kat.stem) + "__META")).with_suffix(".json")
+                #print(path_metadata)
                 with open(path_metadata, "w") as metafile:
                     metafile.write(json.dumps(self.metadata))
+                    print(f"Wrote metadata to {path_metadata}")
         elif UtdFellesConfig().MILJO == "DAPLA":
             dp.write_pandas(self.data, path)
             if self.metadata:
@@ -236,14 +277,14 @@ class UtdKatalog:
         
         return df
 
-def create_utd_katalog(key_col_name: str, extra_cols: list = None) -> UtdKatalog:
+def create_new_utd_katalog(path: str, key_col_name: str, extra_cols: list = None) -> UtdKatalog:
     # Workaround empty-list-parameter-mutability-issue
     if extra_cols is None:
         extra_cols = []
 
     # Make empty dataset with recommended columns
     df = pd.DataFrame()
-    df.columns = [key_col_name, "username", "edited_time", "expiry_date", "validity"]
+    df.columns = [key_col_name, *extra_cols, *REQUIRED_COLS]
     
     # Ask for metadata / Recommend not making katalog
     metadata = {}
@@ -252,4 +293,14 @@ def create_utd_katalog(key_col_name: str, extra_cols: list = None) -> UtdKatalog
     
     print("Add more metadata to the catalogue.metadata before saving if you want. ")
     
-    return UtdKatalog(df, key_col_name, **metadata)
+    return UtdKatalog(path, key_col_name, **metadata)
+
+
+def open_utd_katalog_from_metadata(meta_path: str) -> UtdKatalog:
+    with open(meta_path, "r") as jsonmeta:
+        metadata = json.load(jsonmeta)
+    #print(metadata)
+    return UtdKatalog(metadata.pop("path"), 
+                      metadata.pop("key_col"),
+                      metadata.pop("versioned"),
+                      **metadata)
