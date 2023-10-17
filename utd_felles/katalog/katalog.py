@@ -198,7 +198,6 @@ class UtdKatalog:
                 #print(path_metadata)
                 with open(path_metadata, "w") as metafile:
                     metafile.write(json.dumps(self.metadata))
-                    print(f"Wrote metadata to {path_metadata}")
         elif UtdFellesConfig().MILJO == "DAPLA":
             dp.write_pandas(self.data, path)
             if self.metadata:
@@ -208,6 +207,27 @@ class UtdKatalog:
         print(f"Wrote file to {path}")
         print(f"Wrote metadata to {path_metadata}")
         return None
+    
+    def diff_against_dataset(dataset: pd.DataFrame, key_col_data: str = "") -> dict[str, pd.DataFrame]:
+        if not key_col_data:
+            key_col_data = self.key_col
+        ids_in_kat = list(self.data[self.key_col].unique())
+        ids_in_dataset = list(dataset[ket_col_data].unique())
+        both_ids = [ident for ident in [ids_in_dataset] if ident in ids_in_kat]
+        in_both_df = (dataset[dataset[key_col_data].isin(both_ids)]
+                      .merge(
+                          (self.data[
+                              self.data[self.key_col].isin(both_ids)]
+                           .copy()
+                           .drop(columns=REQUIRED_COLS)),
+                          how="left",
+                          left_on=key_col_data,
+                          right_on=self.key_col
+                      ))
+        return {"only_in_dataset": dataset[dataset[~key_col_data].isin(both_ids)].copy(),
+                "in_both": in_both_df,
+                "only_in_katalog": self.data[~self.data[self.key_col].isin(both_ids)].copy()}
+    
     
     def to_dict(self, 
                 col: str = "", 
