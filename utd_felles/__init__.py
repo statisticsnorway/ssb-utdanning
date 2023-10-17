@@ -8,7 +8,7 @@ __all__ = []
 local_imports = {
     "utd_felles_config": ["UtdFellesConfig"],
     "katalog.kataloger.nuskat": ["get_nuskat"],
-    "katalog.kataloger.skoleregister": ["get_skoleregister", "skoleregister_years"],
+    "katalog.kataloger.skoleregister": ["get_skoleregister", "skoleregister_dates"],
     "katalog.katalog": ["UtdKatalog"],
 }
 

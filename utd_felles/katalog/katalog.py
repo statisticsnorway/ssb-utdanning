@@ -1,42 +1,31 @@
-import dapla as dp
+# Standard library
 from pathlib import Path
-import pandas as pd
+import os
+from datetime import datetime
+import json
 from io import StringIO
+# External packages
+import pandas as pd
+import dapla as dp
+# Local imports
 from utd_felles.utd_felles_config import UtdFellesConfig
-
-
-
-
-def create_utd_katalog(key_col_name: str, extra_cols: list = None) -> UtdKatalog:
-    # Workaround empty-list-parameter-mutability-issue
-    if extra_cols is None:
-        extra_cols = []
-
-    # Make empty dataset with recommended columns
-    df = pd.DataFrame()
-    df.columns = [key_col_name, "username", "edited_time", "expiry_date", "validity"]
-    
-    # Ask for metadata / Recommend not making katalog
-    metadata = {}
-    metadata["team"] = input("Ansvarlig team for katalogen: ")
-    # Hva mer?
-    
-    return UtdKatalog(df, key_col_name, **metadata)
 
 
 class UtdKatalog:
     def __init__(self,
-                 path: str = "",
+                 path: str,
                  key_col: str,
+                 versioned: bool = True,
                  **metadata,
                 ):
         self.path = path
         self.key_col = key_col
+        self.versioned = versioned
         self.data, self.metadata = self.get_data(self.path)
-        self.metadata = {self.metadata, **metadata}
+        self.metadata = self.metadata | metadata
         # Make metadata available directly below object
-        for key, value in self.metadata.items():
-            setattr(self, key, value)
+        #for key, value in self.metadata.items():
+        #    setattr(self, key, value)
 
     def __str__(self):
         result = "En Katalog fra utdannings-fellesfunksjonene."
@@ -50,7 +39,7 @@ class UtdKatalog:
         return result
 
     
-    def get_data(self, path: str = "") -> tuple(pd.DataFrame, dict):
+    def get_data(self, path: str = "") -> tuple[pd.DataFrame, dict]:
         """Get the data and metadata for the catalogue, dependant on the environment we are in"""
         if not path:
             path = self.path
@@ -61,7 +50,13 @@ class UtdKatalog:
             if os.path.isfile(path_metadata):
                 with open(path_metadata, "r") as metafile:
                     metadata = json.load(metafile)
-            return pd.read_parquet(path_kat), metadata
+            if path_kat.suffix == ".parquet":
+                df = pd.read_parquet(path_kat)
+            elif path_kat.suffix == ".sas7bdat":
+                df = pd.read_sas(path_kat)
+            else:
+                raise OSError(f"Can only open parquet and sas7bdat, you gave me {path_kat.suffix}")
+            return df, metadata
         elif UtdFellesConfig().MILJO == "DAPLA":
             path_metadata = path.replace(".parquet", "_META.json")
             try:
@@ -74,14 +69,44 @@ class UtdKatalog:
     def save(self, path: str = "") -> None:
         """Stores class to disk in prod or dapla as parquet, also stores metadata as json?"""
         if not path:
-            path = self.path           
+            path = self.path
+        
+        # Force path to be parquet before writing
+        file, ext = os.path.splitext(os.path.basename(path))
+        if ext != ".parquet":
+            ext = ".parquet"
+            path = os.path.join(os.path.split(path)[0], "".join([file, ext]))
+        
+        # Automatic versioning
+        if self.versioned:
+            filename_parts = file.split("_")
+            last_part = filename_parts[-1]
+            # Check if path already versioned
+            if last_part.startswith("v") and last_part[1:].isnumeric():
+                current_version = int(last_part[1:])
+                # Remove existing version from parts
+                filename_parts = filename_parts[:-1]
+            else:
+                print("Class set to versioned, but read file does not contain correctly placed version-number.")
+                print("The read file should end in _v1 or similar.")
+                current_version = 0
+            new_version = current_version + 1
+            filename_parts += [f"v{new_version}"]
+            # Add extensions back to filename
+            filename = "".join(["_".join(filename_parts), ext])
+            path = os.path.join(os.path.split(path)[0], filename)
+            print(f"Versioning up to {new_version}! New path: {path}")
+            
+        # Reset the classes path, as when we write somewhere, thats were we should open it from again...
+        self.path = path
+        
         if UtdFellesConfig().MILJO == "PROD":
             self.data.to_parquet(path)
             path_kat = Path(path)
             if self.metadata:
                 path_metadata = (path_kat.parent / (str(path_kat.stem) + "__META")).with_suffix(".json")
                 with open(path_metadata, "w") as metafile:
-                    metafile.write(self.metadata)
+                    metafile.write(json.dumps(self.metadata))
         elif UtdFellesConfig().MILJO == "DAPLA":
             dp.write_pandas(self.data, path)
             if self.metadata:
@@ -157,3 +182,21 @@ class UtdKatalog:
             print(f"Couldnt convert column {new_col_data_name} to categorical because of error: {e}")
         
         return df
+
+def create_utd_katalog(key_col_name: str, extra_cols: list = None) -> UtdKatalog:
+    # Workaround empty-list-parameter-mutability-issue
+    if extra_cols is None:
+        extra_cols = []
+
+    # Make empty dataset with recommended columns
+    df = pd.DataFrame()
+    df.columns = [key_col_name, "username", "edited_time", "expiry_date", "validity"]
+    
+    # Ask for metadata / Recommend not making katalog
+    metadata = {}
+    metadata["team"] = input("Ansvarlig team for katalogen: ")
+    # Hva mer?
+    
+    print("Add more metadata to the catalogue.metadata before saving if you want. ")
+    
+    return UtdKatalog(df, key_col_name, **metadata)

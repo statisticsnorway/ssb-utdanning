@@ -16,11 +16,11 @@ def get_skoleregister(from_date: str = "") -> UtdKatalog:
         from_date = sorted(skolereg_dates.keys())[-1]
 
     if UtdFellesConfig().MILJO == "PROD":
-        df = auto_dtype(pd.read_sas(skolereg_dates[year]))
+        df = auto_dtype(pd.read_sas(skolereg_dates[from_date]))
     elif UtdFellesConfig().MILJO == "DAPLA":
         return  # Write later
 
-    return UtdKatalog(df, key_col="orgnr", year=year, path=skolereg_dates[year])
+    return UtdKatalog(df, key_col="orgnr", year=year, path=skolereg_dates[from_date])
 
 
 def skoleregister_dates() -> dict:
