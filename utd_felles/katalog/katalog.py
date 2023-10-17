@@ -1,6 +1,7 @@
 # Standard library
 from pathlib import Path
 import os
+import glob
 from datetime import datetime
 import json
 from io import StringIO
@@ -9,6 +10,7 @@ import pandas as pd
 import dapla as dp
 # Local imports
 from utd_felles.utd_felles_config import UtdFellesConfig
+from utd_felles.data.dtypes import auto_dtype
 
 
 class UtdKatalog:
@@ -16,12 +18,13 @@ class UtdKatalog:
                  path: str,
                  key_col: str,
                  versioned: bool = True,
+                 version: str = "newest",
                  **metadata,
                 ):
         self.path = path
         self.key_col = key_col
         self.versioned = versioned
-        self.data, self.metadata = self.get_data(self.path)
+        self.data, self.metadata = self.get_data(self.path, version=version)
         self.metadata = self.metadata | metadata
         # Make metadata available directly below object
         #for key, value in self.metadata.items():
@@ -39,7 +42,7 @@ class UtdKatalog:
         return result
 
     
-    def get_data(self, path: str = "") -> tuple[pd.DataFrame, dict]:
+    def get_data(self, path: str = "", version: str = "newest") -> tuple[pd.DataFrame, dict]:
         """Get the data and metadata for the catalogue, dependant on the environment we are in"""
         if not path:
             path = self.path
@@ -53,7 +56,7 @@ class UtdKatalog:
             if path_kat.suffix == ".parquet":
                 df = pd.read_parquet(path_kat)
             elif path_kat.suffix == ".sas7bdat":
-                df = pd.read_sas(path_kat)
+                df = auto_dtype(pd.read_sas(path_kat))
             else:
                 raise OSError(f"Can only open parquet and sas7bdat, you gave me {path_kat.suffix}")
             return df, metadata
@@ -66,10 +69,41 @@ class UtdKatalog:
                 metadata = {}
             return dp.read_pandas(path), metadata
     
-    def save(self, path: str = "") -> None:
+    @staticmethod
+    def _split_path(path:str) -> tuple[str, str, str, str]:
+        parent = os.path.split(path)[0]
+        file, ext = os.path.splitext(os.path.basename(path))
+        filename_parts = file.split("_")
+        last_part = filename_parts[-1]
+        return parent, "_".join(filename_parts[:-1]), last_part, ext
+    
+    def _bump_path(self, path: str, version: int = 0) -> str:
+        parent, first_part, last_part, ext = self._split_path(path)
+        # Check if path already versioned
+        if last_part.startswith("v") and last_part[1:].isnumeric():
+            if not version:
+                version = int(last_part[1:]) + 1
+        # If last part wasnt a version-number
+        else:
+            first_part = "_".join([first_part, last_part])
+        if not version:
+            print("Class set to versioned, but read file does not contain correctly placed version-number.")
+            print("The read file should end in _v1 or similar.")
+            version = 1
+        first_part += f"_v{version}"
+        # Add extensions back to filename
+        filename = "".join([first_part, ext])
+        path =  os.path.join(os.path.split(path)[0], filename)
+        return path
+    
+    def save(self, path: str = "", existing_file: str = "") -> None:
         """Stores class to disk in prod or dapla as parquet, also stores metadata as json?"""
         if not path:
             path = self.path
+        
+        valid_existing_file_args = ["", "overwrite", "filebump"]
+        if existing_file not in valid_existing_file_args:
+            raise ValueError(f"Set the existing_file parameter as one of: {valid_existing_file_args}")
         
         # Force path to be parquet before writing
         file, ext = os.path.splitext(os.path.basename(path))
@@ -79,24 +113,41 @@ class UtdKatalog:
         
         # Automatic versioning
         if self.versioned:
-            filename_parts = file.split("_")
-            last_part = filename_parts[-1]
-            # Check if path already versioned
-            if last_part.startswith("v") and last_part[1:].isnumeric():
-                current_version = int(last_part[1:])
-                # Remove existing version from parts
-                filename_parts = filename_parts[:-1]
-            else:
-                print("Class set to versioned, but read file does not contain correctly placed version-number.")
-                print("The read file should end in _v1 or similar.")
-                current_version = 0
-            new_version = current_version + 1
-            filename_parts += [f"v{new_version}"]
-            # Add extensions back to filename
-            filename = "".join(["_".join(filename_parts), ext])
-            path = os.path.join(os.path.split(path)[0], filename)
-            print(f"Versioning up to {new_version}! New path: {path}")
+            path = self._bump_path(path)
             
+        
+        # Check that we are not writing to an existing file
+        if existing_file == "" and os.path.isfile(path):
+            error = f""""File already on path we are trying to write to: {path}
+            If you want to overwrite, set the existing_file parameter to "overwrite",
+            if you want to instead set this to the newest placement available on disk set it to "filebump"
+            Be aware that this might indicate you have opened a file that is not the latest,
+            and you might want to take further steps to avoid losing work or similar.
+            """
+            raise OSError(error)
+        if existing_file == "overwrite" and os.path.isfile(path):
+            print(f"Youve set overwrite, AND YOU ARE ACTUALLY OVERWRITING A FILE RIGHT NOW DUDE: {path}")
+            sure = input("YOU SURE ABOUT THIS!?!?! Type Y/y if you are")
+            if sure.lower() != "y":
+                print("aborting save")
+                return None
+            
+        # If filebump is selected get current version from the filesystem instead'
+        if existing_file == "filebump":
+            # Find the existing versioned same file on disk
+            parent, first_part, last_part, ext = self._split_path(path)
+            
+            pattern = os.path.join(parent, first_part) + f"*{ext}"
+            fileversions = glob.glob(pattern)
+            lastversion = sorted(fileversions)[-1]
+            _, _, latest_version, _ = self._split_path(lastversion)
+            target_version = int(latest_version[1:])+1
+            if latest_version != last_part:
+                print(f"""Filebump actually changing the versioning number to {target_version}, 
+                this might indicate you opened an older file than the newest available...""")
+            path = self._bump_path(path, target_version)
+
+
         # Reset the classes path, as when we write somewhere, thats were we should open it from again...
         self.path = path
         
@@ -113,6 +164,8 @@ class UtdKatalog:
                 path_metadata = path.replace(".parquet", "_META.json")
                 with dp.FileClient.gcs_open(path_metadata, "w") as metafile:
                     metafile.write(self.metadata)
+        print(f"Wrote file to {path}")
+        print(f"Wrote metadata to {path_metadata}")
         return None
     
     def to_dict(self, 
