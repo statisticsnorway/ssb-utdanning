@@ -9,7 +9,8 @@ local_imports = {
     "utd_felles_config": ["UtdFellesConfig"],
     "katalog.kataloger.nuskat": ["get_nuskat"],
     "katalog.kataloger.skoleregister": ["get_skoleregister", "skoleregister_dates"],
-    "katalog.katalog": ["UtdKatalog", "create_new_utd_katalog", "open_utd_katalog_from_metadata"],
+    "katalog.katalog": ["UtdKatalog", ],
+    "katalog.katalog_utils": ["create_new_utd_katalog", "open_utd_katalog_from_metadata"],
 }
 
 # Loop that imports local files into this namespace and appends to __all__ for star imports

@@ -22,14 +22,14 @@ class UtdKatalog:
                  path: str,
                  key_col: str,
                  versioned: bool = True,
-                 version: str = "newest",
                  **metadata,
                 ):
         self.path = path
         self.key_col = key_col
         self.versioned = versioned
         self.metadata = metadata
-        self.get_data(self.path, version=version)
+        self._correct_path()
+        self.get_data(self.path)
         
         # Make metadata available directly below object
         #for key, value in self.metadata.items():
@@ -52,15 +52,59 @@ class UtdKatalog:
             new_metadata = new_metadata | self.metadata
         if metadata:
             new_metadata = new_metadata | metadata
-        new_metadata = new_metadata | {"path": self.path,
+        new_metadata = new_metadata | {
+                                       #"path": self.path,  # Should this always be guessed from placement? Not included in metadata?
                                        "key_col": self.key_col,
                                        "versioned": self.versioned}
         #print(f"updating metadata {new_metadata}")
         self.metadata = new_metadata
         return new_metadata
     
+    def _correct_path(self) -> None:
+        """Sas-people are used to not specifying file-extension, 
+        this method makes an effort looking for the file in storage"""
+        
+        # If the katalog is versioned, and the path contains no version, pick the newest one.
+        # Meaning if the user specifies the version number, they should get that instead
+        print(self.path)
+        version = self._extract_version()
+        if self.versioned and not version:
+            self._path_to_newest_version()
+        print(f"{self.path=}")
+        
+        if not self.path.endswith(".parquet") or not self.path.endswith(".sas7bdat"):
+            if os.path.isfile(self.path + ".parquet"):
+                self.path = self.path.rstrip(".") + ".parquet"
+            elif os.path.isfile(self.path + ".sas7bdat"):
+                self.path = self.path.rstrip(".") + ".sas7bdat"
+            else:
+                raise ValueError(f"Cant find a sas7bdat or parquetfile at {self.path}")
+                
+                
+    def _path_to_newest_version(self):
+        self.path = self.get_latest_version_path()
+        
+    def get_latest_version_path(self):
+        parent, first_part, last_part, ext = self._split_path(self.path)
+        print(f"{parent=}, {first_part=}, {last_part=}, {ext=}")
+        if not self._extract_version():
+            first_part = "_".join([first_part, last_part])
+        pattern = os.path.join(parent, first_part) + f"*{ext}"
+        fileversions = glob.glob(pattern)
+        fileversions = [file for file in fileversions 
+                        if "__" not in file and 
+                        (file.endswith(".sas7bdat") or file.endswith(".parquet"))]
+        print(f"{pattern=}, {fileversions=}")
+        lastversion = sorted(fileversions)[-1]
+        _, _, latest_version, _ = self._split_path(lastversion)
+        if latest_version.startswith("v") and latest_version[1:].isnumeric():
+            latest_path = os.path.join(parent, first_part) + f"_{latest_version}{ext}"
+        else:
+            latest_path = os.path.join(parent, first_part) + ext
+        return latest_path
+        
     
-    def get_data(self, path: str = "", version: str = "newest") -> tuple[pd.DataFrame, dict]:
+    def get_data(self, path: str = "") -> tuple[pd.DataFrame, dict]:
         """Get the data and metadata for the catalogue, dependant on the environment we are in"""
         if not path:
             path = self.path
@@ -105,14 +149,25 @@ class UtdKatalog:
         last_part = filename_parts[-1]
         return parent, "_".join(filename_parts[:-1]), last_part, ext
     
-    def _bump_path(self, path: str, version: int = 0) -> str:
-        parent, first_part, last_part, ext = self._split_path(path)
-        # Check if path already versioned
-        if last_part.startswith("v") and last_part[1:].isnumeric():
-            if not version:
-                version = int(last_part[1:]) + 1
-        # If last part wasnt a version-number
+    def _extract_version(self, path: str = "") -> int:
+        if not path:
+            path = self.path
+        _, _, path_version, _ = self._split_path(path)
+        if path_version.startswith("v") and path_version[1:].isnumeric():
+            return int(path_version[1:])
         else:
+            return 0
+        
+    
+    def _bump_path(self, path: str, version: int = 0) -> str:
+        path_version = self._extract_version()
+        parent, first_part, last_part, ext = self._split_path(path)
+        # Didnt send the parameter
+        if not version:
+            # Take the version from the path
+            version = path_version + 1
+        # If last part wasnt a version-number, add the last part back (we dont like v0)
+        if not path_version:
             first_part = "_".join([first_part, last_part])
         if not version:
             print("Class set to versioned, but read file does not contain correctly placed version-number.")
@@ -142,7 +197,8 @@ class UtdKatalog:
         # Automatic versioning
         if self.versioned:
             path = self._bump_path(path)
-            
+        
+        
         
         # Check that we are not writing to an existing file
         if existing_file == "" and os.path.isfile(path):
@@ -155,25 +211,25 @@ class UtdKatalog:
             raise OSError(error)
         if existing_file == "overwrite" and os.path.isfile(path):
             print(f"Youve set overwrite, AND YOU ARE ACTUALLY OVERWRITING A FILE RIGHT NOW DUDE: {path}")
-            sure = input("YOU SURE ABOUT THIS!?!?! Type Y/y if you are")
+            sure = input("YOU SURE ABOUT THIS!?!?! Type Y/y if you are: ")
             if sure.lower() != "y":
                 print("aborting save")
                 return None
             
         # If filebump is selected get current version from the filesystem instead'
         if existing_file == "filebump":
-            # Find the existing versioned same file on disk
-            parent, first_part, last_part, ext = self._split_path(path)
-            
-            pattern = os.path.join(parent, first_part) + f"*{ext}"
-            fileversions = glob.glob(pattern)
-            lastversion = sorted(fileversions)[-1]
-            _, _, latest_version, _ = self._split_path(lastversion)
-            target_version = int(latest_version[1:])+1
-            if latest_version != last_part:
+            latest_path = self.get_latest_version_path()
+            latest_version = self._extract_version(latest_path)
+            current_version = self._extract_version() # Returns int
+            target_version = latest_version + 1
+            if current_version != latest_version:
                 print(f"""Filebump actually changing the versioning number to {target_version}, 
-                this might indicate you opened an older file than the newest available...""")
-            path = self._bump_path(path, target_version)
+                    this might indicate you opened an older file than the newest available...""")
+                sure = input("You sure you dont want to check if you opened an older file? Y/y: ")
+                if sure.lower() != "y":
+                    print("aborting save")
+                    return None
+                path = self._bump_path(path, target_version)
 
 
         # Reset the classes path, as when we write somewhere, thats were we should open it from again...
@@ -208,21 +264,23 @@ class UtdKatalog:
         print(f"Wrote metadata to {path_metadata}")
         return None
     
-    def diff_against_dataset(dataset: pd.DataFrame, key_col_data: str = "") -> dict[str, pd.DataFrame]:
+    def diff_against_dataset(self,
+                             dataset: pd.DataFrame,
+                             key_col_data: str = "", 
+                             merge_both: bool = False) -> dict[str, pd.DataFrame]:
         if not key_col_data:
             key_col_data = self.key_col
         ids_in_kat = list(self.data[self.key_col].unique())
         ids_in_dataset = list(dataset[ket_col_data].unique())
         both_ids = [ident for ident in [ids_in_dataset] if ident in ids_in_kat]
-        in_both_df = (dataset[dataset[key_col_data].isin(both_ids)]
-                      .merge(
-                          (self.data[
-                              self.data[self.key_col].isin(both_ids)]
-                           .copy()
-                           .drop(columns=REQUIRED_COLS)),
-                          how="left",
-                          left_on=key_col_data,
-                          right_on=self.key_col
+        in_both_df = self.data[self.data[self.key_col].isin(both_ids)].copy()
+        if merge_both:
+            in_both_df = (dataset[dataset[key_col_data].isin(both_ids)]
+                          .merge(
+                              (in_both_df.drop(columns=REQUIRED_COLS)),
+                              how="left",
+                              left_on=key_col_data,
+                              right_on=self.key_col
                       ))
         return {"only_in_dataset": dataset[dataset[~key_col_data].isin(both_ids)].copy(),
                 "in_both": in_both_df,
@@ -297,30 +355,3 @@ class UtdKatalog:
         
         return df
 
-def create_new_utd_katalog(path: str, key_col_name: str, extra_cols: list = None) -> UtdKatalog:
-    # Workaround empty-list-parameter-mutability-issue
-    if extra_cols is None:
-        extra_cols = []
-
-    # Make empty dataset with recommended columns
-    df = pd.DataFrame()
-    df.columns = [key_col_name, *extra_cols, *REQUIRED_COLS]
-    
-    # Ask for metadata / Recommend not making katalog
-    metadata = {}
-    metadata["team"] = input("Ansvarlig team for katalogen: ")
-    # Hva mer?
-    
-    print("Add more metadata to the catalogue.metadata before saving if you want. ")
-    
-    return UtdKatalog(path, key_col_name, **metadata)
-
-
-def open_utd_katalog_from_metadata(meta_path: str) -> UtdKatalog:
-    with open(meta_path, "r") as jsonmeta:
-        metadata = json.load(jsonmeta)
-    #print(metadata)
-    return UtdKatalog(metadata.pop("path"), 
-                      metadata.pop("key_col"),
-                      metadata.pop("versioned"),
-                      **metadata)
