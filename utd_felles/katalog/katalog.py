@@ -29,7 +29,7 @@ class UtdKatalog:
         self.versioned = versioned
         self.metadata = metadata
         self._correct_path()
-        self.get_data(self.path)
+        #self.get_data(self.path)
         
         # Make metadata available directly below object
         #for key, value in self.metadata.items():
@@ -64,21 +64,25 @@ class UtdKatalog:
         """Sas-people are used to not specifying file-extension, 
         this method makes an effort looking for the file in storage"""
         
-        # If the katalog is versioned, and the path contains no version, pick the newest one.
+        # If the katalog is versioned, 
+        # and the path contains no version, 
+        # and the user has not specified full path (depends on extension present), pick the newest one.
         # Meaning if the user specifies the version number, they should get that instead
-        print(self.path)
+        #print(self.path)
         version = self._extract_version()
-        if self.versioned and not version:
+        _, _, _, ext = self._split_path(self.path)
+        has_no_ext = not ext
+        if self.versioned and not version and has_no_ext:
             self._path_to_newest_version()
-        print(f"{self.path=}")
+            print(f"Swapping path to {self.path}, since the katalog is versioned, but the provided path isnt, and you have given no file extension")
         
-        if not self.path.endswith(".parquet") or not self.path.endswith(".sas7bdat"):
+        if not (self.path.endswith(".parquet") or self.path.endswith(".sas7bdat")):
             if os.path.isfile(self.path + ".parquet"):
                 self.path = self.path.rstrip(".") + ".parquet"
             elif os.path.isfile(self.path + ".sas7bdat"):
                 self.path = self.path.rstrip(".") + ".sas7bdat"
             else:
-                raise ValueError(f"Cant find a sas7bdat or parquetfile at {self.path}")
+                print(f"Cant find a sas7bdat or parquetfile at {self.path}...")
                 
                 
     def _path_to_newest_version(self):
@@ -86,28 +90,37 @@ class UtdKatalog:
         
     def get_latest_version_path(self):
         parent, first_part, last_part, ext = self._split_path(self.path)
-        print(f"{parent=}, {first_part=}, {last_part=}, {ext=}")
+        #print(f"{parent=}, {first_part=}, {last_part=}, {ext=}")
         if not self._extract_version():
             first_part = "_".join([first_part, last_part])
-        pattern = os.path.join(parent, first_part) + f"*{ext}"
+        pattern = os.path.join(parent, first_part) + f"*"
         fileversions = glob.glob(pattern)
         fileversions = [file for file in fileversions 
                         if "__" not in file and 
                         (file.endswith(".sas7bdat") or file.endswith(".parquet"))]
-        print(f"{pattern=}, {fileversions=}")
-        lastversion = sorted(fileversions)[-1]
-        _, _, latest_version, _ = self._split_path(lastversion)
-        if latest_version.startswith("v") and latest_version[1:].isnumeric():
-            latest_path = os.path.join(parent, first_part) + f"_{latest_version}{ext}"
-        else:
-            latest_path = os.path.join(parent, first_part) + ext
-        return latest_path
+        #print(f"{pattern=}, {fileversions=}")
+        if fileversions:
+            lastversion = sorted(fileversions)[-1]
+            _, _, latest_version, ext = self._split_path(lastversion)
+            if latest_version.startswith("v") and latest_version[1:].isnumeric():
+                latest_path = os.path.join(parent, first_part) + f"_{latest_version}{ext}"
+            else:
+                latest_path = os.path.join(parent, first_part) + ext
+            return latest_path
+        print("Cant find any files on disk, assuming the current path is the latest one.")
+        return self.path
         
     
     def get_data(self, path: str = "") -> tuple[pd.DataFrame, dict]:
         """Get the data and metadata for the catalogue, dependant on the environment we are in"""
         if not path:
             path = self.path
+        # Warn user if not opening the latest version?
+        if self.get_latest_version_path() != self.path:
+            sure = input(f"You are not opening the latest version of the file: {self.get_latest_version_path()} \n Are you sure? Y/y: ")
+            if not sure.lower() == "y":
+                return None
+            
         if UtdFellesConfig().MILJO == "PROD":
             path_kat = Path(path)
             path_metadata = (path_kat.parent / (str(path_kat.stem) + "__META")).with_suffix(".json")
@@ -141,8 +154,9 @@ class UtdKatalog:
 
 
 
-    @staticmethod
-    def _split_path(path:str) -> tuple[str, str, str, str]:
+    def _split_path(self, path:str = "") -> tuple[str, str, str, str]:
+        if not path:
+            path = self.path
         parent = os.path.split(path)[0]
         file, ext = os.path.splitext(os.path.basename(path))
         filename_parts = file.split("_")
@@ -179,7 +193,10 @@ class UtdKatalog:
         path =  os.path.join(os.path.split(path)[0], filename)
         return path
     
-    def save(self, path: str = "", existing_file: str = "") -> None:
+    def save(self, 
+             path: str = "",
+             bump_version: bool = True,
+             existing_file: str = "") -> None:
         """Stores class to disk in prod or dapla as parquet, also stores metadata as json?"""
         if not path:
             path = self.path
@@ -195,7 +212,7 @@ class UtdKatalog:
             path = os.path.join(os.path.split(path)[0], "".join([file, ext]))
         
         # Automatic versioning
-        if self.versioned:
+        if self.versioned and bump_version:
             path = self._bump_path(path)
         
         
