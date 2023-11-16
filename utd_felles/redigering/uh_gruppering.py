@@ -41,8 +41,7 @@ def grupper_ktrinn(df: pd.DataFrame, col_name: str = "ktrinn", req_cols: list = 
     df = df.copy()
     conditions = {
         "4": (df["kurstrin"].notna()),
-        "5": (df["fagskoleutd"] == "10"),
-        "5": ((df["kurstrin"] == "U") & (df["kltrinn"].isin(["14", "15"]))),
+        "5": (df["fagskoleutd"] == "10") | ((df["kurstrin"] == "U") & (df["kltrinn"].isin(["14", "15"]))),
         "3": (df["kurstrin"].isin(["P", "Q", "K", "R", "I", "D"]) & (df["kltrinn"] == "13")),
         "2": (df["kurstrin"].isin(["H", "J", "K", "R", "I", "D"]) & (df["kltrinn"] == "12")),
         "1": (df["kurstrin"].isin(["A", "B", "C", "K", "R", "D"]) & (df["kltrinn"] == "11"))
