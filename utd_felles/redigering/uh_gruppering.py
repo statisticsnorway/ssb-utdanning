@@ -1,6 +1,8 @@
 """
 NB! NOT TESTED PROPERLY ON REAL DATA. SHOULD IDEALLY RUN ON THE SAME SOURCE DATA IN PYTHON AND IN SAS IN ORDER TO ENSURE THAT THE BEHAVIOUR IS AS EXPECTED. 
     PARTICULARLY BECAUSE THE ORDER OF THE CONDITIONS IS CRUCIAL: LATER CONDITIONS OVERWRITE EARLINER ONES. 
+    
+    grupper_krtrinn() and grupper_skobo() gives the same result with dummy data but grupper_utd() does not. Need to reorganize the order somehow.
 """
 
 import pandas as pd
@@ -85,9 +87,9 @@ def grupper_skobo(df: pd.DataFrame, col_name: str = "skobo", req_cols: list = ["
         raise ValueError(f"Missing required columns: {', '.join(missing_cols)}.")
     df = df.copy()
     conditions = {
-        "1": (df["kommnr"] == df["skolekom"]),
+        "3": (df["kommnr"].str[:2] != df["skolekom"].str[:2]),
         "2": (df["kommnr"].str[:2] == df["skolekom"].str[:2]),
-        "3": (df["kommnr"].str[:2] != df["skolekom"].str[:2])
+        "1": (df["kommnr"] == df["skolekom"])
     }
     for key, cond in conditions.items():
         df.loc[cond, col_name] = key
