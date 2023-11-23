@@ -83,6 +83,14 @@ class UtdKatalog:
                 self.path = self.path.rstrip(".") + ".sas7bdat"
             else:
                 print(f"Cant find a sas7bdat or parquetfile at {self.path}...")
+                return None
+        # If we find a file on disk, and the dataframe is still unpopulated
+        if not hasattr(self, "data"):
+            self.get_data()
+            return None
+        if not isinstance(self.data, pd.DataFrame):
+            self.get_data()
+        
                 
                 
     def _path_to_newest_version(self):

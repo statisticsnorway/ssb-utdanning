@@ -19,7 +19,7 @@ def get_skoleregister(from_date: str = "") -> UtdKatalog:
         df = auto_dtype(pd.read_sas(skolereg_dates[from_date]))
     elif UtdFellesConfig().MILJO == "DAPLA":
         return  # Write later
-
+    
     return UtdKatalog(df, key_col="orgnr", year=year, path=skolereg_dates[from_date])
 
 

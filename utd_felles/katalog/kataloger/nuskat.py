@@ -17,4 +17,6 @@ def get_nuskat(path: str = "", from_date: str = "") -> UtdKatalog:
         if not path:
             path = ""  # Fix later,use from_date if versioned
         nuskat = dp.read_pandas(path)
+        
+        
     return UtdKatalog(nuskat, key_col="nus2000", path=path)

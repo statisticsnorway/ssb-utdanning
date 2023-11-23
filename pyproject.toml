@@ -17,8 +17,7 @@ ipykernel = "^6.15.3"
 [[tool.poetry.source]]
 name = "nexus"
 url = "http://pl-nexuspro-p.ssb.no:8081/repository/pypi-proxy/simple"
-default = true
-secondary = false
+priority = "default"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
