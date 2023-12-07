@@ -1,4 +1,0 @@
-- Other, mapper den også NA ?
-- Mapping av "."
-- Ranges "22-30"
-- Tom streng "": "blank"
