@@ -1,1 +1,0 @@
-"""Store a format from a Python dictonary."""
