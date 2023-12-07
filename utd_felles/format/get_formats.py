@@ -4,73 +4,9 @@ import pandas as pd
 import numpy as np
 import dateutil
 
-
-PATH_PROD = "/ssb/stamme01/utd/utd-felles/formater/"
-
-
-def info_stored_formats(path_prod: str = PATH_PROD) -> pd.DataFrame:
-    """In Prodsone, list all json-format-files in format folder.
-    
-    Does not look at file content, only what can be extracted from the filesystem.
-    Date is parsed from filename, converting datetime strings to true datetimes as well.
-    Sorts descending by name and date.
-    
-    Parameters
-    ----------
-    path_prod: str
-        The path to the folder containing the json-formats-files. 
-        Set to a default of "/ssb/stamme01/utd/utd-felles/formater/"
-    
-    Returns
-    -------
-    pd.DataFrame
-        A Pandas DataFrame containing information extracted from the path names.
-    """
-    all_paths = glob.glob(f"{path_prod}*.json")
-    all_names = ["_".join(os.path.split(p)[1].split(".")[0].split("_")[:-1]) for p in all_paths]
-    all_dates_original = [os.path.split(p)[1].split(".")[0].split("_")[-1] for p in all_paths]
-    all_dates_datetime = [dateutil.parser.parse(d) for d in all_dates_original]
-    df_info = (pd.DataFrame({"name": all_names,
-                            "date_original": all_dates_original, 
-                            "date_datetime": all_dates_datetime,
-                            "path": all_paths,})
-                           .sort_values(["name", "date_datetime"]))
-    return df_info
-
-
-def get_path(name: str, date: str = "latest") -> str:
-    """Get the path to a json-format-file.
-
-    Parameters
-    ----------
-    name: str
-        The name of the format.
-    date: str
-        The date of the format.
-        If "latest", the latest format will be returned.
-        If a datetime string, the format with the closest date will be returned.
-    
-    Returns
-    -------
-    str
-        The path to the json-format-file.
-    """
-    
-    print(f"Finding path from date: {date}")
-    if date != "latest":
-        date_time = dateutil.parser.parse(date)
-    elif date == "latest":
-        date_time = datetime.datetime.now()
-    df_info = info_stored_formats()
-    df_info = df_info[df_info["name"] == name].sort_values("date_datetime", ascending=False)
-    for i, row in df_info.iterrows():
-        if row["date_datetime"] < date_time:
-            format_date = row["date_datetime"]
-            break
-    get_path = df_info[df_info["date_datetime"] == format_date]["path"].iloc[0]
-    return get_path
-                               
-def get_format(name: str, date: str = "latest") -> dict|defaultdict:
+from utd_felles.format.formats import get_path
+          
+def get_format(name: str, date: str = "latest", convert_ranges: bool = True) -> dict|defaultdict:
     """Get the format from a json-format-file, dependent on the name (start of filename).
 
     Parameters
@@ -96,15 +32,34 @@ def get_format(name: str, date: str = "latest") -> dict|defaultdict:
     with open(path, "r") as format_json:
         ord_dict = json.load(format_json)
     
+    # Sas can have ranges like "22-33" these should be converted to individual keys
+    if convert_ranges:
+        new_dict = {}
+        keys_to_remove = []
+        for key, value in ord_dict.items():
+            if "-" in key:
+                parts = key.split("-")
+                if len(parts) == 2 and all([x.isnumeric() for x in parts]):
+                    keys_to_remove += [key]
+                    parts = [int(x) for x in parts]
+                    for i in range(min(parts), max(parts) + 1):
+                        if str(i) not in ord_dict:
+                            new_dict[str(i)] = value
+                        if i not in ord_dict:
+                            new_dict[i] = value
+        for key in keys_to_remove:
+            del ord_dict[key]
+        ord_dict |= new_dict
+    
     # Populate nans with first nan-value found in format
     nan_str_types = [".", "none", "", "NA", "<NA>", "<NaN>"]
     nan_py_types = [None,  np.nan, float('nan')]
     nan_key_str_types = []
-    for k in ord_dict.keys():
+    for k in [x for x in ord_dict if isinstance(x, str)]:
         for j in nan_str_types:
             if k.lower() == j.lower():
                 nan_key_str_types += [k]
-    nan_key_py_types = [y for y in [x for x in ord_dict.keys() if not isinstance(x, str)] if z in nan_py_types]
+    nan_key_py_types = [y for y in [x for x in ord_dict if not isinstance(x, str)] if y in nan_py_types]
     if nan_key_py_types or nan_key_str_types:
         nan_vals = [v for k, v in ord_dict.items() if k in nan_key_py_types or k in nan_key_str_types]
         # Lets just take the first one
@@ -116,7 +71,7 @@ def get_format(name: str, date: str = "latest") -> dict|defaultdict:
     
     # Consider returning a defualtdict if "other" specified.
     str_keys = {k: v for k, v in ord_dict.items() if isinstance(k, str)}
-    if "other" in [x.lower() for x in str_keys.keys()]:
+    if "other" in [x.lower() for x in str_keys]:
         # Just use the first one we find
         other_val = [v for k, v in str_keys.items() if k.lower() == "other"][0]
         def_dict = defaultdict(lambda: other_val)

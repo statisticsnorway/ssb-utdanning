@@ -5,8 +5,7 @@ import datetime
 import json
 
 from utd_felles.config import PROD_FORMATS_PATH
-
-
+from utd_felles.format.formats import get_path
 
 def store_format_prod(formats: dict[str, dict[str, str]]|dict[str, str],
                       output_path: str = PROD_FORMATS_PATH) -> None:
@@ -49,12 +48,36 @@ def store_format_prod(formats: dict[str, dict[str, str]]|dict[str, str],
     now = datetime.datetime.now().isoformat("T", "seconds")
     if nested:
         for format_name, format_content in formats.items():
-            with open(os.path.join(output_path, f"{format_name}_{now}.json"), "w") as json_file:
-                json.dump(format_content, json_file)
+            if is_different_from_last_time(format_name, format_content):
+                with open(os.path.join(output_path, f"{format_name}_{now}.json"), "w") as json_file:
+                    json.dump(format_content, json_file)
     elif not nested:
-        with open(os.path.join(output_path, f"{format_name}_{now}.json"), "w") as json_file:
-                json.dump(formats, json_file)
- 
+        if is_different_from_last_time(format_name, format_content):
+            with open(os.path.join(output_path, f"{format_name}_{now}.json"), "w") as json_file:
+                    json.dump(formats, json_file)
+                    
+def is_different_from_last_time(format_name: str, format_content: dict[str, str]) -> bool:
+    """Checks if the content you are trying to save is different from the last save.
+    
+    Parameters
+    ----------
+    format_name: str
+        The short form of the format name (first part of json-filename).
+    format_content: dict[str, str]
+        The content to compare against the content stored on disk.
+        
+    Returns
+    -------
+    bool
+        If the content is different, return True, if it is the same, returns False.
+    """
+    print(get_path(format_name, date = "latest"))
+    with open(get_path(format_name, date = "latest"), "r") as format_json:
+        content = json.load(format_json)
+    if content != format_content:
+        return True
+    print("Content of format looks the same as previous version, not saving.")
+    return False
 
 def batch_process_folder_sasfiles(sas_files_path: str, output_path: str = PROD_FORMATS_PATH) -> None:
     """Finds all .sas files in folder, tries to extract formats from these.
