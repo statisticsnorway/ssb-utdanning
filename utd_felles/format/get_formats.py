@@ -39,23 +39,58 @@ def info_stored_formats(path_prod: str = PATH_PROD) -> pd.DataFrame:
 
 
 def get_path(name: str, date: str = "latest") -> str:
+    """Get the path to a json-format-file.
+
+    Parameters
+    ----------
+    name: str
+        The name of the format.
+    date: str
+        The date of the format.
+        If "latest", the latest format will be returned.
+        If a datetime string, the format with the closest date will be returned.
     
+    Returns
+    -------
+    str
+        The path to the json-format-file.
+    """
     
     print(f"Finding path from date: {date}")
     if date != "latest":
-        date = dateutil.parser.parse(date)
+        date_time = dateutil.parser.parse(date)
     elif date == "latest":
-        date = datetime.datetime.now()
+        date_time = datetime.datetime.now()
     df_info = info_stored_formats()
     df_info = df_info[df_info["name"] == name].sort_values("date_datetime", ascending=False)
     for i, row in df_info.iterrows():
-        if row["date_datetime"] < date:
+        if row["date_datetime"] < date_time:
             format_date = row["date_datetime"]
             break
     get_path = df_info[df_info["date_datetime"] == format_date]["path"].iloc[0]
     return get_path
                                
 def get_format(name: str, date: str = "latest") -> dict|defaultdict:
+    """Get the format from a json-format-file, dependent on the name (start of filename).
+
+    Parameters
+    ----------
+    name: str
+        The name of the format.
+    date: str
+        The date of the format.
+        If "latest", the latest format will be returned.
+        If a datetime string, the format with the closest date will be returned.
+    
+    Returns
+    -------
+    dict|defaultdict
+        The format as a dictionary.
+        If the format contains a "other" key, a defaultdict will be returned.
+        The defaultdict will have the keys of the format, and the default value will be the "other" value.
+        If the format contains the SAS-value for missing: ".", or another recognized "empty-datatype":
+        Many known keys for empty values, will be inserted in the dict, to hopefully map these correctly.
+    """
     path = get_path(name, date)
     print("Getting format from", path)
     with open(path, "r") as format_json:
