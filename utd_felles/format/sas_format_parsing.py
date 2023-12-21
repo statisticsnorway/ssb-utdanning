@@ -1,7 +1,7 @@
 import re
 
 from utd_felles.format.formats import store_format_prod
-
+from utd_felles.config import PROD_FORMATS_PATH
 
 def batch_process_folder_sasfiles(sas_files_path: str, output_path: str = PROD_FORMATS_PATH) -> None:
     """Finds all .sas files in folder, tries to extract formats from these.
