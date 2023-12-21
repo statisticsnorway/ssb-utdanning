@@ -1,8 +1,12 @@
 import glob, os, datetime
 import dateutil
 import pandas as pd
+import numpy as np
 
 from utd_felles.config import PROD_FORMATS_PATH
+
+       
+
 
 
 def info_stored_formats(select_name: str = "", path_prod: str = PROD_FORMATS_PATH) -> pd.DataFrame:
