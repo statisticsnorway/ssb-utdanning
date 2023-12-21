@@ -1,83 +1,7 @@
-import os
-import glob
 import re
-import datetime
-import json
 
-from utd_felles.config import PROD_FORMATS_PATH
-from utd_felles.format.formats import get_path
+from utd_felles.format.formats import store_format_prod
 
-def store_format_prod(formats: dict[str, dict[str, str]]|dict[str, str],
-                      output_path: str = PROD_FORMATS_PATH) -> None:
-    """Takes a nested or unnested dictionary and saves it to prodsone-folder as a timestamped json.
-    
-    Parameters
-    ----------
-    formats: dict[str, dict[str, str]] | dict[str, str]
-        The format as a nested or unnested dictionary.
-        If nested, the first layer of keys should be the format-names.
-        The values of the dictionary are the dict contents of the formats.¨
-        If unnested, we assume, this is a single format, and we ask for the name using input().
-    output_path: str
-        The path to the folder where the format will be stored. 
-        Not including the filename itself, only the base folder.
-    
-    Returns
-    -------
-    None
-        Only writes to disk (side effect).
-    
-    Raises
-    ------
-    NotImplemented
-        If the format is not a nested or unnested dictionary of strings.
-    
-    Examples
-    --------
-    >>> store_format_prod({"format_name": {"format_key1": "value1", "format_key2": "value2"}})
-    >>> store_format_prod({"format_key": "value1"})
-    """
-    if all([isinstance(x, dict) for x in formats.values()]):
-        nested = True
-    elif all([isinstance(x, str) for x in formats.values()]):
-        nested = False
-        format_name = input("Please specify the name of the format: ")
-    else:
-        raise NotImplemented("Expecting a nested or unnested dict of strings.")
-               
-    now = datetime.datetime.now().isoformat("T", "seconds")
-    if nested:
-        for format_name, format_content in formats.items():
-            if is_different_from_last_time(format_name, format_content):
-                with open(os.path.join(output_path, f"{format_name}_{now}.json"), "w") as json_file:
-                    json.dump(format_content, json_file)
-    elif not nested:
-        if is_different_from_last_time(format_name, format_content):
-            with open(os.path.join(output_path, f"{format_name}_{now}.json"), "w") as json_file:
-                    json.dump(formats, json_file)
-                    
-def is_different_from_last_time(format_name: str, format_content: dict[str, str]) -> bool:
-    """Checks if the content you are trying to save is different from the last save.
-    
-    Parameters
-    ----------
-    format_name: str
-        The short form of the format name (first part of json-filename).
-    format_content: dict[str, str]
-        The content to compare against the content stored on disk.
-        
-    Returns
-    -------
-    bool
-        If the content is different, return True, if it is the same, returns False.
-    """
-    print(get_path(format_name, date = "latest"))
-    with open(get_path(format_name, date = "latest"), "r") as format_json:
-        content = json.load(format_json)
-    if content != format_content:
-        return True
-    print("Content of format looks the same as previous version, not saving.")
-    return False
 
 def batch_process_folder_sasfiles(sas_files_path: str, output_path: str = PROD_FORMATS_PATH) -> None:
     """Finds all .sas files in folder, tries to extract formats from these.
@@ -104,7 +28,7 @@ def batch_process_folder_sasfiles(sas_files_path: str, output_path: str = PROD_F
     for file in glob.glob(sas_files_path + "*.sas"):
         k, v = process_single_sasfile(file, output_path)
         formats[k] = v
-        
+
 def process_single_sasfile(file: str, output_path: str = PROD_FORMATS_PATH) -> None:
     """Get a single .sas file from storage, extracts formats and stores to disk as timestamped jsonfiles.
 
