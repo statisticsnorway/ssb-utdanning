@@ -8,14 +8,15 @@ from utd_felles.config import PROD_FORMATS_PATH
 
 
 
-class UtdFormat(defaultdict):
-    def __init__(self,*args):
-        if args:
-            super(defaultdict, self).__init__(*args)
-        else:
-            super(defaultdict, self).__init__(int)
+class UtdFormat(dict):
+    def __init__(self, start_dict: dict = None):
+        super(dict, self).__init__()
+        self.cached = True  # Switching the default to False, will f-up __setitem__
+        if start_dict:
+            for k, v in start_dict.items():
+                dict.__setitem__(self, k, v)
         self.update()
-        self.cached = True
+        
 
         
     def update(self):
@@ -25,14 +26,15 @@ class UtdFormat(defaultdict):
         
     
     def __setitem__(self, key, value):
-        super(defaultdict, self).__setitem__(key, value)
-        if isinstance(key, str):
-            if "-" in key and key.count("-") == 1:
-                self.store_ranges()
-            if key.lower() == "other" and key != "other":
-                self.set_other_as_lowercase()
-        if self.check_if_na(key):
-            self.set_na_value()
+        if self.cached:
+            dict.__setitem__(self, key, value)
+            if isinstance(key, str):
+                if "-" in key and key.count("-") == 1:
+                    self.store_ranges()
+                if key.lower() == "other" and key != "other":
+                    self.set_other_as_lowercase()
+            if self.check_if_na(key):
+                self.set_na_value()
     
     
     def __missing__(self, key):
