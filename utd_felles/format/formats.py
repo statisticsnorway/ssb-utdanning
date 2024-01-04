@@ -9,7 +9,17 @@ from utd_felles.config import PROD_FORMATS_PATH
 
 
 class UtdFormat(dict):
+    """
+    Custom dictionary class designed to handle specific formatting conventions.
+    """
     def __init__(self, start_dict: dict = None):
+        """
+        Initializes the UtdFormat instance.
+
+        Parameters
+        ----------
+        - start_dict (dict, optional): Initial dictionary to populate UtdFormat.
+        """
         super(dict, self).__init__()
         self.cached = True  # Switching the default to False, will f-up __setitem__
         if start_dict:
@@ -20,12 +30,23 @@ class UtdFormat(dict):
 
         
     def update(self):
+        """
+        Update method to perform necessary formatting operations.
+        """
         self.set_na_value()
         self.store_ranges()
         self.set_other_as_lowercase()
         
     
     def __setitem__(self, key, value):
+        """
+        Overrides the '__setitem__' method of dictionary to perform custom actions on setting items.
+
+        Parameters
+        ----------
+        - key: Key of the item to be set.
+        - value: Value to be set for the corresponding key.
+        """
         if self.cached:
             dict.__setitem__(self, key, value)
             if isinstance(key, str):
@@ -38,7 +59,13 @@ class UtdFormat(dict):
     
     
     def __missing__(self, key):
-            
+        """
+        Overrides the '__missing__' method of dictionary to handle missing keys.
+
+        Parameters
+        ----------
+        - key: Key that is missing in the dictionary.
+        """
         int_str_confuse = self.int_str_confuse(key)
         if int_str_confuse:
             if self.cached:
@@ -69,6 +96,9 @@ class UtdFormat(dict):
         
     
     def store_ranges(self):
+        """
+        Stores ranges based on specified keys in the dictionary.
+        """
         self.ranges = {}
         for key, value in self.items():
             
@@ -90,6 +120,13 @@ class UtdFormat(dict):
 
     
     def look_in_ranges(self, key):
+        """
+        Looks for the specified key within the stored ranges.
+
+        Parameters
+        ----------
+        - key: Key to search within the stored ranges.
+        """
         #print(f"looking in ranges for {key}")
         try:
             key = float(key)
@@ -103,6 +140,13 @@ class UtdFormat(dict):
     
     
     def int_str_confuse(self, key):
+        """
+        Handles conversion between integer and string keys.
+
+        Parameters
+        ----------
+        - key: Key to be converted or checked for existence in the dictionary.
+        """
         if isinstance(key, str):
             try:
                 key = int(key)
@@ -117,7 +161,9 @@ class UtdFormat(dict):
         return None
         
     def set_other_as_lowercase(self):
-        # In case "other" has mixed large and small letters
+        """
+        Sets the key 'other' to lowercase if mixed cases are found.
+        """
         found = False
         for key, value in self.items():
             if key.lower() == "other":
@@ -130,6 +176,9 @@ class UtdFormat(dict):
     
     
     def set_na_value(self):
+        """
+        Sets the value for NA (Not Available) keys in the dictionary.
+        """
         for key, value in self.items():
             if self.check_if_na(key):
                 self.na_value = value
@@ -140,6 +189,17 @@ class UtdFormat(dict):
     
     @staticmethod
     def check_if_na(key) -> bool:
+        """
+        Checks if the specified key represents a NA (Not Available) value.
+
+        Parameters
+        ----------
+        - key: Key to be checked for NA value.
+
+        Returns:
+        -------
+        - bool: True if the key represents NA, False otherwise.
+        """
         if pd.isna(key):
             return True
         if isinstance(key, str):
@@ -152,6 +212,15 @@ class UtdFormat(dict):
               format_name: str,
               output_path: str = PROD_FORMATS_PATH,
               force: bool = False):
+        """
+        Stores the UtdFormat instance in a specified output path.
+
+        Parameters
+        ----------
+        - format_name (str): Name of the format to be stored.
+        - output_path (str, optional): Path where the format will be stored.
+        - force (bool, optional): Flag to force storing even for cached instances.
+        """
         if self.cached and not force:
             error_msg = """Storing a cached UtdFormat might lead to many more keys than you want.
             Please check the amount of keys before storing.
