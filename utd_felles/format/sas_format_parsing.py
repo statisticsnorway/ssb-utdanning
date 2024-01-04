@@ -1,6 +1,7 @@
-import re
+import re, glob
+from pathlib import Path
 
-from utd_felles.format.formats import store_format_prod
+from utd_felles.format.formats import store_format_prod, UtdFormat
 from utd_felles.config import PROD_FORMATS_PATH
 
 def batch_process_folder_sasfiles(sas_files_path: str, output_path: str = PROD_FORMATS_PATH) -> None:
@@ -26,8 +27,8 @@ def batch_process_folder_sasfiles(sas_files_path: str, output_path: str = PROD_F
     """
     formats = {}
     for file in glob.glob(sas_files_path + "*.sas"):
-        k, v = process_single_sasfile(file, output_path)
-        formats[k] = v
+        print(f"Processing {file}.")
+        process_single_sasfile(file, output_path)
 
 def process_single_sasfile(file: str, output_path: str = PROD_FORMATS_PATH) -> None:
     """Get a single .sas file from storage, extracts formats and stores to disk as timestamped jsonfiles.
@@ -57,9 +58,14 @@ def process_single_sasfile(file: str, output_path: str = PROD_FORMATS_PATH) -> N
     """
     if not file.endswith(".sas"):
         raise ValueError("Dude, you gotta send in a .sas file.")
-    with open(output_path + "/" + file, "r", encoding="latin1") as sas_file:
+    with open(file, "r", encoding="latin1") as sas_file:
         content = sas_file.read()
-    store_format_prod(parse_sas_script(content), output_path)
+    for format_name, format_content in parse_sas_script(content).items():
+        #print(format_name, format_content)
+        form = UtdFormat(format_content)
+        form.cached = False
+        form.store(format_name)
+    
     
 def parse_sas_script(sas_script_content: str) -> dict[str, dict[str, str]]:
     """Extract a format as a Python dictionary from a SAS script.
@@ -97,11 +103,16 @@ def parse_sas_script(sas_script_content: str) -> dict[str, dict[str, str]]:
                     pass
                 else:
                     try:
-                        key = line.split("=")[0].strip().strip("'").strip('"')
-                        value = line.split("=")[1].strip().strip("'").strip('"')
+                        key = line.split("=")[0].replace("\t","").strip().strip("'").strip('"')
+                        value = line.split("=")[1].replace("\t","").strip().strip("'").strip('"')
                         format_content[key] = value
                     except Exception as e:
                         print(value_part, line)
                         raise e
             formats_in_file[format_name] = format_content
+    if formats_in_file:
+        #print(formats_in_file)
+        ...
+    else:
+        print(sas_script_content)
     return formats_in_file
