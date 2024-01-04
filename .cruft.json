@@ -6,7 +6,7 @@
     "cookiecutter": {
       "full_name": "Carl F. Corneil",
       "email": "aecorn@gmail.com",
-      "project_name": "ssb_fellesfunksjoner_360",
+      "project_name": "utd-fellesfunksjoner-python",
       "description": "",
       "license_year": "2023",
       "_template": "https://github.com/statisticsnorway/ssb-project-template-stat"
