@@ -69,6 +69,12 @@ pretty = true
 show_column_numbers = true
 show_error_context = true
 
+[[tool.mypy.overrides]]
+module = [
+    "fagfunksjoner.*",  # Fagfunksjoner er ikke typed enda - januar 2024
+]
+ignore_missing_imports = true
+
 [tool.ruff]
 force-exclude = true  # Apply excludes to pre-commit
 show-fixes = true

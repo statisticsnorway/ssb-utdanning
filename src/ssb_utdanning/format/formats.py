@@ -9,11 +9,13 @@ import pandas as pd
 
 from ssb_utdanning.config import PROD_FORMATS_PATH
 
+UTDFORMAT_INPUT_TYPE = dict[str | int, Any] | dict[str, Any]
 
-class UtdFormat(dict[str | int, Any]):
+
+class UtdFormat(dict[Any, Any]):
     """Custom dictionary class designed to handle specific formatting conventions."""
 
-    def __init__(self, start_dict: dict[str | int, Any] | None = None):
+    def __init__(self, start_dict: UTDFORMAT_INPUT_TYPE | None = None):
         """Initializes the UtdFormat instance.
 
         Args:
@@ -24,9 +26,9 @@ class UtdFormat(dict[str | int, Any]):
         if start_dict:
             for k, v in start_dict.items():
                 dict.__setitem__(self, k, v)
-        self.update()
+        self.update_format()
 
-    def update(self) -> None:
+    def update_format(self) -> None:
         """Update method to set special instance attributes."""
         self.set_na_value()
         self.store_ranges()
@@ -86,7 +88,7 @@ class UtdFormat(dict[str | int, Any]):
 
     def store_ranges(self) -> None:
         """Stores ranges based on specified keys in the dictionary."""
-        self.ranges = {}
+        self.ranges: dict[str, tuple[float, float]] = {}
         for key, value in self.items():
             if isinstance(key, str):
                 if "-" in key and key.count("-") == 1:
@@ -95,14 +97,14 @@ class UtdFormat(dict[str | int, Any]):
                         top.isdigit() or top.lower() == "high"
                     ):
                         if bottom.lower() == "low":
-                            bottom = float("-inf")
+                            bottom_float = float("-inf")
                         else:
-                            bottom = float(bottom)
+                            bottom_float = float(bottom)
                         if top.lower() == "high":
-                            top = float("inf")
+                            top_float = float("inf")
                         else:
-                            top = float(top)
-                        self.ranges[value] = (bottom, top)
+                            top_float = float(top)
+                        self.ranges[value] = (bottom_float, top_float)
 
     def look_in_ranges(self, key: str | int | float) -> None | str:
         """Looks for the specified key within the stored ranges.
@@ -124,7 +126,7 @@ class UtdFormat(dict[str | int, Any]):
                 return range_key
         return None
 
-    def int_str_confuse(self, key) -> None | Any:
+    def int_str_confuse(self, key: str | int) -> None | Any:
         """Handles conversion between integer and string keys.
 
         Args:
@@ -150,9 +152,10 @@ class UtdFormat(dict[str | int, Any]):
         """Sets the key 'other' to lowercase if mixed cases are found."""
         found = False
         for key in self:
-            if key.lower() == "other":
-                found = True
-                break
+            if isinstance(key, str):
+                if key.lower() == "other":
+                    found = True
+                    break
         if found:
             value = self[key]
             del self[key]
@@ -173,7 +176,7 @@ class UtdFormat(dict[str | int, Any]):
             return False
 
     @staticmethod
-    def check_if_na(key) -> bool:
+    def check_if_na(key: str | Any) -> bool:
         """Checks if the specified key represents a NA (Not Available) value.
 
         Args:
@@ -210,7 +213,7 @@ class UtdFormat(dict[str | int, Any]):
             Please check the amount of keys before storing.
             You can reopen the dict, set it as False on .cached, then store again, or send force=True to the store method."""
             raise ValueError(error_msg)
-        store_format_prod({format_name: self}, PROD_FORMATS_PATH)
+        store_format_prod({format_name: self}, output_path)
 
 
 def info_stored_formats(
@@ -285,7 +288,7 @@ def get_path(name: str, date: str = "latest") -> str | None:
 
 def get_format(
     name: str, date: str = "latest", convert_ranges: bool = True
-) -> UtdFormat:
+) -> UtdFormat | None:
     """Retrieves the format from a json-format-file, dependent on the name (start of filename).
 
     Args:
@@ -300,13 +303,15 @@ def get_format(
     """
     path = get_path(name, date)
     print("Getting format from", path)
-    with open(path) as format_json:
-        ord_dict = json.load(format_json)
-    return UtdFormat(ord_dict)
+    if path:
+        with open(path) as format_json:
+            ord_dict = json.load(format_json)
+        return UtdFormat(ord_dict)
+    return None
 
 
 def store_format_prod(
-    formats: dict[str, dict[str, str]] | dict[str, str],
+    formats: dict[str, UtdFormat] | UtdFormat,
     output_path: str = PROD_FORMATS_PATH,
 ) -> None:
     """Takes a nested or unnested dictionary and saves it to prodsone-folder as a timestamped json.
@@ -335,23 +340,23 @@ def store_format_prod(
 
     now = datetime.datetime.now().isoformat("T", "seconds")
     if nested:
-        for format_name, format_content in formats.items():
+        formats_nested: dict[str, UtdFormat] = formats
+        for format_name, format_content in formats_nested.items():
             if is_different_from_last_time(format_name, format_content):
                 with open(
                     os.path.join(output_path, f"{format_name}_{now}.json"), "w"
                 ) as json_file:
                     json.dump(format_content, json_file)
-    elif not nested:
-        if is_different_from_last_time(format_name, format_content):
+    elif not nested and isinstance(formats, UtdFormat):
+        format_not_nested: UtdFormat = formats
+        if is_different_from_last_time(format_name, format_not_nested):
             with open(
                 os.path.join(output_path, f"{format_name}_{now}.json"), "w"
             ) as json_file:
-                json.dump(formats, json_file)
+                json.dump(format_not_nested, json_file)
 
 
-def is_different_from_last_time(
-    format_name: str, format_content: dict[str, str]
-) -> bool:
+def is_different_from_last_time(format_name: str, format_content: UtdFormat) -> bool:
     """Checks if the current format content differs from the last saved version.
 
     Args:
@@ -364,10 +369,12 @@ def is_different_from_last_time(
     path_latest = get_path(format_name, date="latest")
     print(path_latest)
     if path_latest:
-        with open(get_path(format_name, date="latest")) as format_json:
-            content = json.load(format_json)
-        if content != format_content:
-            return True
+        path = get_path(format_name, date="latest")
+        if path:
+            with open(path) as format_json:
+                content = json.load(format_json)
+            if content != format_content:
+                return True
     # No previous format found
     else:
         return True

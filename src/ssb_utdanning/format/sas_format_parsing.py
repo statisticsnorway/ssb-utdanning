@@ -2,6 +2,7 @@ import glob
 import re
 
 from ssb_utdanning.config import PROD_FORMATS_PATH
+from ssb_utdanning.format.formats import UTDFORMAT_INPUT_TYPE
 from ssb_utdanning.format.formats import UtdFormat
 
 
@@ -63,6 +64,7 @@ def process_single_sasfile(file: str, output_path: str = PROD_FORMATS_PATH) -> N
         raise ValueError("Dude, you gotta send in a .sas file.")
     with open(file, encoding="latin1") as sas_file:
         content = sas_file.read()
+    format_content: UTDFORMAT_INPUT_TYPE
     for format_name, format_content in parse_sas_script(content).items():
         # print(format_name, format_content)
         form = UtdFormat(format_content)
@@ -90,7 +92,7 @@ def parse_sas_script(sas_script_content: str) -> dict[str, dict[str, str]]:
     >>> parse_sas_script("proc format; value $format_name format_key1 = 'value1' format_key2 = 'value2'; run;")
     >>> parse_sas_script("proc format; value $format_name format_key1 = 'value1' format_key2 = 'value2'; run;")
     """
-    formats_in_file = {}
+    formats_in_file: dict[str, dict[str, str]] = {}
     for proc_step in sas_script_content.split("proc format;")[1:]:
         proc_step = proc_step.split("run;")[0]
         for value_part in proc_step.split("value ")[1:]:
