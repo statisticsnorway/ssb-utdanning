@@ -1,15 +1,29 @@
 {
-  "template": "https://github.com/statisticsnorway/ssb-project-template-stat",
-  "commit": "cb5e93fbcb298920b3d76770352d823840c49a38",
-  "checkout": "1.0.0",
+  "template": "https://github.com/statisticsnorway/ssb-pypitemplate.git",
+  "commit": "ade308e2279e8de90c4ba67d8148e984b3465d36",
+  "checkout": "2023.12.11",
   "context": {
     "cookiecutter": {
-      "full_name": "Carl F. Corneil",
-      "email": "aecorn@gmail.com",
-      "project_name": "utd-fellesfunksjoner-python",
-      "description": "",
-      "license_year": "2023",
-      "_template": "https://github.com/statisticsnorway/ssb-project-template-stat"
+      "project_name": "ssb-utdanning",
+      "package_name": "ssb_utdanning",
+      "friendly_name": "SSB Utdanning Fellesfunksjoner",
+      "copyright_owner": "Statistics Norway",
+      "copyright_year": "2024",
+      "author": "Carl F. Corneil",
+      "email": "cfc@ssb.no",
+      "github_organization": "statisticsnorway",
+      "version": "0.0.0",
+      "license": "MIT",
+      "development_status": "Development Status :: 2 - Pre-Alpha",
+      "code_quality_level": "Medium",
+      "_copy_without_render": [
+        "*.rst_t"
+      ],
+      "_jinja2_env_vars": {
+        "lstrip_blocks": true,
+        "trim_blocks": true
+      },
+      "_template": "https://github.com/statisticsnorway/ssb-pypitemplate.git"
     }
   },
   "directory": null

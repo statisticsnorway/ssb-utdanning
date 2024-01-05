@@ -1,0 +1,1 @@
+"""SSB Utdanning Fellesfunksjoner."""
