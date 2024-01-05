@@ -57,6 +57,9 @@ class UtdFormat(dict[Any, Any]):
         Args:
             key: Key that is missing in the dictionary.
 
+        Returns:
+            Any: Value of key in any special conditions: confusion int/str, in one of the ranges, NA or if other is defined.
+
         Raises:
             ValueError: If the key is not found in the format and no 'other' key is specified.
         """
@@ -202,8 +205,11 @@ class UtdFormat(dict[Any, Any]):
 
         Args:
             format_name (str): Name of the format to be stored.
-            output_path (str, optional): Path where the format will be stored.
-            force (bool, optional): Flag to force storing even for cached instances.
+            output_path (str): Path where the format will be stored.
+            force (bool): Flag to force storing even for cached instances.
+
+        Returns:
+            None: Only writes to disk (side effect).
 
         Raises:
             ValueError: If storing a cached UtdFormat might lead to an unexpectedly large number of keys.
@@ -226,11 +232,11 @@ def info_stored_formats(
     Sorts descending by name and date.
 
     Args:
-        select_name (str, optional): Name of the specific format to select information for.
-        path_prod (str, optional): Path to the directory containing stored format files. Set to a default of "/ssb/stamme01/utd/utd-felles/formater/"
+        select_name (str): Name of the specific format to select information for.
+        path_prod (str): Path to the directory containing stored format files. Set to a default of "/ssb/stamme01/utd/utd-felles/formater/"
 
     Returns:
-    pd.DataFrame: Information extracted from the path names.
+        pd.DataFrame: Information extracted from the path names.
 
     Raises:
         OSError: If the specified path_prod directory does not exist.
@@ -264,7 +270,7 @@ def get_path(name: str, date: str = "latest") -> str | None:
 
     Args:
         name (str): Name of the format.
-        date (str, optional): Date string to find the path for. Defaults to "latest". If a datetime string, the format with the closest date will be returned.
+        date (str): Date string to find the path for. Defaults to "latest". If a datetime string, the format with the closest date will be returned.
 
     Returns:
         str: The path associated with the specified format and date, if found; otherwise, None.
@@ -286,15 +292,12 @@ def get_path(name: str, date: str = "latest") -> str | None:
     return None
 
 
-def get_format(
-    name: str, date: str = "latest", convert_ranges: bool = True
-) -> UtdFormat | None:
+def get_format(name: str, date: str = "latest") -> UtdFormat | None:
     """Retrieves the format from a json-format-file, dependent on the name (start of filename).
 
     Args:
         name (str): Name of the format.
-        date (str, optional): Date string to find the format for. Defaults to "latest". If a datetime string, the format with the closest date will be returned.
-        convert_ranges (bool, optional): Flag indicating whether to convert ranges. Defaults to True.
+        date (str): Date string to find the format for. Defaults to "latest". If a datetime string, the format with the closest date will be returned.
 
     Returns:
         dict or defaultdict: The formatted dictionary or defaultdict for the specified format and date. If the format contains a "other" key, a defaultdict will be returned. If the
@@ -321,10 +324,10 @@ def store_format_prod(
             Nested dictionary structure expected if multiple formats are passed. If nested, the first layer of keys should be the format-names.
             The values of the dictionary are the dict contents of the formats.¨
             If unnested, we assume, this is a single format, and we ask for the name using input().
-        output_path (str, optional): Path to store the format data. Not including the filename itself, only the base folder. Defaults to PROD_FORMATS_PATH.
+        output_path (str): Path to store the format data. Not including the filename itself, only the base folder. Defaults to PROD_FORMATS_PATH.
 
     Raises:
-        NotImplemented: If the provided formats structure is neither nested nor unnested dictionaries of strings.
+        NotImplementedError: If the provided formats structure is neither nested nor unnested dictionaries of strings.
 
     Examples:
     >>> store_format_prod({"format_name": {"format_key1": "value1", "format_key2": "value2"}})
@@ -361,7 +364,7 @@ def is_different_from_last_time(format_name: str, format_content: UtdFormat) -> 
 
     Args:
         format_name (str): The short name of the format (first part of json-filename).
-        format_content (dict[str, str]): Content of the format in dictionary format to be compared against the content stored on disk.
+        format_content (UtdFormat): Content of the format in dictionary format to be compared against the content stored on disk.
 
     Returns:
         bool: True if the current format content is different from the last saved version; otherwise, False.
