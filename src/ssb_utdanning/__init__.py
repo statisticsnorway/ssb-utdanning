@@ -6,7 +6,9 @@ Where data is possible to fit into pandas DataFrames, this will be preferred, bu
 """
 
 import importlib
+
 import toml
+
 
 # Split into function for testing
 def _try_getting_pyproject_toml(e: Exception | None = None) -> str:
@@ -24,6 +26,8 @@ def _try_getting_pyproject_toml(e: Exception | None = None) -> str:
             f"Error from ssb-klass-pythons __init__, not able to get version-number, setting it to {version_missing}: {passed_excep}"
         )
         return version_missing
+
+
 # Gets the installed version from pyproject.toml, then there is no need to update this file
 try:
     __version__ = importlib.metadata.version("ssb-utdanning")
@@ -39,5 +43,7 @@ local_imports = {
 # Loop that imports local files into this namespace and appends to __all__ for star imports
 for file, funcs in local_imports.items():
     for func in funcs:
-        globals()[func] = getattr(importlib.import_module(f"ssb_utdanning.{file}", func), func)
+        globals()[func] = getattr(
+            importlib.import_module(f"ssb_utdanning.{file}", func), func
+        )
         __all__.append(func)
