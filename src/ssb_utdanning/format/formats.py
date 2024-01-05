@@ -325,10 +325,6 @@ def store_format_prod(
 
     Raises:
         NotImplementedError: If the provided formats structure is neither nested nor unnested dictionaries of strings.
-
-    Examples:
-    >>> store_format_prod({"format_name": {"format_key1": "value1", "format_key2": "value2"}})
-    >>> store_format_prod({"format_key": "value1"})
     """
     if all([isinstance(x, dict) for x in formats.values()]):
         nested = True
