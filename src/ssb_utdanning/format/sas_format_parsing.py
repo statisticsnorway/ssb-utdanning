@@ -1,8 +1,8 @@
 import re, glob
 from pathlib import Path
 
-from utd_felles.format.formats import store_format_prod, UtdFormat
-from utd_felles.config import PROD_FORMATS_PATH
+from ssb_utdanning.format.formats import store_format_prod, UtdFormat
+from ssb_utdanning.config import PROD_FORMATS_PATH
 
 def batch_process_folder_sasfiles(sas_files_path: str, output_path: str = PROD_FORMATS_PATH) -> None:
     """Finds all .sas files in folder, tries to extract formats from these.

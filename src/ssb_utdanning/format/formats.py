@@ -4,7 +4,7 @@ import dateutil
 import pandas as pd
 import numpy as np
 
-from utd_felles.config import PROD_FORMATS_PATH
+from ssb_utdanning.config import PROD_FORMATS_PATH
 
 
 

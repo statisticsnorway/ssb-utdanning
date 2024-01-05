@@ -1,2 +1,2 @@
-from utd_felles.format.formats import info_stored_formats, get_format, UtdFormat, store_format_prod
-from utd_felles.format.sas_format_parsing import batch_process_folder_sasfiles, process_single_sasfile, parse_sas_script
+from ssb_utdanning.format.formats import info_stored_formats, get_format, UtdFormat, store_format_prod
+from ssb_utdanning.format.sas_format_parsing import batch_process_folder_sasfiles, process_single_sasfile, parse_sas_script
