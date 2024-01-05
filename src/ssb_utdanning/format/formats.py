@@ -9,7 +9,7 @@ from ssb_utdanning.config import PROD_FORMATS_PATH
 
 
 class UtdFormat(dict):
-     """
+    """
     Custom dictionary class designed to handle specific formatting conventions.
     """
     def __init__(self, start_dict: dict = None):
@@ -29,9 +29,7 @@ class UtdFormat(dict):
 
 
     def update(self):
-        """
-        Update method to set special instance attributes.
-        """
+        """Update method to set special instance attributes."""
         self.set_na_value()
         self.store_ranges()
         self.set_other_as_lowercase()
