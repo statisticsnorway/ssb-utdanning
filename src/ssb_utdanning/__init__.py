@@ -1,8 +1,6 @@
-"""A Python package built on top of Statistics Norway's code- and classification-system "KLASS".
+"""ssb_utdanning is an Education-statistics functionality package in python, owned by Statistics Norway.
 
-The package aims to make Klass's API for retrieving data easier to use by re-representing Klass's internal hierarchy as python-classes.
-Containing methods for easier traversal down, search classes and widgets, reasonable defaults to parameters etc.
-Where data is possible to fit into pandas DataFrames, this will be preferred, but hirerachical data will be kept as json / dict structure.
+Blabla.
 """
 
 import importlib
@@ -12,7 +10,7 @@ import toml
 
 # Split into function for testing
 def _try_getting_pyproject_toml(e: Exception | None = None) -> str:
-    """Look for version in pyproject.toml, if not found, set to 0.0.0"""
+    """Look for version in pyproject.toml, if not found, set to 0.0.0 ."""
     if e is None:
         passed_excep: Exception = Exception("")
     else:

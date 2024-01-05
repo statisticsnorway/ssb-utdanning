@@ -28,7 +28,6 @@ def batch_process_folder_sasfiles(
     --------
     >>> batch_process_folder_sasfiles("/ssb/stamme01/utd/utd-felles/formater/")
     """
-    formats = {}
     for file in glob.glob(sas_files_path + "*.sas"):
         print(f"Processing {file}.")
         process_single_sasfile(file, output_path)
