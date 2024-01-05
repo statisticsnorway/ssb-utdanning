@@ -208,9 +208,6 @@ class UtdFormat(dict[Any, Any]):
             output_path (str): Path where the format will be stored.
             force (bool): Flag to force storing even for cached instances.
 
-        Returns:
-            None: Only writes to disk (side effect).
-
         Raises:
             ValueError: If storing a cached UtdFormat might lead to an unexpectedly large number of keys.
         """
