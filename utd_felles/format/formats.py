@@ -9,7 +9,16 @@ from utd_felles.config import PROD_FORMATS_PATH
 
 
 class UtdFormat(dict):
+     """
+    Custom dictionary class designed to handle specific formatting conventions.
+    """
     def __init__(self, start_dict: dict = None):
+        """
+        Initializes the UtdFormat instance.
+
+        Args:
+            start_dict (dict, optional): Initial dictionary to populate UtdFormat.
+        """
         super(dict, self).__init__()
         self.cached = True  # Switching the default to False, will f-up __setitem__
         if start_dict:
@@ -20,12 +29,22 @@ class UtdFormat(dict):
 
         
     def update(self):
+        """
+        Update method to set special instance attributes.
+        """
         self.set_na_value()
         self.store_ranges()
         self.set_other_as_lowercase()
         
     
     def __setitem__(self, key, value):
+        """
+        Overrides the '__setitem__' method of dictionary to perform custom actions on setting items.
+
+        Args:
+            key: Key of the item to be set.
+            value: Value to be set for the corresponding key.
+        """
         if self.cached:
             dict.__setitem__(self, key, value)
             if isinstance(key, str):
@@ -38,7 +57,15 @@ class UtdFormat(dict):
     
     
     def __missing__(self, key):
-            
+        """
+        Overrides the '__missing__' method of dictionary to handle missing keys.
+
+        Args:
+            key: Key that is missing in the dictionary.
+
+        Raises:
+            ValueError: If the key is not found in the format and no 'other' key is specified.
+        """
         int_str_confuse = self.int_str_confuse(key)
         if int_str_confuse:
             if self.cached:
@@ -69,6 +96,9 @@ class UtdFormat(dict):
         
     
     def store_ranges(self):
+        """
+        Stores ranges based on specified keys in the dictionary.
+        """
         self.ranges = {}
         for key, value in self.items():
             
@@ -90,6 +120,15 @@ class UtdFormat(dict):
 
     
     def look_in_ranges(self, key):
+        """
+        Looks for the specified key within the stored ranges.
+
+        Args:
+            key: Key to search within the stored ranges.
+
+        Returns:
+            The value associated with the range containing the key, if found; otherwise, None.
+        """
         #print(f"looking in ranges for {key}")
         try:
             key = float(key)
@@ -103,6 +142,16 @@ class UtdFormat(dict):
     
     
     def int_str_confuse(self, key):
+        """
+        Handles conversion between integer and string keys.
+
+        Args:
+            key: Key to be converted or checked for existence in the dictionary.
+
+        Returns:
+            The value associated with the key (if found) or None.
+        """
+
         if isinstance(key, str):
             try:
                 key = int(key)
@@ -117,7 +166,9 @@ class UtdFormat(dict):
         return None
         
     def set_other_as_lowercase(self):
-        # In case "other" has mixed large and small letters
+        """
+        Sets the key 'other' to lowercase if mixed cases are found.
+        """
         found = False
         for key, value in self.items():
             if key.lower() == "other":
@@ -130,6 +181,12 @@ class UtdFormat(dict):
     
     
     def set_na_value(self):
+        """
+        Sets the value for NA (Not Available) keys in the UtdFormat.
+
+        Returns:
+            bool: True if NA value is successfully set, False otherwise.
+        """
         for key, value in self.items():
             if self.check_if_na(key):
                 self.na_value = value
@@ -140,6 +197,15 @@ class UtdFormat(dict):
     
     @staticmethod
     def check_if_na(key) -> bool:
+        """
+        Checks if the specified key represents a NA (Not Available) value.
+
+        Args:
+            key: Key to be checked for NA value.
+
+        Returns:
+            bool: True if the key represents NA, False otherwise.
+        """
         if pd.isna(key):
             return True
         if isinstance(key, str):
@@ -152,6 +218,17 @@ class UtdFormat(dict):
               format_name: str,
               output_path: str = PROD_FORMATS_PATH,
               force: bool = False):
+        """
+        Stores the UtdFormat instance in a specified output path.
+
+        Args:
+            format_name (str): Name of the format to be stored.
+            output_path (str, optional): Path where the format will be stored.
+            force (bool, optional): Flag to force storing even for cached instances.
+
+        Raises:
+            ValueError: If storing a cached UtdFormat might lead to an unexpectedly large number of keys.
+        """
         if self.cached and not force:
             error_msg = """Storing a cached UtdFormat might lead to many more keys than you want.
             Please check the amount of keys before storing.
@@ -168,16 +245,15 @@ def info_stored_formats(select_name: str = "", path_prod: str = PROD_FORMATS_PAT
     Date is parsed from filename, converting datetime strings to true datetimes as well.
     Sorts descending by name and date.
     
-    Parameters
-    ----------
-    path_prod: str
-        The path to the folder containing the json-formats-files. 
-        Set to a default of "/ssb/stamme01/utd/utd-felles/formater/"
+    Args:
+        select_name (str, optional): Name of the specific format to select information for.
+        path_prod (str, optional): Path to the directory containing stored format files. Set to a default of "/ssb/stamme01/utd/utd-felles/formater/"
     
-    Returns
-    -------
-    pd.DataFrame
-        A Pandas DataFrame containing information extracted from the path names.
+    Returns:
+    pd.DataFrame: Information extracted from the path names.
+    
+    Raises:
+        OSError: If the specified path_prod directory does not exist.
     """
     if not os.path.isdir(path_prod):
         raise OSError(f"Cant find folder {path_prod}")
@@ -197,21 +273,14 @@ def info_stored_formats(select_name: str = "", path_prod: str = PROD_FORMATS_PAT
 
 
 def get_path(name: str, date: str = "latest") -> str:
-    """Get the path to a json-format-file.
-
-    Parameters
-    ----------
-    name: str
-        The name of the format.
-    date: str
-        The date of the format.
-        If "latest", the latest format will be returned.
-        If a datetime string, the format with the closest date will be returned.
+    """Retrieves the path for a specific format on a given date.
     
-    Returns
-    -------
-    str
-        The path to the json-format-file.
+    Args:
+        name (str): Name of the format.
+        date (str, optional): Date string to find the path for. Defaults to "latest". If a datetime string, the format with the closest date will be returned.
+    
+    Returns:
+        str: The path associated with the specified format and date, if found; otherwise, None.
     """
     
     print(f"Finding path from date: {date}")
@@ -234,25 +303,17 @@ def get_path(name: str, date: str = "latest") -> str:
 
           
 def get_format(name: str, date: str = "latest", convert_ranges: bool = True) -> dict|defaultdict:
-    """Get the format from a json-format-file, dependent on the name (start of filename).
-
-    Parameters
-    ----------
-    name: str
-        The name of the format.
-    date: str
-        The date of the format.
-        If "latest", the latest format will be returned.
-        If a datetime string, the format with the closest date will be returned.
+    """Retrieves the format from a json-format-file, dependent on the name (start of filename).
     
-    Returns
-    -------
-    dict|defaultdict
-        The format as a dictionary.
-        If the format contains a "other" key, a defaultdict will be returned.
-        The defaultdict will have the keys of the format, and the default value will be the "other" value.
-        If the format contains the SAS-value for missing: ".", or another recognized "empty-datatype":
-        Many known keys for empty values, will be inserted in the dict, to hopefully map these correctly.
+    Args:
+        name (str): Name of the format.
+        date (str, optional): Date string to find the format for. Defaults to "latest". If a datetime string, the format with the closest date will be returned.
+        convert_ranges (bool, optional): Flag indicating whether to convert ranges. Defaults to True.
+    
+    Returns:
+        dict or defaultdict: The formatted dictionary or defaultdict for the specified format and date. If the format contains a "other" key, a defaultdict will be returned. If the  
+            format contains the SAS-value for missing: ".", or another recognized "empty-datatype":
+            Many known keys for empty values, will be inserted in the dict, to hopefully map these correctly.
     """
     path = get_path(name, date)
     print("Getting format from", path)
@@ -263,31 +324,21 @@ def get_format(name: str, date: str = "latest", convert_ranges: bool = True) -> 
 
 def store_format_prod(formats: dict[str, dict[str, str]]|dict[str, str],
                       output_path: str = PROD_FORMATS_PATH) -> None:
-    """Takes a nested or unnested dictionary and saves it to prodsone-folder as a timestamped json.
+    """
+    Takes a nested or unnested dictionary and saves it to prodsone-folder as a timestamped json.
     
-    Parameters
-    ----------
-    formats: dict[str, dict[str, str]] | dict[str, str]
-        The format as a nested or unnested dictionary.
-        If nested, the first layer of keys should be the format-names.
-        The values of the dictionary are the dict contents of the formats.¨
-        If unnested, we assume, this is a single format, and we ask for the name using input().
-    output_path: str
-        The path to the folder where the format will be stored. 
-        Not including the filename itself, only the base folder.
-    
-    Returns
-    -------
-    None
-        Only writes to disk (side effect).
-    
-    Raises
-    ------
-    NotImplemented
-        If the format is not a nested or unnested dictionary of strings.
+    Args:
+        formats (dict[str, dict[str, str]] | dict[str, str]): Dictionary containing format information.
+            Nested dictionary structure expected if multiple formats are passed. If nested, the first layer of keys should be the format-names.
+            The values of the dictionary are the dict contents of the formats.¨
+            If unnested, we assume, this is a single format, and we ask for the name using input().
+        output_path (str, optional): Path to store the format data. Not including the filename itself, only the base folder. Defaults to PROD_FORMATS_PATH.
+        
+    Raises:
+        NotImplemented: If the provided formats structure is neither nested nor unnested dictionaries of strings.
     
     Examples
-    --------
+
     >>> store_format_prod({"format_name": {"format_key1": "value1", "format_key2": "value2"}})
     >>> store_format_prod({"format_key": "value1"})
     """
@@ -311,19 +362,15 @@ def store_format_prod(formats: dict[str, dict[str, str]]|dict[str, str],
                     json.dump(formats, json_file)
                     
 def is_different_from_last_time(format_name: str, format_content: dict[str, str]) -> bool:
-    """Checks if the content you are trying to save is different from the last save.
+    """
+    Checks if the current format content differs from the last saved version.
+
+    Args:
+        format_name (str): The short name of the format (first part of json-filename).
+        format_content (dict[str, str]): Content of the format in dictionary format to be compared against the content stored on disk.
     
-    Parameters
-    ----------
-    format_name: str
-        The short form of the format name (first part of json-filename).
-    format_content: dict[str, str]
-        The content to compare against the content stored on disk.
-        
-    Returns
-    -------
-    bool
-        If the content is different, return True, if it is the same, returns False.
+    Returns:
+        bool: True if the current format content is different from the last saved version; otherwise, False.
     """
     path_latest = get_path(format_name, date = "latest")
     print(path_latest)
