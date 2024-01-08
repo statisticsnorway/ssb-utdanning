@@ -22,19 +22,19 @@ def test_UtdFormat_add_range() -> None:
     assert frmt[12] == "teens"
 
 
-def test_UtdFormat_other():
+def test_UtdFormat_other() -> None:
     frmt = UtdFormat({"oThEr": "teens"})
     assert frmt["other"] == "teens"
     assert frmt[12] == "teens"
 
 
-def test_UtdFormat_add_other():
+def test_UtdFormat_add_other() -> None:
     frmt = UtdFormat()
     frmt["oThEr"] = "teens"
     assert frmt[12] == "teens"
 
 
-def test_UtdFormat_add_NA():
+def test_UtdFormat_add_NA() -> None:
     frmt = UtdFormat()
-    frmt[float("nan")] = "teens"
+    frmt["<NA>"] = "teens"
     assert frmt["."] == "teens"
