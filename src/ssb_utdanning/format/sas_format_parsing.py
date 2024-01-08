@@ -23,11 +23,6 @@ def batch_process_folder_sasfiles(
     -------
     None
         Only writes to disk (side effect).
-
-
-    Examples:
-    --------
-    >>> batch_process_folder_sasfiles("/ssb/stamme01/utd/utd-felles/formater/")
     """
     for file in glob.glob(sas_files_path + "*.sas"):
         print(f"Processing {file}.")
