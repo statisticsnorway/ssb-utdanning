@@ -13,13 +13,21 @@ delete the .rst file afterwards.
 
 ```{eval-rst}
 ssb\_utdanning package
-=============================================================================
+======================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   ssb_utdanning.format
 
 
-ssb\_utdanning.format module
------------------------------------------------------------------------------
+ssb\_utdanning.config module
+----------------------------
 
-.. automodule:: ssb_utdanning.format
+.. automodule:: ssb_utdanning.config
    :members:
    :undoc-members:
    :show-inheritance:
