@@ -16,10 +16,10 @@ ssb\_utdanning package
 =============================================================================
 
 
-ssb\_utdanning.functions module
+ssb\_utdanning.format module
 -----------------------------------------------------------------------------
 
-.. automodule:: ssb_utdanning.functions
+.. automodule:: ssb_utdanning.format
    :members:
    :undoc-members:
    :show-inheritance:
