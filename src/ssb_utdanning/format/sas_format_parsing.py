@@ -15,9 +15,6 @@ def batch_process_folder_sasfiles(
         sas_files_path (str): The path to the folder containing the .sas files.
         output_path (str): The path to the folder where the formats will be stored.
             Not including the filename itself, only the base folder.
-
-    Returns:
-        None: Only writes to disk (side effect).
     """
     for file in glob.glob(sas_files_path + "*.sas"):
         print(f"Processing {file}.")
@@ -31,9 +28,6 @@ def process_single_sasfile(file: str, output_path: str = PROD_FORMATS_PATH) -> N
         file (str): The path to the .sas file.
         output_path (str): The path to the folder where the formats will be stored.
             Not including the filename itself, only the base folder.
-
-    Returns:
-        None: Only writes to disk (side effect).
 
     Raises:
         ValueError: If the file is not a .sas file.
@@ -59,6 +53,9 @@ def parse_sas_script(sas_script_content: str) -> dict[str, dict[str, str]]:
     Returns:
         dict[str, dict[str, str]]: A nested dictionary containing the format-name as key,
             and the format-content as value.
+
+    Raises:
+        Exception: If we are unable to parse the lines of a format correctly.
     """
     formats_in_file: dict[str, dict[str, str]] = {}
     for proc_step in sas_script_content.split("proc format;")[1:]:
