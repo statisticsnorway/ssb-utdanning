@@ -11,6 +11,11 @@ def test_UtdFormat_intstr_confusion() -> None:
     assert frmt[10] == "teens"
 
 
+def test_UtdFormat_intstr_confusion_intfirst() -> None:
+    frmt = UtdFormat({10: "teens"})
+    assert frmt["10"] == "teens"
+
+
 def test_UtdFormat_range() -> None:
     frmt = UtdFormat({"10-20": "teens"})
     assert frmt[12] == "teens"
