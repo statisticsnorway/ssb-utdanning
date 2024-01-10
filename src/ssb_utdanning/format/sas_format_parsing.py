@@ -11,18 +11,10 @@ def batch_process_folder_sasfiles(
 ) -> None:
     """Finds all .sas files in folder, tries to extract formats from these.
 
-    Parameters
-    ----------
-    sas_files_path: str
-        The path to the folder containing the .sas files.
-    output_path: str
-        The path to the folder where the formats will be stored.
-        Not including the filename itself, only the base folder.
-
-    Returns:
-    -------
-    None
-        Only writes to disk (side effect).
+    Args:
+        sas_files_path (str): The path to the folder containing the .sas files.
+        output_path (str): The path to the folder where the formats will be stored.
+            Not including the filename itself, only the base folder.
     """
     for file in glob.glob(sas_files_path + "*.sas"):
         print(f"Processing {file}.")
@@ -32,23 +24,13 @@ def batch_process_folder_sasfiles(
 def process_single_sasfile(file: str, output_path: str = PROD_FORMATS_PATH) -> None:
     """Get a single .sas file from storage, extracts formats and stores to disk as timestamped jsonfiles.
 
-    Parameters
-    ----------
-    file: str
-        The path to the .sas file.
-    output_path: str
-        The path to the folder where the formats will be stored.
-        Not including the filename itself, only the base folder.
-
-    Returns:
-    -------
-    None
-        Only writes to disk (side effect).
+    Args:
+        file (str): The path to the .sas file.
+        output_path (str): The path to the folder where the formats will be stored.
+            Not including the filename itself, only the base folder.
 
     Raises:
-    ------
-    ValueError
-        If the file is not a .sas file.
+        ValueError: If the file is not a .sas file.
     """
     if not file.endswith(".sas"):
         raise ValueError("Dude, you gotta send in a .sas file.")
@@ -65,15 +47,15 @@ def process_single_sasfile(file: str, output_path: str = PROD_FORMATS_PATH) -> N
 def parse_sas_script(sas_script_content: str) -> dict[str, dict[str, str]]:
     """Extract a format as a Python dictionary from a SAS script.
 
-    Parameters
-    ----------
-    sas_script_content: str
-        The content of the SAS script.
+    Args:
+        sas_script_content (str):The content of the SAS script.
 
     Returns:
-    -------
-    dict[str, dict[str, str]]
-        A nested dictionary containing the format-name as key, and the format-content as value.
+        dict[str, dict[str, str]]: A nested dictionary containing the format-name as key,
+            and the format-content as value.
+
+    Raises:
+        Exception: If we are unable to parse the lines of a format correctly.
     """
     formats_in_file: dict[str, dict[str, str]] = {}
     for proc_step in sas_script_content.split("proc format;")[1:]:
