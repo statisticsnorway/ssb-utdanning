@@ -41,8 +41,10 @@ class TestSasFormatParsing(unittest.TestCase):
         assert self.frmt_shortnames[0] not in shortnames
         assert self.frmt_shortnames[1] not in shortnames
         
-        filename = str(self.path / self.filenames[0])
-        process_single_sasfile(file=filename, output_path=str(self.path))
+        # filename = str(self.path / self.filenames[0])
+        filename = self.path / self.filenames[0]
+        # process_single_sasfile(file=filename, output_path=str(self.path))
+        process_single_sasfile(file=filename, output_path=self.path)
         
         dir_files = os.listdir(self.path)
         shortnames = [file.split('_')[0] for file in dir_files]
@@ -70,8 +72,10 @@ class TestSasFormatParsing(unittest.TestCase):
         assert self.frmt_shortnames[1] not in shortnames
         
         # parsing sas files as batch and converting to json
-        batch_process_folder_sasfiles(sas_files_path = str(self.path),
-                                      output_path = str(self.path))
+        # batch_process_folder_sasfiles(sas_files_path = str(self.path),
+        #                               output_path = str(self.path))
+        batch_process_folder_sasfiles(sas_files_path = self.path,
+                                      output_path = self.path)
         
         # checking that json files with correct names are created
         dir_files = os.listdir(self.path)
@@ -88,4 +92,3 @@ class TestSasFormatParsing(unittest.TestCase):
     def tearDown(self) -> None:
         # Clean up test files and folders after tests
         shutil.rmtree(self.path, ignore_errors=True)
-

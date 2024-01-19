@@ -108,10 +108,8 @@ class TestUtdFormat(unittest.TestCase):
     def test_store(self) -> None:
         utd_format = UtdFormat(self.range_dict)
         assert len(os.listdir(self.path)) == 0
-        print(os.listdir(self.path))
-        utd_format.store(format_name="test", output_path=str(self.path), force=True)
+        utd_format.store(format_name="test", output_path=self.path, force=True)
         assert len(os.listdir(self.path)) == 1
-        print(os.listdir(self.path))
 
     def tearDown(self) -> None:
         # Clean up test files and folders after tests

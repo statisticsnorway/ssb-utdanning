@@ -1,5 +1,6 @@
 import glob
 import re
+from pathlib import Path
 
 from ssb_utdanning.config import PROD_FORMATS_PATH
 from ssb_utdanning.format.formats import UTDFORMAT_INPUT_TYPE
@@ -7,7 +8,7 @@ from ssb_utdanning.format.formats import UtdFormat
 
 
 def batch_process_folder_sasfiles(
-    sas_files_path: str, output_path: str = PROD_FORMATS_PATH
+    sas_files_path: str | Path, output_path: str | Path = PROD_FORMATS_PATH
 ) -> None:
     """Finds all .sas files in folder, tries to extract formats from these.
 
@@ -24,6 +25,8 @@ def batch_process_folder_sasfiles(
     None
         Only writes to disk (side effect).
     """
+    if isinstance(sas_files_path, Path):
+        sas_files_path = str(sas_files_path)
     if not sas_files_path.endswith("/"):
         sas_files_path += "/"
     for file in glob.glob(sas_files_path + "*.sas"):
@@ -31,7 +34,7 @@ def batch_process_folder_sasfiles(
         process_single_sasfile(file, output_path)
 
 
-def process_single_sasfile(file: str, output_path: str = PROD_FORMATS_PATH) -> None:
+def process_single_sasfile(file: str | Path, output_path: str | Path = PROD_FORMATS_PATH) -> None:
     """Get a single .sas file from storage, extracts formats and stores to disk as timestamped jsonfiles.
 
     Parameters
@@ -52,6 +55,8 @@ def process_single_sasfile(file: str, output_path: str = PROD_FORMATS_PATH) -> N
     ValueError
         If the file is not a .sas file.
     """
+    if isinstance(file, Path):
+        file = str(file)
     if not file.endswith(".sas"):
         raise ValueError("Dude, you gotta send in a .sas file.")
     with open(file, encoding="latin1") as sas_file:

@@ -51,10 +51,3 @@ class TestGetFormat(unittest.TestCase):
     def tearDown(self) -> None:
         # Clean up test files and folders after tests
         shutil.rmtree(self.path, ignore_errors=True)
-
-
-test = TestGetFormat()
-test.setUp()
-test.test_get_format()
-
-

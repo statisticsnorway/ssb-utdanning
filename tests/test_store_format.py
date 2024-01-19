@@ -20,7 +20,6 @@ def mock_is_different_from_last_time(format_name: str, format_content: UtdFormat
     split_files = [files[i].split('_') for i in range(len(files))]
     shortnames = np.array((split_files))[:,0]
     if format_name in shortnames:
-        #path = get_path(format_name, date="latest")
         if path:
             # find the file to compare with
             idx = []
@@ -44,8 +43,6 @@ def mock_is_different_from_last_time(format_name: str, format_content: UtdFormat
 class TestStoreFormat(unittest.TestCase):
     def setUp(self) -> None:
         # Create a temporary folder and add test JSON files for testing
-        # Create test files with different names and date patterns
-        # Set up a test directory structure and add some test JSON files
         template_dir = Path(os.getcwd())
         self.path = template_dir / 'test_formats'
         # make sure the tree is clean
@@ -68,14 +65,14 @@ class TestStoreFormat(unittest.TestCase):
         for i, file in enumerate(self.test_files):
             shortnames = self.shortname_files_in_path()
             assert self.test_files[i].split('_')[0] not in shortnames
-            store_format_prod({list(self.dictionaries[i].keys())[0]: UtdFormat(self.dictionaries[i][list(self.dictionaries[i].keys())[0]])}, output_path = str(self.path))
+            store_format_prod({list(self.dictionaries[i].keys())[0]: UtdFormat(self.dictionaries[i][list(self.dictionaries[i].keys())[0]])}, output_path = self.path)
             shortnames = self.shortname_files_in_path()
             assert self.test_files[i].split('_')[0] in shortnames
         # try and write file again, sohuld not be possible because content is the same
         shortnames = self.shortname_files_in_path()
         n_file_files = len(shortnames)
         assert n_file_files == 2
-        store_format_prod({list(self.dictionaries[0].keys())[0]: UtdFormat(self.dictionaries[0][list(self.dictionaries[0].keys())[0]])}, output_path = str(self.path))
+        store_format_prod({list(self.dictionaries[0].keys())[0]: UtdFormat(self.dictionaries[0][list(self.dictionaries[0].keys())[0]])}, output_path = self.path)
         shortnames = self.shortname_files_in_path()
         n_file_files = len(shortnames)
         assert n_file_files == 2
@@ -85,7 +82,7 @@ class TestStoreFormat(unittest.TestCase):
         self.dictionaries[0]['file']['testkey'] = 'testvalue'
         # timedelay to not overwrite file with same timestamp as previous file
         time.sleep(3)
-        store_format_prod({list(self.dictionaries[0].keys())[0]: UtdFormat(self.dictionaries[0][list(self.dictionaries[0].keys())[0]])}, output_path = str(self.path))
+        store_format_prod({list(self.dictionaries[0].keys())[0]: UtdFormat(self.dictionaries[0][list(self.dictionaries[0].keys())[0]])}, output_path = self.path)
         shortnames = self.shortname_files_in_path()
         n_file_files = len(shortnames)
         assert n_file_files == 3
@@ -93,4 +90,6 @@ class TestStoreFormat(unittest.TestCase):
     def tearDown(self) -> None:
         # Clean up test files and folders after tests
         shutil.rmtree(self.path, ignore_errors=True)
+
+
 

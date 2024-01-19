@@ -3,6 +3,7 @@ import glob
 import json
 import os
 from typing import Any
+from pathlib import Path
 
 import dateutil.parser
 import pandas as pd
@@ -206,7 +207,7 @@ class UtdFormat(dict[Any, Any]):
     def store(
         self,
         format_name: str,
-        output_path: str = PROD_FORMATS_PATH,
+        output_path: str | Path = PROD_FORMATS_PATH,
         force: bool = False,
     ) -> None:
         """Stores the UtdFormat instance in a specified output path.
@@ -228,7 +229,7 @@ class UtdFormat(dict[Any, Any]):
 
 
 def info_stored_formats(
-    select_name: str = "", path_prod: str = PROD_FORMATS_PATH
+    select_name: str = "", path_prod: str | Path = PROD_FORMATS_PATH
 ) -> pd.DataFrame:
     """In Prodsone, list all json-format-files in format folder.
 
@@ -246,6 +247,10 @@ def info_stored_formats(
     Raises:
         OSError: If the specified path_prod directory does not exist.
     """
+    if isinstance(path_prod, Path):
+        path_prod = str(path_prod)
+    if not path_prod.endswith('/'):
+        path_prod += '/'
     if not os.path.isdir(path_prod):
         raise OSError(f"Cant find folder {path_prod}")
     all_paths = glob.glob(f"{path_prod}*.json")
@@ -320,7 +325,7 @@ def get_format(name: str, date: str = "latest") -> UtdFormat | None:
 
 def store_format_prod(
     formats: dict[str, UtdFormat] | UtdFormat,
-    output_path: str = PROD_FORMATS_PATH,
+    output_path: str | Path = PROD_FORMATS_PATH,
 ) -> None:
     """Takes a nested or unnested dictionary and saves it to prodsone-folder as a timestamped json.
 

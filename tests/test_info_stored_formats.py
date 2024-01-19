@@ -41,10 +41,11 @@ class TestInfoStoredFormats(unittest.TestCase):
     def test_folder_not_found(self) -> None:
         with self.assertRaises(OSError):
             # Test when folder does not exist
-            info_stored_formats(path_prod="not/here/yo")
+            info_stored_formats(path_prod=Path("not/here/yo"))
 
     def test_extract_information(self) -> None:
-        df_info = info_stored_formats(path_prod=str(self.path) + "/")
+        # df_info = info_stored_formats(path_prod=str(self.path) + "/")
+        df_info = info_stored_formats(path_prod=self.path)
         assert isinstance(df_info, pd.DataFrame)
         for i, filename in enumerate(self.test_files):
             assert df_info["name"][i] == filename.split("_")[0]
@@ -55,7 +56,8 @@ class TestInfoStoredFormats(unittest.TestCase):
         # Test selecting a specific name
         for i, filename in enumerate(self.test_files):
             shortname = filename.split("_")[0]
-            df_info = info_stored_formats(shortname, path_prod=str(self.path) + "/")
+            # df_info = info_stored_formats(shortname, path_prod=str(self.path) + "/")
+            df_info = info_stored_formats(shortname, path_prod=self.path)
             # Check if the returned object is a DataFrame
             assert isinstance(df_info, pd.DataFrame)
             assert list(df_info["date_original"])[0] == self.dates[i]
