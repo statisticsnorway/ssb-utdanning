@@ -4,7 +4,15 @@ import pandas as pd
 from pathlib import Path
 import os
 import shutil
+from unittest import mock
 from ssb_utdanning.format.formats import UtdFormat
+import ssb_utdanning
+
+
+def mock_is_different_from_last_time(
+    format_name: str, format_content: UtdFormat
+) -> bool:
+    return True
 
 
 class TestUtdFormat(unittest.TestCase):
@@ -105,7 +113,11 @@ class TestUtdFormat(unittest.TestCase):
 
         assert utd_format["nonexistent_key"] == "rest"
 
-    def test_store(self) -> None:
+    @mock.patch(
+        "ssb_utdanning.format.formats.is_different_from_last_time",
+        side_effect=mock_is_different_from_last_time,
+    )
+    def test_store(self, mock_get: mock.MagicMock) -> None:
         utd_format = UtdFormat(self.range_dict)
         assert len(os.listdir(self.path)) == 0
         utd_format.store(format_name="test", output_path=self.path, force=True)

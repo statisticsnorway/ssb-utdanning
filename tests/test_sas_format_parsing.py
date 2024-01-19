@@ -1,4 +1,5 @@
 import unittest
+from unittest import mock
 import shutil
 from pathlib import Path
 import os
@@ -8,6 +9,7 @@ from ssb_utdanning.format.formats import UtdFormat
 from ssb_utdanning.format.sas_format_parsing import process_single_sasfile
 from ssb_utdanning.format.sas_format_parsing import batch_process_folder_sasfiles
 from ssb_utdanning.format.sas_format_parsing import parse_sas_script
+import ssb_utdanning
 
 
 def local_get_format(path: Path, frmtname: str) -> UtdFormat:
@@ -25,6 +27,12 @@ def local_get_format(path: Path, frmtname: str) -> UtdFormat:
     return UtdFormat(ord_dict)
 
 
+def mock_is_different_from_last_time(
+    format_name: str, format_content: UtdFormat
+) -> bool:
+    return True
+
+
 class TestSasFormatParsing(unittest.TestCase):
     def setUp(self) -> None:
         template_dir = Path(os.getcwd())
@@ -36,7 +44,11 @@ class TestSasFormatParsing(unittest.TestCase):
         self.filenames, self.formats = create_folder_w_sasfiles(self.path)
         self.frmt_shortnames = [f"frmt{i}" for i in range(1, 5)]
 
-    def test_process_single_sasfile(self) -> None:
+    @mock.patch(
+        "ssb_utdanning.format.formats.is_different_from_last_time",
+        side_effect=mock_is_different_from_last_time,
+    )
+    def test_process_single_sasfile(self, mock_get: mock.MagicMock) -> None:
         dir_files = os.listdir(self.path)
         shortnames = [file.split("_")[0] for file in dir_files]
         assert self.frmt_shortnames[0] not in shortnames
@@ -61,7 +73,11 @@ class TestSasFormatParsing(unittest.TestCase):
         frmt2 = local_get_format(self.path, self.frmt_shortnames[1])
         assert frmt2 == UtdFormat(self.formats[1])
 
-    def test_batch_process_folder_sasfiles(self) -> None:
+    @mock.patch(
+        "ssb_utdanning.format.formats.is_different_from_last_time",
+        side_effect=mock_is_different_from_last_time,
+    )
+    def test_batch_process_folder_sasfiles(self, mock_get: mock.MagicMock) -> None:
         # delete file in test_format folder and build sas files again
         self.tearDown()
         self.setUp()
