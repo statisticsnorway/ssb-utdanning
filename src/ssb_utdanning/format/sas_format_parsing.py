@@ -24,6 +24,8 @@ def batch_process_folder_sasfiles(
     None
         Only writes to disk (side effect).
     """
+    if not sas_files_path.endswith("/"):
+        sas_files_path += "/"
     for file in glob.glob(sas_files_path + "*.sas"):
         print(f"Processing {file}.")
         process_single_sasfile(file, output_path)
@@ -56,10 +58,9 @@ def process_single_sasfile(file: str, output_path: str = PROD_FORMATS_PATH) -> N
         content = sas_file.read()
     format_content: UTDFORMAT_INPUT_TYPE
     for format_name, format_content in parse_sas_script(content).items():
-        # print(format_name, format_content)
         form = UtdFormat(format_content)
         form.cached = False
-        form.store(format_name)
+        form.store(format_name, output_path)
 
 
 def parse_sas_script(sas_script_content: str) -> dict[str, dict[str, str]]:
@@ -84,9 +85,10 @@ def parse_sas_script(sas_script_content: str) -> dict[str, dict[str, str]]:
             format_content = {}
             for line in value_part.split("\n"):
                 line = line.strip(" ")
-                # print(line)
-                if line.startswith("$") or "=" not in line and line:
+                if line.startswith("$") and "=" not in line and line:
                     format_name = line[1:]
+                elif line.startswith("$") is False and "=" not in line and line:
+                    format_name = line
                 elif not line:
                     pass
                 else:
@@ -107,8 +109,9 @@ def parse_sas_script(sas_script_content: str) -> dict[str, dict[str, str]]:
                         )
                         format_content[key] = value
                     except Exception as e:
-                        print(value_part, line)
+                        # print(value_part, line)
                         raise e
+
             formats_in_file[format_name] = format_content
     if formats_in_file:
         # print(formats_in_file)

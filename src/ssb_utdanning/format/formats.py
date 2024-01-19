@@ -6,6 +6,7 @@ from typing import Any
 
 import dateutil.parser
 import pandas as pd
+from pandas._libs.missing import NAType
 
 from ssb_utdanning.config import PROD_FORMATS_PATH
 
@@ -34,7 +35,7 @@ class UtdFormat(dict[Any, Any]):
         self.store_ranges()
         self.set_other_as_lowercase()
 
-    def __setitem__(self, key: str | int, value: Any) -> None:
+    def __setitem__(self, key: str | int | float | NAType | None, value: Any) -> None:
         """Overrides the '__setitem__' method of dictionary to perform custom actions on setting items.
 
         Args:
@@ -51,7 +52,7 @@ class UtdFormat(dict[Any, Any]):
             if self.check_if_na(key):
                 self.set_na_value()
 
-    def __missing__(self, key: str | int) -> Any:
+    def __missing__(self, key: str | int | float | NAType | None) -> Any:
         """Overrides the '__missing__' method of dictionary to handle missing keys.
 
         Args:
@@ -69,17 +70,23 @@ class UtdFormat(dict[Any, Any]):
                 self[key] = int_str_confuse
             return int_str_confuse
 
+        if self.check_if_na(key):
+            if self.set_na_value():
+                if self.cached:
+                    self[key] = self.na_value
+                return self.na_value
+
         key_in_range = self.look_in_ranges(key)
         if key_in_range:
             if self.cached:
                 self[key] = key_in_range
             return key_in_range
 
-        if self.check_if_na(key):
-            if self.set_na_value():
-                if self.cached:
-                    self[key] = self.na_value
-                return self.na_value
+        # if self.check_if_na(key):
+        #     if self.set_na_value():
+        #         if self.cached:
+        #             self[key] = self.na_value
+        #         return self.na_value
 
         other = self.get("other", "")
         if other:
@@ -109,7 +116,7 @@ class UtdFormat(dict[Any, Any]):
                             top_float = float(top)
                         self.ranges[value] = (bottom_float, top_float)
 
-    def look_in_ranges(self, key: str | int | float) -> None | str:
+    def look_in_ranges(self, key: str | int | float | NAType | None) -> None | str:
         """Looks for the specified key within the stored ranges.
 
         Args:
@@ -119,17 +126,18 @@ class UtdFormat(dict[Any, Any]):
             The value associated with the range containing the key, if found; otherwise, None.
         """
         # print(f"looking in ranges for {key}")
-        try:
-            key = float(key)
-        except ValueError:
-            return None
-        for range_key, (bottom, top) in self.ranges.items():
-            # print(f"Looking in ranges at {range_key}, {bottom=} {top=}")
-            if key >= bottom and key <= top:
-                return range_key
+        if isinstance(key, str | int | float):
+            try:
+                key = float(key)
+            except ValueError:
+                return None
+            for range_key, (bottom, top) in self.ranges.items():
+                # print(f"Looking in ranges at {range_key}, {bottom=} {top=}")
+                if key >= bottom and key <= top:
+                    return range_key
         return None
 
-    def int_str_confuse(self, key: str | int) -> None | Any:
+    def int_str_confuse(self, key: str | int | float | NAType | None) -> None | Any:
         """Handles conversion between integer and string keys.
 
         Args:
@@ -191,7 +199,7 @@ class UtdFormat(dict[Any, Any]):
         if pd.isna(key):
             return True
         if isinstance(key, str):
-            if key in [".", "none", "", "NA", "<NA>", "<NaN>"]:
+            if key in [".", "none", "None", "", "NA", "<NA>", "<NaN>", "nan", "NaN"]:
                 return True
         return False
 
