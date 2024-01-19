@@ -2,8 +2,8 @@ import datetime
 import glob
 import json
 import os
-from typing import Any
 from pathlib import Path
+from typing import Any
 
 import dateutil.parser
 import pandas as pd
@@ -249,8 +249,8 @@ def info_stored_formats(
     """
     if isinstance(path_prod, Path):
         path_prod = str(path_prod)
-    if not path_prod.endswith('/'):
-        path_prod += '/'
+    if not path_prod.endswith("/"):
+        path_prod += "/"
     if not os.path.isdir(path_prod):
         raise OSError(f"Cant find folder {path_prod}")
     all_paths = glob.glob(f"{path_prod}*.json")

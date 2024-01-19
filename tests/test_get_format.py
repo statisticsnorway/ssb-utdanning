@@ -9,14 +9,16 @@ import ssb_utdanning
 from ssb_utdanning.format.formats import get_format
 from ssb_utdanning.format.formats import UtdFormat
 
+
 def mock_get_path(filename: str, var2: None) -> Path:
-    return Path(os.getcwd()) / 'test_formats' / filename
+    return Path(os.getcwd()) / "test_formats" / filename
+
 
 class TestGetFormat(unittest.TestCase):
     def setUp(self) -> None:
         # Create a temporary folder and add test JSON files for testing
         template_dir = Path(os.getcwd())
-        self.path = template_dir / 'test_formats'
+        self.path = template_dir / "test_formats"
         os.makedirs(self.path, exist_ok=True)
 
         # Create test JSON files
@@ -37,17 +39,17 @@ class TestGetFormat(unittest.TestCase):
             )
         }
         self.dictionaries = [frmt1, frmt2]
-        
+
         for k, file_name in enumerate(self.test_files):
             with open(os.path.join(self.path, file_name), "w") as json_file:
                 json.dump(self.dictionaries[k], json_file)
-    
-    @mock.patch('ssb_utdanning.format.formats.get_path', side_effect=mock_get_path)
+
+    @mock.patch("ssb_utdanning.format.formats.get_path", side_effect=mock_get_path)
     def test_get_format(self, mock_get: mock.MagicMock) -> None:
         frmt = get_format(self.test_files[0])
         assert isinstance(frmt, UtdFormat)
         assert frmt == self.dictionaries[0]
-        
+
     def tearDown(self) -> None:
         # Clean up test files and folders after tests
         shutil.rmtree(self.path, ignore_errors=True)

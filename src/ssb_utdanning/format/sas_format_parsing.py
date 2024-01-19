@@ -34,7 +34,9 @@ def batch_process_folder_sasfiles(
         process_single_sasfile(file, output_path)
 
 
-def process_single_sasfile(file: str | Path, output_path: str | Path = PROD_FORMATS_PATH) -> None:
+def process_single_sasfile(
+    file: str | Path, output_path: str | Path = PROD_FORMATS_PATH
+) -> None:
     """Get a single .sas file from storage, extracts formats and stores to disk as timestamped jsonfiles.
 
     Parameters
