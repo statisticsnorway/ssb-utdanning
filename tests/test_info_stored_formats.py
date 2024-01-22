@@ -16,7 +16,7 @@ class TestInfoStoredFormats(unittest.TestCase):
         os.makedirs(self.path, exist_ok=True)
 
         # Create test JSON files
-        self.test_files = ["file_2023-05-10.json", "anotherfile_2024-01-09.json"]
+        self.test_files = ["anotherfile_2024-01-09.json", "file_2023-05-10.json"]
         self.dates = [self.test_files[0][-15:-5], self.test_files[1][-15:-5]]
         frmt1 = {
             "file": dict(
@@ -45,9 +45,10 @@ class TestInfoStoredFormats(unittest.TestCase):
 
     def test_extract_information(self) -> None:
         # df_info = info_stored_formats(path_prod=str(self.path) + "/")
-        df_info = info_stored_formats(path_prod=self.path)
+        df_info = info_stored_formats(path_prod=self.path).sort_values('name').reset_index().drop(columns='index')
         assert isinstance(df_info, pd.DataFrame)
         for i, filename in enumerate(self.test_files):
+            print(filename.split("_")[0])
             assert df_info["name"][i] == filename.split("_")[0]
             assert df_info["date_original"][i] == filename.split("_")[1][:-5]
             assert df_info["path"][i] == str(self.path / filename)
