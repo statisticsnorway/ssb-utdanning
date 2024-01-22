@@ -1,167 +1,141 @@
 """
-NB! NOT TESTED PROPERLY ON REAL DATA. SHOULD IDEALLY RUN ON THE SAME SOURCE DATA IN PYTHON AND IN SAS IN ORDER TO ENSURE THAT THE BEHAVIOUR IS AS EXPECTED. 
-    PARTICULARLY BECAUSE THE ORDER OF THE CONDITIONS IS CRUCIAL: LATER CONDITIONS OVERWRITE EARLINER ONES. 
-    
-    grupper_krtrinn() and grupper_skobo() gives the same result with dummy data but grupper_utd() does not. Need to reorganize the order somehow.
+NB! TESTED ON IGANG_2022_MINIREG. IT APPEARS TO PROVIDE THE CORRECT BEHAVIOUR. KEEP IN MIND THAT THE ORDER OF THE CONDITIONS IS CRUCIAL. FURTHER TESTING ADVICED.
 """
 
 import pandas as pd
 
-
-def grupper_ktrinn(df: pd.DataFrame, col_name: str = "ktrinn", req_cols: list = ["kurstrin", "kltrinn", "fagskoleutd"], default: pd._libs.missing.NAType = pd.NA) -> pd.DataFrame:
+def grupper_ktrinn(df: pd.DataFrame, col_name: str = "ktrinn", rename_cols: dict = None, default: pd._libs.missing.NAType = pd.NA) -> pd.DataFrame:
     """
-    Group a DataFrame based on conditions related to 'kurstrin', 'kltrinn', and 'fagskoleutd'.
+    Groups educational levels based on specified conditions.
 
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Input DataFrame with "kurstrin", "kltrinn, and fagskoleutd" columns.
-    col_name : str
-        Name of the column to store grouping information. Defaults to 'ktrinn'.
-    req_cols : list, optional
-        List of column names that must be present in the DataFrame. Defaults to [kurstrin", "kltrinn", "fagskoleutd"].
-    default : optional
-        Default value for rows not meeting any conditions. Defaults to pd.NA.
+    Arg(s):
+        df (pd.DataFrame): Input DataFrame containing education data.
+        col_name (str, optional): Name of the column to store the grouped educational levels. Defaults to "ktrinn".
+        rename_cols (dict, optional): Dictionary to rename columns. Defaults to None.
+        default (pd._libs.missing.NAType, optional): Default value for missing or ungrouped entries. Defaults to pd.NA.
 
-    Returns
-    -------
-    pandas.DataFrame
-        DataFrame with an additional column ('col_name') indicating the group based on conditions.
-
-    Raises
-    ------
-    ValueError
-        Checks if the required columns are in the DataFrame. Raises an ValueError if not.
-
-    Notes
-    -----
-    The order of conditions is crucial. Later conditions overwrite earlier ones.
+    Return(s):
+        pd.DataFrame: DataFrame with added column containing grouped educational levels.
     """
-    missing_cols = [col for col in req_cols if col not in df.columns]
-    if missing_cols:
-        raise ValueError(f"Missing required columns: {', '.join(missing_cols)}.")
     df = df.copy()
-    conditions = {
-        "4": (df["kurstrin"].notna()),
-        "5": (df["fagskoleutd"] == "10") | ((df["kurstrin"] == "U") & (df["kltrinn"].isin(["14", "15"]))),
-        "3": (df["kurstrin"].isin(["P", "Q", "K", "R", "I", "D"]) & (df["kltrinn"] == "13")),
-        "2": (df["kurstrin"].isin(["H", "J", "K", "R", "I", "D"]) & (df["kltrinn"] == "12")),
-        "1": (df["kurstrin"].isin(["A", "B", "C", "K", "R", "D"]) & (df["kltrinn"] == "11"))
-    }
-    for key, cond in conditions.items():
-        df.loc[cond, col_name] = key
-    df[col_name] = df[col_name].fillna(default)
-    return df
-
-def grupper_skobo(df: pd.DataFrame, col_name: str = "skobo", req_cols: list = ["kommnr", "skolekom"], default: pd._libs.missing.NAType = pd.NA) -> pd.DataFrame:
-    """
-    Group a DataFrame based on conditions related to 'kommnr' and 'skolekom'.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Input DataFrame with 'kommnr' and 'skolekom' columns.
-    col_name : str
-        Name of the column to store grouping information.
-    req_cols : list, optional
-        List of column names that must be present in the DataFrame. Defaults to ["kommnr", "skolekom"].
-    default : optional
-        Default value for rows not meeting any conditions. Defaults to pd.NA.
-
-    Returns
-    -------
-    pandas.DataFrame
-        DataFrame with an additional column ('col_name') indicating the group based on conditions.
-
-    Raises
-    ------
-    ValueError
-        Checks if the required columns are in the DataFrame. Raises an ValueError if not.
-
-    Notes
-    -----
-    The order of conditions is crucial. Later conditions overwrite earlier ones.
-    """
-    missing_cols = [col for col in req_cols if col not in df.columns]
-    if missing_cols:
-        raise ValueError(f"Missing required columns: {', '.join(missing_cols)}.")
-    df = df.copy()
-    conditions = {
-        "3": (df["kommnr"].str[:2] != df["skolekom"].str[:2]),
-        "2": (df["kommnr"].str[:2] == df["skolekom"].str[:2]),
-        "1": (df["kommnr"] == df["skolekom"])
-    }
-    for key, cond in conditions.items():
-        df.loc[cond, col_name] = key
-    df[col_name] = df[col_name].fillna(default)
-    return df
-
-def grupper_utd(df: pd.DataFrame, col_name: str = "utd", req_cols: list = ["kilde", "naering", "nus2000", "skolekom", "studretn", "fagskoleutd", "komp"], default: pd._libs.missing.NAType = pd.NA) -> pd.DataFrame:
-    """
-    Group a DataFrame based on conditions related to "kilde", "naering", "nus2000", "skolekom", "studretn", "fagskoleutd", and "komp".
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Input DataFrame with "kilde", "naering", "nus2000", "skolekom", "studretn", "fagskoleutd", and "komp" columns.
-    col_name : str
-        Name of the column to store grouping information.
-    req_cols : list, optional
-        List of column names that must be present in the DataFrame. Defaults to ["kilde", "naering", "nus2000", "skolekom", "studretn", "fagskoleutd", "komp"].
-    default : optional
-        Default value for rows not meeting any conditions. Defaults to pd.NA.
-
-    Returns
-    -------
-    pandas.DataFrame
-        DataFrame with an additional column ('col_name') indicating the group based on conditions.
+    
+    req_cols = ["kurstrin", "kltrinn", "fagskoleutd"]
+    if rename_cols is not None:
+        df = df.rename(columns=rename_cols)
         
-    Raises
-    ------
-    ValueError
-        Checks if the required columns are in the DataFrame. Raises an ValueError if not.
-
-    Notes
-    -----
-    The order of conditions is crucial. Later conditions overwrite earlier ones.
-    """
     missing_cols = [col for col in req_cols if col not in df.columns]
     if missing_cols:
         raise ValueError(f"Missing required columns: {', '.join(missing_cols)}.")
+    
+    conditions = {
+        "1": (df["kurstrin"].isin(["A", "B", "C", "K", "R", "D"]) & (df["kltrinn"] == "11")),
+        "2": (df["kurstrin"].isin(["H", "J", "K", "R", "I", "D"]) & (df["kltrinn"] == "12")),
+        "3": (df["kurstrin"].isin(["P", "Q", "K", "R", "I", "D"]) & (df["kltrinn"] == "13")),
+        "5": (df["fagskoleutd"] == "10") | ((df["kurstrin"] == "U") & (df["kltrinn"].isin(["14", "15"]))),
+        "4": (df["kurstrin"].notna())
+    }
+    reversed_conditions = {k: conditions[k] for k in reversed(list(conditions.keys()))}
+    for key, cond in reversed_conditions.items():
+        df.loc[cond, col_name] = key
+    df[col_name] = df[col_name].fillna(default)
+    return df
+
+def grupper_skobo(df: pd.DataFrame, col_name: str = "skobo", rename_cols: dict = None, default: pd._libs.missing.NAType = pd.NA) -> pd.DataFrame:
+    """
+    Groups school boards based on specified conditions.
+
+    Arg(s):
+        df (pd.DataFrame): Input DataFrame containing school board data.
+        col_name (str, optional): Name of the column to store the grouped school board categories. Defaults to "skobo".
+        rename_cols (dict, optional): Dictionary to rename columns. Defaults to None.
+        default (pd._libs.missing.NAType, optional): Default value for missing or ungrouped entries. Defaults to pd.NA.
+
+    Return(s):
+        pd.DataFrame: DataFrame with added column containing grouped school board categories.
+    """
     df = df.copy()
+    
+    req_cols = ["kommnr", "skolekom"]
+    if rename_cols is not None:
+        df = df.rename(columns=rename_cols)
+    
+    missing_cols = [col for col in req_cols if col not in df.columns]
+    if missing_cols:
+        raise ValueError(f"Missing required columns: {', '.join(missing_cols)}.")
+    
+    conditions = {
+        "1": (df["kommnr"] == df["skolekom"]),
+        "2": (df["kommnr"].str[:2] == df["skolekom"].str[:2]),
+        "3": (df["kommnr"].str[:2] != df["skolekom"].str[:2])
+    }
+    reversed_conditions = {k: conditions[k] for k in reversed(list(conditions.keys()))}
+    for key, cond in reversed_conditions.items():
+        df.loc[cond, col_name] = key
+    df[col_name] = df[col_name].fillna(default)
+    return df
+
+def grupper_utd(df: pd.DataFrame, col_name: str = "utd", rename_cols: dict = None, default: pd._libs.missing.NAType = pd.NA) -> pd.DataFrame:
+    """
+    Groups education data based on specified conditions.
+
+    Arg(s):
+        df (pd.DataFrame): Input DataFrame containing education data.
+        col_name (str, optional): Name of the column to store the grouped education categories. Defaults to "utd".
+        default (pd._libs.missing.NAType, optional): Default value for missing or ungrouped entries. Defaults to pd.NA.
+        rename_cols (dict, optional): Dictionary to rename columns. Defaults to None.
+
+    Return(s):
+        pd.DataFrame: DataFrame with added column containing grouped education categories.
+    """
+    df = df.copy()
+    
+    req_cols = ["kilde", "sn07", "nus2000", "skolekom", "studretn", "fagskoleutd", "komp"]
+    if rename_cols is not None:
+        df = df.rename(columns=rename_cols)
+
+    missing_cols = [col for col in req_cols if col not in df.columns]
+    if missing_cols:
+        raise ValueError(f"Missing required columns: {', '.join(missing_cols)}.")
+    
+    # Explanations.
+    utland_komm = "2580"
+    gsk_nacer = ("85.100", "85.201", "85.202", "85.203")
+    avsl_gsk_kilde = "10"
+        
     conditions = {
         # Grunnskoler
-        "100": ((df["kilde"] == "10") | ((df["naering"].isin(["85.100", "85.201", "85.202", "85.203"])) & (df["nus2000"].str[0].isin(["0", "1", "2"])))),
+        "100": ((df["kilde"] == avsl_gsk_kilde) | ((df["sn07"].isin(gsk_nacer)) & (df["nus2000"].str[0].isin(["0", "1", "2"])))),
         # Annen universitets- og høgskoleutdanning
-        "320": ((df["naering"].str[:5] != "85.42") & (df["skolekom"] != "2580") & (df["nus2000"].str[0].isin(["6", "7", "8"]))),
+        "320": ((df["sn07"].str[:5] != "85.42") & (df["skolekom"] != utland_komm) & (df["nus2000"].str[0].isin(["6", "7", "8"]))),
         # Folkehøgskoler
-        "510": ((df["naering"] == "85.591") & (df["studretn"].isna())),
+        "510": ((df["sn07"] == "85.591") & (df["studretn"].isna())),
         # Arbeidsmarkedskurs
-        "520": (df["naering"] == "85.592"),
+        "520": (df["sn07"] == "85.592"),
         # Fagskoler
-        "710": ((df["studretn"] == "50") | (df["fagskoleutd"] == "10")),
+        "710": ((df["studretn"] == "50") | (df["fagskoleutd"] == avsl_gsk_kilde)),
         # Høyere utdanning i utlandet
-        "620": ((df["skolekom"] == "2580") & (df["nus2000"].str[0] > "5")),
+        "620": ((df["skolekom"] == utland_komm) & (df["nus2000"].str[0] > "5")),
         # Statlige høgskoler
-        "311": ((df["naering"] == "85.423") & (df["studretn"].isna()) & (df["nus2000"].str[0] > "4")),
+        "311": ((df["sn07"] == "85.423") & (df["studretn"].isna()) & (df["nus2000"].str[0] > "4")),
         # Militære høgskoler
-        "312": (df["naering"] == "85.424"),
+        "312": (df["sn07"] == "85.424"),
         # Andre høgskoler
-        "313": ((df["naering"] == "85.429") & (df["studretn"].isna()) & (df["nus2000"].str[0] > "4")),
+        "313": ((df["sn07"] == "85.429") & (df["studretn"].isna()) & (df["nus2000"].str[0] > "4")),
         # Universiteter
-        "401": ((df["naering"] == "85.421") & (df["nus2000"].str[0] > "4")),
+        "401": ((df["sn07"] == "85.421") & (df["nus2000"].str[0] > "4")),
         # Vitenskapelige høgskoler
-        "402": ((df["naering"] == "85.422") & (df["nus2000"].str[0] > "4")),
+        "402": ((df["sn07"] == "85.422") & (df["nus2000"].str[0] > "4")),
         # Lærlinger i vgo i Norge
-        "212": ((df["kilde"].isin(["21", "30", "31", "51"])) & (df["komp"].isin(["2", "5"])) & (df["skolekom"] != "2580")),
+        "212": ((df["kilde"].isin(["21", "30", "31", "51"])) & (df["komp"].isin(["2", "5"])) & (df["skolekom"] != utland_komm)),
         # Annen videregående utdanning - kilde 23
         "220": (df["kilde"] == "23"),        
         # Elever i vgo i Norge
-        "211": (((df["studretn"].notna() & (df["kilde"] != "31")) | (df["studretn"].notna() & (df["kilde"] == "31") & (df["skolekom"] != "2580")))),
+        "211": (((df["studretn"].notna() & (df["kilde"] != "31")) | (df["studretn"].notna() & (df["kilde"] == "31") & (df["skolekom"] != utland_komm)))),
         # Videregående utdanning i utlandet
-        "610": ((df["skolekom"] == "2580") & (df["nus2000"].str[0] < "6")),
+        "610": ((df["skolekom"] == utland_komm) & (df["nus2000"].str[0] < "6")),
     }
-    for key, cond in conditions.items():
+    reversed_conditions = {k: conditions[k] for k in reversed(list(conditions.keys()))}
+    for key, cond in reversed_conditions.items():
         df.loc[cond, col_name] = key
     df[col_name] = df[col_name].fillna(default)
     return df
