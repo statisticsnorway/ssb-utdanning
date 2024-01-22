@@ -25,11 +25,13 @@ def batch_process_folder_sasfiles(
     None
         Only writes to disk (side effect).
     """
-    if isinstance(sas_files_path, Path):
-        sas_files_path = str(sas_files_path)
-    if not sas_files_path.endswith("/"):
-        sas_files_path += "/"
-    for file in glob.glob(sas_files_path + "*.sas"):
+    if not isinstance(sas_files_path, Path):
+        sas_files_path = Path(sas_files_path)
+    if not isinstance(output_path, Path):
+        output_path = Path(output_path)
+    # if not sas_files_path.endswith("/"):
+    #     sas_files_path += "/"
+    for file in glob.glob(str(sas_files_path) + "/*.sas"):
         print(f"Processing {file}.")
         process_single_sasfile(file, output_path)
 
@@ -57,9 +59,12 @@ def process_single_sasfile(
     ValueError
         If the file is not a .sas file.
     """
-    if isinstance(file, Path):
-        file = str(file)
-    if not file.endswith(".sas"):
+    if not isinstance(file, Path):
+        file = Path(file)
+    if not isinstance(output_path, Path):
+        output_path = Path(output_path)
+
+    if not str(file).endswith(".sas"):
         raise ValueError("Dude, you gotta send in a .sas file.")
     with open(file, encoding="latin1") as sas_file:
         content = sas_file.read()

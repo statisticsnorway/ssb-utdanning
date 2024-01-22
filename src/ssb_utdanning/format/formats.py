@@ -220,6 +220,8 @@ class UtdFormat(dict[Any, Any]):
         Raises:
             ValueError: If storing a cached UtdFormat might lead to an unexpectedly large number of keys.
         """
+        if not isinstance(output_path, Path):
+            output_path = Path(output_path)
         if self.cached and not force:
             error_msg = """Storing a cached UtdFormat might lead to many more keys than you want.
             Please check the amount of keys before storing.
@@ -247,13 +249,14 @@ def info_stored_formats(
     Raises:
         OSError: If the specified path_prod directory does not exist.
     """
-    if isinstance(path_prod, Path):
-        path_prod = str(path_prod)
-    if not path_prod.endswith("/"):
-        path_prod += "/"
+    if not isinstance(path_prod, Path):
+        path_prod = Path(path_prod)
+    # if not path_prod.endswith("/"):
+    #     path_prod = str(path_prod)
+    #     path_prod += "/"
     if not os.path.isdir(path_prod):
         raise OSError(f"Cant find folder {path_prod}")
-    all_paths = glob.glob(f"{path_prod}*.json")
+    all_paths = glob.glob(f"{path_prod!s}/*.json")
     all_names = [
         "_".join(os.path.split(p)[1].split(".")[0].split("_")[:-1]) for p in all_paths
     ]
@@ -339,6 +342,8 @@ def store_format_prod(
     Raises:
         NotImplementedError: If the provided formats structure is neither nested nor unnested dictionaries of strings.
     """
+    if not isinstance(output_path, Path):
+        output_path = Path(output_path)
     if all([isinstance(x, dict) for x in formats.values()]):
         nested = True
     elif all([isinstance(x, str) for x in formats.values()]):
@@ -353,14 +358,14 @@ def store_format_prod(
         for format_name, format_content in formats_nested.items():
             if is_different_from_last_time(format_name, format_content):
                 with open(
-                    os.path.join(output_path, f"{format_name}_{now}.json"), "w"
+                    output_path / (format_name + "_" + now + ".json"), "w"
                 ) as json_file:
                     json.dump(format_content, json_file)
     elif not nested and isinstance(formats, UtdFormat):
         format_not_nested: UtdFormat = formats
         if is_different_from_last_time(format_name, format_not_nested):
             with open(
-                os.path.join(output_path, f"{format_name}_{now}.json"), "w"
+                output_path / (format_name + "_" + now + ".json"), "w"
             ) as json_file:
                 json.dump(format_not_nested, json_file)
 
