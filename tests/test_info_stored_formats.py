@@ -45,7 +45,12 @@ class TestInfoStoredFormats(unittest.TestCase):
 
     def test_extract_information(self) -> None:
         # df_info = info_stored_formats(path_prod=str(self.path) + "/")
-        df_info = info_stored_formats(path_prod=self.path).sort_values('name').reset_index().drop(columns='index')
+        df_info = (
+            info_stored_formats(path_prod=self.path)
+            .sort_values("name")
+            .reset_index()
+            .drop(columns="index")
+        )
         assert isinstance(df_info, pd.DataFrame)
         for i, filename in enumerate(self.test_files):
             print(filename.split("_")[0])
