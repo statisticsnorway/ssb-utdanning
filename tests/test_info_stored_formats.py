@@ -16,8 +16,12 @@ class TestInfoStoredFormats(unittest.TestCase):
         os.makedirs(self.path, exist_ok=True)
 
         # Create test JSON files
-        self.test_files = ["anotherfile_2024-01-09.json", "file_2023-05-10.json"]
-        self.dates = [self.test_files[0][-15:-5], self.test_files[1][-15:-5]]
+        self.test_files = [
+            "anotherfile_2024-01-09T12-13-14.json",
+            "file_2023-05-10T12-13-14.json",
+        ]
+        self.dates = [self.test_files[0][-24:-5], self.test_files[1][-24:-5]]
+        print(self.dates)
         frmt1 = {
             "file": dict(
                 zip(

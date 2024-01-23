@@ -9,6 +9,7 @@ import dateutil.parser
 import pandas as pd
 from pandas._libs.missing import NAType
 
+from ssb_utdanning.config import DATETIME_FORMAT
 from ssb_utdanning.config import PROD_FORMATS_PATH
 
 UTDFORMAT_INPUT_TYPE = dict[str | int, Any] | dict[str, Any]
@@ -120,14 +121,12 @@ class UtdFormat(dict[Any, Any]):
         Returns:
             The value associated with the range containing the key, if found; otherwise, None.
         """
-        # print(f"looking in ranges for {key}")
         if isinstance(key, str | int | float):
             try:
                 key = float(key)
             except ValueError:
                 return None
             for range_key, (bottom, top) in self.ranges.items():
-                # print(f"Looking in ranges at {range_key}, {bottom=} {top=}")
                 if key >= bottom and key <= top:
                     return range_key
         return None
@@ -247,14 +246,16 @@ def info_stored_formats(
         path_prod = Path(path_prod)
     if not os.path.isdir(path_prod):
         raise OSError(f"Cant find folder {path_prod}")
-    all_paths = glob.glob(str(path_prod) +"/*.json")
+    all_paths = glob.glob(str(path_prod) + "/*.json")
     all_names = [
         "_".join(os.path.split(p)[1].split(".")[0].split("_")[:-1]) for p in all_paths
     ]
     all_dates_original = [
         os.path.split(p)[1].split(".")[0].split("_")[-1] for p in all_paths
     ]
-    all_dates_datetime = [dateutil.parser.parse(d) for d in all_dates_original]
+    all_dates_datetime = [
+        datetime.datetime.strptime(d, DATETIME_FORMAT) for d in all_dates_original
+    ]
     df_info = pd.DataFrame(
         {
             "name": all_names,
@@ -288,6 +289,7 @@ def get_path(name: str, date: str = "latest") -> str | None:
     df_info = df_info.sort_values("date_datetime", ascending=False)
     if len(df_info):
         for _, row in df_info.iterrows():
+            print(row["date_datetime"], date_time)
             if row["date_datetime"] < date_time:
                 format_date = row["date_datetime"]
                 break
@@ -343,7 +345,7 @@ def store_format_prod(
     else:
         raise NotImplementedError("Expecting a nested or unnested dict of strings.")
 
-    now = datetime.datetime.now().isoformat("T", "seconds")
+    now = datetime.datetime.now().isoformat("T", "seconds").replace(":", "-")
     if nested:
         formats_nested: dict[str, UtdFormat] = formats
         for format_name, format_content in formats_nested.items():
