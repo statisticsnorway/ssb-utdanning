@@ -29,8 +29,7 @@ def batch_process_folder_sasfiles(
         sas_files_path = Path(sas_files_path)
     if not isinstance(output_path, Path):
         output_path = Path(output_path)
-    # if not sas_files_path.endswith("/"):
-    #     sas_files_path += "/"
+
     for file in glob.glob(str(sas_files_path) + "/*.sas"):
         print(f"Processing {file}.")
         process_single_sasfile(file, output_path)
@@ -121,12 +120,10 @@ def parse_sas_script(sas_script_content: str) -> dict[str, dict[str, str]]:
                         )
                         format_content[key] = value
                     except Exception as e:
-                        # print(value_part, line)
                         raise e
 
             formats_in_file[format_name] = format_content
     if formats_in_file:
-        # print(formats_in_file)
         ...
     else:
         print(sas_script_content)

@@ -37,8 +37,8 @@ class TestUtdFormat(unittest.TestCase):
     def test_initialization(self) -> None:
         utd_format = UtdFormat(self.test_dict)
         # Add assertions to verify the initialization of the UtdFormat instance
-        self.assertTrue(isinstance(utd_format, UtdFormat))
-        self.assertTrue(isinstance(utd_format, dict))
+        self.assertIsInstance(utd_format, UtdFormat)
+        self.assertIsInstance(utd_format, dict)
         # Add more specific assertions as needed
 
     def test_setitem_method(self) -> None:
