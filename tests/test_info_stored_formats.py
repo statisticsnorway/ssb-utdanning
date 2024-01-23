@@ -33,7 +33,6 @@ class TestInfoStoredFormats(unittest.TestCase):
             )
         }
         dictionaries = [frmt1, frmt2]
-        # print(frmt1)
         for k, file_name in enumerate(self.test_files):
             with open(os.path.join(self.path, file_name), "w") as json_file:
                 json.dump(dictionaries[k], json_file)
@@ -44,7 +43,6 @@ class TestInfoStoredFormats(unittest.TestCase):
             info_stored_formats(path_prod=Path("not/here/yo"))
 
     def test_extract_information(self) -> None:
-        # df_info = info_stored_formats(path_prod=str(self.path) + "/")
         df_info = (
             info_stored_formats(path_prod=self.path)
             .sort_values("name")
@@ -62,7 +60,6 @@ class TestInfoStoredFormats(unittest.TestCase):
         # Test selecting a specific name
         for i, filename in enumerate(self.test_files):
             shortname = filename.split("_")[0]
-            # df_info = info_stored_formats(shortname, path_prod=str(self.path) + "/")
             df_info = info_stored_formats(shortname, path_prod=self.path)
             # Check if the returned object is a DataFrame
             assert isinstance(df_info, pd.DataFrame)

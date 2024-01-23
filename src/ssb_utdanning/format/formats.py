@@ -83,12 +83,6 @@ class UtdFormat(dict[Any, Any]):
                 self[key] = key_in_range
             return key_in_range
 
-        # if self.check_if_na(key):
-        #     if self.set_na_value():
-        #         if self.cached:
-        #             self[key] = self.na_value
-        #         return self.na_value
-
         other = self.get("other", "")
         if other:
             if self.cached:
@@ -251,12 +245,9 @@ def info_stored_formats(
     """
     if not isinstance(path_prod, Path):
         path_prod = Path(path_prod)
-    # if not path_prod.endswith("/"):
-    #     path_prod = str(path_prod)
-    #     path_prod += "/"
     if not os.path.isdir(path_prod):
         raise OSError(f"Cant find folder {path_prod}")
-    all_paths = glob.glob(f"{path_prod!s}/*.json")
+    all_paths = glob.glob(str(path_prod) +"/*.json")
     all_names = [
         "_".join(os.path.split(p)[1].split(".")[0].split("_")[:-1]) for p in all_paths
     ]
