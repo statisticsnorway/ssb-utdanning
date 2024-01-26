@@ -304,7 +304,7 @@ def get_path(name: str, date: str = "latest") -> str | None:
 
 
 def get_format(
-    name: str = "", date: str = "latest", filepath: str | Path = ""
+    name: str = "", date: str = "latest", filepath: str | Path | None = ""
 ) -> UtdFormat | None:
     """Retrieves the format from a json-format-file, dependent on the name (start of filename).
 
