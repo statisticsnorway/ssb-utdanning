@@ -6,7 +6,6 @@ import os
 import shutil
 from unittest import mock
 from ssb_utdanning.format.formats import UtdFormat
-import ssb_utdanning
 
 
 def mock_is_different_from_last_time(

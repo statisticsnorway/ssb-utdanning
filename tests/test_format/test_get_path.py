@@ -1,8 +1,6 @@
 from unittest import mock
 import pandas as pd
-import dateutil
 import datetime
-import ssb_utdanning
 from ssb_utdanning.config import DATETIME_FORMAT
 from ssb_utdanning.format.formats import get_path
 

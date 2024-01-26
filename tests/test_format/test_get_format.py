@@ -4,8 +4,6 @@ import shutil
 import unittest
 from pathlib import Path
 from unittest import mock
-import pandas as pd
-import ssb_utdanning
 from ssb_utdanning.format.formats import get_format
 from ssb_utdanning.format.formats import UtdFormat
 

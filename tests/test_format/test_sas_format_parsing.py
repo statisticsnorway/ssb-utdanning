@@ -8,8 +8,6 @@ from create_folder_w_sasfiles import create_folder_w_sasfiles
 from ssb_utdanning.format.formats import UtdFormat
 from ssb_utdanning.format.sas_format_parsing import process_single_sasfile
 from ssb_utdanning.format.sas_format_parsing import batch_process_folder_sasfiles
-from ssb_utdanning.format.sas_format_parsing import parse_sas_script
-import ssb_utdanning
 
 
 def local_get_format(path: Path, frmtname: str) -> UtdFormat:

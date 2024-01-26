@@ -16,9 +16,6 @@ def batch_process_folder_sasfiles(
         sas_files_path (str): The path to the folder containing the .sas files.
         output_path (str): The path to the folder where the formats will be stored.
             Not including the filename itself, only the base folder.
-
-    Returns:
-        None: Only writes to disk (side effect).
     """
     if not isinstance(sas_files_path, Path):
         sas_files_path = Path(sas_files_path)
@@ -40,8 +37,8 @@ def process_single_sasfile(
         output_path (str): The path to the folder where the formats will be stored.
             Not including the filename itself, only the base folder.
 
-    Returns:
-        None: Only writes to disk (side effect).
+    Raises:
+        ValueError: If file path sent in is not a .sas file.
     """
     if not isinstance(file, Path):
         file = Path(file)

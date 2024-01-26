@@ -6,7 +6,6 @@ import unittest
 from pathlib import Path
 from unittest import mock
 import numpy as np
-import ssb_utdanning
 from ssb_utdanning.format.formats import UtdFormat
 from ssb_utdanning.format.formats import store_format_prod
 from write_test_formats import write_test_formats

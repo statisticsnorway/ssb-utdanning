@@ -72,11 +72,10 @@ class UtdFormat(dict[Any, Any]):
                 self[key] = int_str_confuse
             return int_str_confuse
 
-        if self.check_if_na(key):
-            if self.set_na_value():
-                if self.cached:
-                    self[key] = self.na_value
-                return self.na_value
+        if self.check_if_na(key) and self.set_na_value():
+            if self.cached:
+                self[key] = self.na_value
+            return self.na_value
 
         key_in_range = self.look_in_ranges(key)
         if key_in_range:
@@ -99,18 +98,12 @@ class UtdFormat(dict[Any, Any]):
             if isinstance(key, str) and "-" in key and key.count("-") == 1:
                 self._range_to_floats(key, value)
 
-    def _range_to_floats(self, key: str, value: str) -> tuple[float, float]:
+    def _range_to_floats(self, key: str, value: str) -> None:
         """Converts a range key to a tuple of floats.
 
         Args:
             key: Key to be converted to a tuple of floats.
             value (str): Value to be associated with the converted range.
-
-        Raises:
-            ValueError: If the key is not a valid range key.
-
-        Returns:
-            tuple[float, float]: Tuple of floats representing the range.
         """
         bottom, top = key.split("-")[0].strip(), key.split("-")[1].strip()
         if (bottom.isdigit() or bottom.lower() == "low") and (
