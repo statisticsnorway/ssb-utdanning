@@ -63,7 +63,8 @@ def parse_sas_script(sas_script_content: str) -> dict[str, dict[str, str]]:
         sas_script_content (str): The content of the SAS script.
 
     Returns:
-        dict[str, dict[str, str]]: A nested dictionary containing the format-name as key, and the format-content as value.
+        dict[str, dict[str, str]]: A nested dictionary containing the format-name as key,
+            and the format-content as value.
     """
     formats_in_file: dict[str, dict[str, str]] = {}
     for proc_step in sas_script_content.split("proc format;")[1:]:
