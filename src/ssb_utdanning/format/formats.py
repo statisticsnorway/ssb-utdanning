@@ -303,22 +303,31 @@ def get_path(name: str, date: str = "latest") -> str | None:
     return None
 
 
-def get_format(name: str, date: str = "latest") -> UtdFormat | None:
+def get_format(
+    name: str = "", date: str = "latest", filepath: str | Path = ""
+) -> UtdFormat | None:
     """Retrieves the format from a json-format-file, dependent on the name (start of filename).
 
     Args:
         name (str): Name of the format.
         date (str): Date string to find the format for. Defaults to "latest". If a datetime string, the format with the closest date will be returned.
+        filepath (str): Send in the full path to the format directly, this will ignore the name and date args.
 
     Returns:
         dict or defaultdict: The formatted dictionary or defaultdict for the specified format and date. If the format contains a "other" key, a defaultdict will be returned. If the
             format contains the SAS-value for missing: ".", or another recognized "empty-datatype":
             Many known keys for empty values, will be inserted in the dict, to hopefully map these correctly.
+
+    Raises:
+        ValueError: If no name or filepath is specified.
     """
-    path = get_path(name, date)
-    print("Getting format from", path)
-    if path:
-        with open(path) as format_json:
+    if not name and not filepath:
+        raise ValueError("Please specify a name or filepath.")
+    if not filepath:
+        filepath = get_path(name, date)
+    print("Getting format from", filepath)
+    if filepath:
+        with open(filepath) as format_json:
             ord_dict = json.load(format_json)
         return UtdFormat(ord_dict)
     return None
