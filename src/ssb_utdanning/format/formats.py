@@ -96,21 +96,35 @@ class UtdFormat(dict[Any, Any]):
         """Stores ranges based on specified keys in the dictionary."""
         self.ranges: dict[str, tuple[float, float]] = {}
         for key, value in self.items():
-            if isinstance(key, str):
-                if "-" in key and key.count("-") == 1:
-                    bottom, top = key.split("-")[0].strip(), key.split("-")[1].strip()
-                    if (bottom.isdigit() or bottom.lower() == "low") and (
-                        top.isdigit() or top.lower() == "high"
-                    ):
-                        if bottom.lower() == "low":
-                            bottom_float = float("-inf")
-                        else:
-                            bottom_float = float(bottom)
-                        if top.lower() == "high":
-                            top_float = float("inf")
-                        else:
-                            top_float = float(top)
-                        self.ranges[value] = (bottom_float, top_float)
+            if isinstance(key, str) and "-" in key and key.count("-") == 1:
+                self._range_to_floats(key, value)
+
+    def _range_to_floats(self, key: str, value: str) -> tuple[float, float]:
+        """Converts a range key to a tuple of floats.
+
+        Args:
+            key: Key to be converted to a tuple of floats.
+            value (str): Value to be associated with the converted range.
+
+        Raises:
+            ValueError: If the key is not a valid range key.
+
+        Returns:
+            tuple[float, float]: Tuple of floats representing the range.
+        """
+        bottom, top = key.split("-")[0].strip(), key.split("-")[1].strip()
+        if (bottom.isdigit() or bottom.lower() == "low") and (
+            top.isdigit() or top.lower() == "high"
+        ):
+            if bottom.lower() == "low":
+                bottom_float = float("-inf")
+            else:
+                bottom_float = float(bottom)
+            if top.lower() == "high":
+                top_float = float("inf")
+            else:
+                top_float = float(top)
+            self.ranges[value] = (bottom_float, top_float)
 
     def look_in_ranges(self, key: str | int | float | NAType | None) -> None | str:
         """Looks for the specified key within the stored ranges.
@@ -157,10 +171,9 @@ class UtdFormat(dict[Any, Any]):
         """Sets the key 'other' to lowercase if mixed cases are found."""
         found = False
         for key in self:
-            if isinstance(key, str):
-                if key.lower() == "other":
-                    found = True
-                    break
+            if isinstance(key, str) and key.lower() == "other":
+                found = True
+                break
         if found:
             value = self[key]
             del self[key]
@@ -176,9 +189,8 @@ class UtdFormat(dict[Any, Any]):
             if self.check_if_na(key):
                 self.na_value = value
                 return True
-        else:
-            self.na_value = None
-            return False
+        self.na_value = None
+        return False
 
     @staticmethod
     def check_if_na(key: str | Any) -> bool:
