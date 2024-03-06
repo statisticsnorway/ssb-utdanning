@@ -16,6 +16,11 @@ Changelog = "https://github.com/statisticsnorway/ssb-utdanning/releases"
 [tool.poetry.dependencies]
 python = "^3.9"
 click = ">=8.0.1"
+ipysheet = "^0.7.0"
+pandas = "^2.2.0"
+saspy = "^5.5.0"
+pyarrow = "^15.0.0"
+fastparquet = "^2023.10.1"
 
 [tool.poetry.group.dev.dependencies]
 pygments = ">=2.10.0"
@@ -36,6 +41,13 @@ typeguard = ">=2.13.3"
 xdoctest = { extras = ["colors"], version = ">=0.15.10" }
 myst-parser = { version = ">=0.16.1" }
 ipykernel = ">=6.0.0"
+
+
+
+[[tool.poetry.source]]
+name = "nexus"
+url = "http://pl-nexuspro-p.ssb.no:8081/repository/pypi-proxy/simple"
+priority = "default"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
