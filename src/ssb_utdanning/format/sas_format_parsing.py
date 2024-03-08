@@ -27,7 +27,6 @@ def batch_process_folder_sasfiles(
         process_single_sasfile(file, output_path)
 
 
-
 def process_single_sasfile(
     file: str | Path, output_path: str | Path = PROD_FORMATS_PATH
 ) -> None:
@@ -59,6 +58,7 @@ def process_single_sasfile(
 
 def parse_sas_script(sas_script_content: str) -> dict[str, dict[str, str]]:
     """Extract a format as a Python dictionary from a SAS script.
+
     Args:
         sas_script_content (str): The content of the SAS script.
 

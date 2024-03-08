@@ -1,18 +1,19 @@
-"""Attributes:
-    ENVIR (str): The environment the application is running in.
-    SERVICE (str): The service the application is running in.
-    REGION (str): The region the application is running in.
+"""The config holds attributes/constants that the user should be allowed to change before running code, that we do not want as parameters to functions.
 
-    TESTING (bool): Whether the application is running in testing mode.
-    MOCKING (bool): Whether the application is running in mocking mode.
+Attributes:
+ENVIR (str): The environment the application is running in.
+SERVICE (str): The service the application is running in.
+REGION (str): The region the application is running in.
 
-    DATETIME_FORMAT (str): The datetime format used in filenames.
+TESTING (bool): Whether the application is running in testing mode.
+MOCKING (bool): Whether the application is running in mocking mode.
 
-    PROD_FORMATS_PATH (str): The path to the production formats.
+DATETIME_FORMAT (str): The datetime format used in filenames.
+
+PROD_FORMATS_PATH (str): The path to the production formats.
 """
 
 import os
-
 
 ENVIR = os.environ.get("DAPLA_ENVIRONMENT", "TEST")
 SERVICE = os.environ.get("DAPLA_SERVICE", "JUPYTERLAB")
