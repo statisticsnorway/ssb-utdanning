@@ -16,7 +16,6 @@
 # Built Visual Studio Code Extensions
 *.vsix
 
-
 # The section below contains SSB specific ignores, not included in the Python-
 # and R-ignores from GitHub.
 *.csv
