@@ -17,7 +17,6 @@ UTDFORMAT_INPUT_TYPE = dict[str | int, Any] | dict[str, Any]
 
 class UtdFormat(dict[Any, Any]):
     """Custom dictionary class designed to handle specific formatting conventions."""
-
     def __init__(self, start_dict: UTDFORMAT_INPUT_TYPE | None = None):
         """Initializes the UtdFormat instance.
 
@@ -29,6 +28,7 @@ class UtdFormat(dict[Any, Any]):
         if start_dict:
             for k, v in start_dict.items():
                 dict.__setitem__(self, k, v)
+
         self.update_format()
 
     def update_format(self) -> None:
@@ -54,8 +54,9 @@ class UtdFormat(dict[Any, Any]):
             if self.check_if_na(key):
                 self.set_na_value()
 
-    def __missing__(self, key: str | int | float | NAType | None) -> Any:
-        """Overrides the '__missing__' method of dictionary to handle missing keys.
+    def __missing__(self, key):
+        """
+        Overrides the '__missing__' method of dictionary to handle missing keys.
 
         Args:
             key: Key that is missing in the dictionary.
