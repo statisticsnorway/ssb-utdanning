@@ -1,3 +1,16 @@
+"""Attributes:
+    ENVIR (str): The environment the application is running in.
+    SERVICE (str): The service the application is running in.
+    REGION (str): The region the application is running in.
+
+    TESTING (bool): Whether the application is running in testing mode.
+    MOCKING (bool): Whether the application is running in mocking mode.
+
+    PROD_FORMATS_PATH (str): The path to the production formats.
+    DATETIME_FORMAT (str): The datetime format used in filenames.
+"""
+
+
 import fagfunksjoner
 
 MILJO = fagfunksjoner.check_env()
