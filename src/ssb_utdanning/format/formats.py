@@ -9,7 +9,7 @@ from utd_felles.config import PROD_FORMATS_PATH
 
 
 class UtdFormat(dict):
-     """
+    """
     Custom dictionary class designed to handle specific formatting conventions.
     """
     def __init__(self, start_dict: dict = None):
