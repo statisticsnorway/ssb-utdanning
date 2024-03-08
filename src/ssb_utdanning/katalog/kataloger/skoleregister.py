@@ -1,12 +1,11 @@
-import pandas as pd
-import dapla as dp
-from pathlib import Path
 import glob
 from functools import lru_cache
+from pathlib import Path
 
-from utd_felles.utd_felles_config import UtdFellesConfig
-from utd_felles.katalog.katalog import UtdKatalog
+import pandas as pd
 from utd_felles.data.dtypes import auto_dtype
+from utd_felles.katalog.katalog import UtdKatalog
+from utd_felles.utd_felles_config import UtdFellesConfig
 
 
 @lru_cache(50)
@@ -19,7 +18,7 @@ def get_skoleregister(from_date: str = "") -> UtdKatalog:
         df = auto_dtype(pd.read_sas(skolereg_dates[from_date]))
     elif UtdFellesConfig().MILJO == "DAPLA":
         return  # Write later
-    
+
     return UtdKatalog(df, key_col="orgnr", year=year, path=skolereg_dates[from_date])
 
 
@@ -29,7 +28,7 @@ def skoleregister_dates() -> dict:
         paths = [Path(x) for x in glob.glob(base_path + "*.sas7bdat")]
         date_paths = sorted([x for x in paths if x.stem[1:].isdigit()])
         date_paths_dict = {x.stem[1:5]: x for x in date_paths}
-        #print(year_paths_dict.keys())
+        # print(year_paths_dict.keys())
         return date_paths_dict
     elif UtdFellesConfig().MILJO == "DAPLA":
         return  # Write later

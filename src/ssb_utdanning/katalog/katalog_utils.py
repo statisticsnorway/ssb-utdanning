@@ -1,12 +1,14 @@
 import json
+
 import pandas as pd
-from .katalog import UtdKatalog, REQUIRED_COLS
+
+from .katalog import REQUIRED_COLS
+from .katalog import UtdKatalog
 
 
-
-def create_new_utd_katalog(path: str,
-                           key_col_name: str,
-                           extra_cols: list = None) -> UtdKatalog:
+def create_new_utd_katalog(
+    path: str, key_col_name: str, extra_cols: list = None
+) -> UtdKatalog:
     # Workaround empty-list-parameter-mutability-issue
     if extra_cols is None:
         extra_cols = []
@@ -26,11 +28,11 @@ def create_new_utd_katalog(path: str,
     result.data = df
     return result
 
+
 def open_utd_katalog_from_metadata(meta_path: str) -> UtdKatalog:
-    with open(meta_path, "r") as jsonmeta:
+    with open(meta_path) as jsonmeta:
         metadata = json.load(jsonmeta)
     file_path = meta_path.replace("__META.json", "")
-    return UtdKatalog(file_path,
-                      metadata.pop("key_col"),
-                      metadata.pop("versioned"),
-                      **metadata)
+    return UtdKatalog(
+        file_path, metadata.pop("key_col"), metadata.pop("versioned"), **metadata
+    )
