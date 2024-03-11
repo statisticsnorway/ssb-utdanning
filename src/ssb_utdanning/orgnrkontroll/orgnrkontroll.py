@@ -6,21 +6,21 @@ from ssb_utdanning import logger
 from ssb_utdanning.config import PROD_SKOLEREG_PATH
 from ssb_utdanning.config import PROD_VIGO_PATH
 
-# # Notes
-#
-# * Må bestemme hvordan vi skal håndtere 'skolereg' og 'vigo'
-#     * Versjonering, filtype og path
-# if __name__ == "__main__":
-#    innfil_path = "/ssb/stamme01/utd/utd-vg-vgu/data-produkt/vigo-elev/"
-#    innfil_filename = "vigo_elev_g2023_nus_v1.sas7bdat"
-#    data = saspy_df_from_path(innfil_path + innfil_filename)
-
 
 def get_skolereg(aar: str | int = "latest") -> pd.DataFrame:
-    """Get skolereg by year from prodsone path, with option to get the latest version as default."""
+    """Get skolereg by year from prodsone path, with option to get the latest version as default.
+
+    Args:
+        aar (str | int): The year you want to get the skolereg from.
+
+    Returns:
+        pd.DataFrame: The opened dataframe of the available skolereg.
+
+    Raises:
+        ValueError: If a single skolereg for opening, cant be determined.
+    """
     # denne delen må kanskje  oppdateres når det er bestemt hvordan vi skal håndtere skolereg
     files = os.listdir(PROD_SKOLEREG_PATH)
-
     files = [
         file.split("_")[-1] for file in files if file.split("_")[0] == "testskolereg"
     ]
@@ -35,17 +35,27 @@ def get_skolereg(aar: str | int = "latest") -> pd.DataFrame:
         logger.info("Henter nyeste skoleregfil %s", skolereg_filename)
     else:
         skolereg_filename = [file for file in skolereg_files if file[1:5] == str(aar)]
-        assert len(skolereg_filename) == 1
+        if len(skolereg_filename) != 1:
+            raise ValueError("Cant pick a single skolereg-file.")
         skolereg_filename = skolereg_filename[0]
         logger.info("Henter skoleregfil %s", skolereg_filename)
 
     skolereg_filename = "testskolereg_" + skolereg_filename
-    skolereg = pd.read_parquet(PROD_SKOLEREG_PATH + skolereg_filename)
-    return skolereg
+    return pd.read_parquet(PROD_SKOLEREG_PATH + skolereg_filename)
 
 
 def get_vigo_skole(aar: str | int = "latest") -> pd.DataFrame:
-    """Get vigo skole-file by year from prodsone path, with option to get the latest version as default."""
+    """Get vigo skole-file by year from prodsone path, with option to get the latest version as default.
+
+    Args:
+        aar (str | int): The year you want to get the vigo-skole file from.
+
+    Returns:
+        pd.DataFrame: The opened dataframe of the available vigo-skole-file.
+
+    Raises:
+        ValueError: If a single vigo-skole-file for opening, cant be determined.
+    """
     # denne delen må oppdateres når det er bestemt hvordan vi skal håndtere vigo
     files = os.listdir(PROD_VIGO_PATH)
     files = [
@@ -61,13 +71,13 @@ def get_vigo_skole(aar: str | int = "latest") -> pd.DataFrame:
         logger.info("Henter nyeste vigo skolefil %s", vigo_filename)
     else:
         vigo_filename = [file for file in vigo_files if file[1:5] == str(aar)]
-        assert len(vigo_filename) == 1
+        if len(vigo_filename) != 1:
+            raise ValueError("Cant pick a single vigo-skole file.")
         vigo_filename = vigo_filename[0]
         logger.info("Henter vigo skolefil %s", vigo_filename)
 
     vigo_filename = "testvigoskole_" + vigo_filename
-    vigo = pd.read_parquet(PROD_VIGO_PATH + vigo_filename)
-    return vigo
+    return pd.read_parquet(PROD_VIGO_PATH + vigo_filename)
 
 
 def evaluate_skolereg_merge(
@@ -76,7 +86,17 @@ def evaluate_skolereg_merge(
     orgnr_col_innfil: str = "orgnr",
     orgnrbed_col_innfil: str = "orgnrbed",
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Find how many will merge on the two 'orgnr' variables."""
+    """Find how many will merge on the two 'orgnr' variables.
+
+    Args:
+        innfil (pd.DataFrame): The dataframe to evaluate.
+        skolereg (pd.DataFrame): The dataframe to evaluate against.
+        orgnr_col_innfil (str): The column name of the 'orgnr' variable in the innfil. Defaults to 'orgnr'.
+        orgnrbed_col_innfil (str): The column name of the 'orgnrbed' variable in the innfil. Defaults to 'orgnrbed'.
+
+    Returns:
+        tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: Three dataframes, one for the orgnr-merge, one for the orgnrbed-merge, and one for the innfil-merge.
+    """
     kobler_orgnr = innfil.loc[innfil[orgnr_col_innfil].isin(skolereg["orgnr"])]
 
     logger.info(
@@ -175,7 +195,7 @@ def merge_skolereg(
     return pd.concat([merged_orgnr, merged_orgnrbed])
 
 
-def merge_vigo(
+def merge_vigo_skole(
     kobler_fskolenr: pd.DataFrame,
     fskolenr_innfil: str = "fskolenr",
     vigo_keep_cols: set[str] | str = "all",
@@ -213,7 +233,12 @@ def orgnrkontroll(
     """Combines functions in the common pipeline for upper-secondary schools (VGU)."""
     if skolereg_keep_cols is None:
         skolereg_keep_cols = ["orgnr", "orgnrbed"]
-    if len(str(aar)) != 4:
+
+    if aar == "latest":
+        pass
+    elif len(str(aar)) == 4 and str(aar).isdigit():
+        pass
+    else:
         aar = input("Formatet på aargangsvariabel er feil. Vi trenger YYYY:")
 
     skolereg = get_skolereg(aar)
@@ -235,7 +260,9 @@ def orgnrkontroll(
         aar,
     )
 
-    merged_w_vigo = merge_vigo(kobler_fskolenr, fskolenr_innfil, vigo_keep_cols, vigo)
+    merged_w_vigo = merge_vigo_skole(
+        kobler_fskolenr, fskolenr_innfil, vigo_keep_cols, vigo
+    )
 
     if concat_return:
         logger.info(
@@ -246,16 +273,3 @@ def orgnrkontroll(
         "Returnerer 3 objekter: de som merger med skolereg, de som merger med vigo, de som ikke merger."
     )
     return merged_w_skolereg, merged_w_vigo, kobler_ikke_fskolenr
-
-
-# if __name__ == "__main__":
-#    merged_w_skolereg, merged_w_vigo, kobler_ikke_fskolenr = orgnrkontroll(
-#        data,
-#        orgnr_col_innfil="orgnr_inn",
-#        orgnrbed_col_innfil="forgnr",
-#        skolereg_keep_cols=["nace1_sn07"],
-#        aar=2023,
-#    )
-#    assert len(merged_w_skolereg) + len(merged_w_vigo) + len(
-#        kobler_ikke_fskolenr
-#    ) == len(data)

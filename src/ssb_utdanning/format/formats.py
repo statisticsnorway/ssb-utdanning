@@ -9,6 +9,7 @@ import dateutil.parser
 import pandas as pd
 from pandas._libs.missing import NAType
 
+from ssb_utdanning import logger
 from ssb_utdanning.config import DATETIME_FORMAT
 from ssb_utdanning.config import PROD_FORMATS_PATH
 
@@ -286,7 +287,7 @@ def get_path(name: str, date: str = "latest") -> str | None:
     Returns:
         str: The path associated with the specified format and date, if found; otherwise, None.
     """
-    print(f"Finding path from date: {date}")
+    logger.info("Finding path from date: %s", date)
     if date != "latest":
         date_time = dateutil.parser.parse(date)
     elif date == "latest":
@@ -295,7 +296,7 @@ def get_path(name: str, date: str = "latest") -> str | None:
     df_info = df_info.sort_values("date_datetime", ascending=False)
     if len(df_info):
         for _, row in df_info.iterrows():
-            print(row["date_datetime"], date_time)
+            logger.info("%s %s", str(row["date_datetime"]), str(date_time))
             if row["date_datetime"] < date_time:
                 format_date = row["date_datetime"]
                 break
@@ -326,7 +327,7 @@ def get_format(
         raise ValueError("Please specify a name or filepath.")
     if not filepath:
         filepath = get_path(name, date)
-    print("Getting format from", filepath)
+    logger.info("Getting format from %s", filepath)
     if filepath:
         with open(filepath) as format_json:
             ord_dict = json.load(format_json)
@@ -389,7 +390,7 @@ def is_different_from_last_time(format_name: str, format_content: UtdFormat) -> 
         bool: True if the current format content is different from the last saved version; otherwise, False.
     """
     path_latest = get_path(format_name, date="latest")
-    print(path_latest)
+    logger.info("Latest path: %s", str(path_latest))
     if path_latest:
         path = get_path(format_name, date="latest")
         if path:
@@ -400,5 +401,5 @@ def is_different_from_last_time(format_name: str, format_content: UtdFormat) -> 
     # No previous format found
     else:
         return True
-    print("Content of format looks the same as previous version, not saving.")
+    logger.info("Content of format looks the same as previous version, not saving.")
     return False
