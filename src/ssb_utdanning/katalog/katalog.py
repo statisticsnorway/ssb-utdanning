@@ -1,3 +1,16 @@
+"""The main class for Katalogs at 360.
+
+Katalogs are files that are somewhere inbetween real data and metadata.
+
+They usually have a single columns with some sort of identifier, like orgnr or nus2000.
+Then they have 2+ columns of other groupings or data that can be "attached" to real data.
+They may represent a list of idents that there is no other info on, that we have tracked down info for,
+that we would like to "re-attach" each year, for example.
+
+Katalogs can also be called "kodeverk", "kodelister", "omkodingskatalog" etc.
+View "katalog" as an umbrella-term above these.
+"""
+
 # Standard library
 import getpass
 import glob
@@ -11,26 +24,31 @@ import dapla as dp
 
 # External packages
 import pandas as pd
-from utd_felles.data.dtypes import auto_dtype
+
+from ssb_utdanning import logger
 
 # Local imports
-from utd_felles.utd_felles_config import UtdFellesConfig
+from ssb_utdanning.config import REGION
+from ssb_utdanning.data.dtypes import auto_dtype
 
 REQUIRED_COLS = ["username", "edited_time", "expiry_date", "validity"]
 
 
 class UtdKatalog:
+    """The main class for Katalogs at 360."""
+
     def __init__(
         self,
         path: str,
         key_col: str,
         versioned: bool = True,
-        **metadata,
-    ):
+        **metadata: dict[str, str],
+    ) -> None:
+        """Create an instance of UtdKatalog with some baseline attributes."""
         self.path = path
         self.key_col = key_col
         self.versioned = versioned
-        self.metadata = metadata
+        self.metadata: dict[str, str] = metadata
         self._correct_path()
         # self.get_data(self.path)
 
@@ -38,7 +56,8 @@ class UtdKatalog:
         # for key, value in self.metadata.items():
         #    setattr(self, key, value)
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Print some of the content of the Katalog."""
         result = "En Katalog fra utdannings-fellesfunksjonene."
         for key, attr in vars(self).items():
             if key != "data":
@@ -49,7 +68,9 @@ class UtdKatalog:
         result += buf.getvalue()
         return result
 
-    def _update_metadata(self, metadata: dict = None):
+    def _update_metadata(
+        self, metadata: dict[str, str] | None = None
+    ) -> dict[str, str]:
         new_metadata = {}
         if hasattr(self, "metadata"):
             new_metadata = new_metadata | self.metadata
@@ -60,26 +81,23 @@ class UtdKatalog:
             "key_col": self.key_col,
             "versioned": self.versioned,
         }
-        # print(f"updating metadata {new_metadata}")
         self.metadata = new_metadata
         return new_metadata
 
     def _correct_path(self) -> None:
-        """Sas-people are used to not specifying file-extension,
-        this method makes an effort looking for the file in storage
-        """
+        """Sas-people are used to not specifying file-extension, this method makes an effort looking for the file in storage."""
         # If the katalog is versioned,
         # and the path contains no version,
         # and the user has not specified full path (depends on extension present), pick the newest one.
         # Meaning if the user specifies the version number, they should get that instead
-        # print(self.path)
         version = self._extract_version()
         _, _, _, ext = self._split_path(self.path)
         has_no_ext = not ext
         if self.versioned and not version and has_no_ext:
             self._path_to_newest_version()
-            print(
-                f"Swapping path to {self.path}, since the katalog is versioned, but the provided path isnt, and you have given no file extension"
+            logger.info(
+                "Swapping path to %s, since the katalog is versioned, but the provided path isnt, and you have given no file extension",
+                str(self.path),
             )
 
         if not (self.path.endswith(".parquet") or self.path.endswith(".sas7bdat")):
@@ -88,7 +106,9 @@ class UtdKatalog:
             elif os.path.isfile(self.path + ".sas7bdat"):
                 self.path = self.path.rstrip(".") + ".sas7bdat"
             else:
-                print(f"Cant find a sas7bdat or parquetfile at {self.path}...")
+                logger.info(
+                    "Cant find a sas7bdat or parquetfile at %s...", str(self.path)
+                )
                 return None
         # If we find a file on disk, and the dataframe is still unpopulated
         if not hasattr(self, "data"):
@@ -97,12 +117,12 @@ class UtdKatalog:
         if not isinstance(self.data, pd.DataFrame):
             self.get_data()
 
-    def _path_to_newest_version(self):
+    def _path_to_newest_version(self) -> None:
         self.path = self.get_latest_version_path()
 
-    def get_latest_version_path(self):
+    def get_latest_version_path(self) -> str:
+        """Figure out the most recent path/version for the current Katalog."""
         parent, first_part, last_part, ext = self._split_path(self.path)
-        # print(f"{parent=}, {first_part=}, {last_part=}, {ext=}")
         if not self._extract_version():
             first_part = "_".join([first_part, last_part])
         pattern = os.path.join(parent, first_part) + "*"
@@ -113,7 +133,6 @@ class UtdKatalog:
             if "__" not in file
             and (file.endswith(".sas7bdat") or file.endswith(".parquet"))
         ]
-        # print(f"{pattern=}, {fileversions=}")
         if fileversions:
             lastversion = sorted(fileversions)[-1]
             _, _, latest_version, ext = self._split_path(lastversion)
@@ -124,13 +143,23 @@ class UtdKatalog:
             else:
                 latest_path = os.path.join(parent, first_part) + ext
             return latest_path
-        print(
+        logger.info(
             "Cant find any files on disk, assuming the current path is the latest one."
         )
         return self.path
 
-    def get_data(self, path: str = "") -> tuple[pd.DataFrame, dict]:
-        """Get the data and metadata for the catalogue, dependant on the environment we are in"""
+    def get_data(self, path: str = "") -> tuple[pd.DataFrame, dict[str, str]]:
+        """Get the data and metadata for the catalogue, dependant on the environment we are in.
+
+        Args:
+            path (str): The path to the file to open. Defaults to "".
+
+        Returns:
+            tuple[pd.DataFrame, dict[str, str]]: The dataframe and metadata for the catalogue.
+
+        Raises:
+            OSError: If the file extension is not parquet or sas7bdat.
+        """
         if not path:
             path = self.path
         # Warn user if not opening the latest version?
@@ -141,7 +170,7 @@ class UtdKatalog:
             if not sure.lower() == "y":
                 return None
 
-        if UtdFellesConfig().MILJO == "PROD":
+        if REGION == "ON_PREM":
             path_kat = Path(path)
             path_metadata = (
                 path_kat.parent / (str(path_kat.stem) + "__META")
@@ -158,12 +187,12 @@ class UtdKatalog:
                 raise OSError(
                     f"Can only open parquet and sas7bdat, you gave me {path_kat.suffix}"
                 )
-        elif UtdFellesConfig().MILJO == "DAPLA":
+        elif REGION == "DAPLA":
             path_metadata = path.replace(".parquet", "_META.json")
             try:
                 with dp.FileClient.gcs_open(path_metadata, "r") as metafile:
                     metadata = json.load(metafile)
-            except:
+            except FileNotFoundError:
                 metadata = {}
             df = dp.read_pandas(path)
 
@@ -205,10 +234,10 @@ class UtdKatalog:
         if not path_version:
             first_part = "_".join([first_part, last_part])
         if not version:
-            print(
+            logger.info(
                 "Class set to versioned, but read file does not contain correctly placed version-number."
+                "The read file should end in _v1 or similar."
             )
-            print("The read file should end in _v1 or similar.")
             version = 1
         first_part += f"_v{version}"
         # Add extensions back to filename
@@ -219,7 +248,17 @@ class UtdKatalog:
     def save(
         self, path: str = "", bump_version: bool = True, existing_file: str = ""
     ) -> None:
-        """Stores class to disk in prod or dapla as parquet, also stores metadata as json?"""
+        """Stores class to disk in prod or dapla as parquet, also stores metadata as json?
+
+        Args:
+            path (str): Path to save the file to. Defaults to "".
+            bump_version (bool): Whether or not to bump the version of the file. Defaults to True.
+            existing_file (str): What to do if the file already exists on the path. Defaults to "". Can also be set to "overwrite" or "filedump".
+
+        Raises:
+            ValueError: If existing_file is not one of the valid options.
+            OSError: If the file already exists on the path and existing_file is not set to "overwrite" or "filebump".
+        """
         if not path:
             path = self.path
 
@@ -249,12 +288,13 @@ class UtdKatalog:
             """
             raise OSError(error)
         if existing_file == "overwrite" and os.path.isfile(path):
-            print(
-                f"Youve set overwrite, AND YOU ARE ACTUALLY OVERWRITING A FILE RIGHT NOW DUDE: {path}"
+            logger.warning(
+                "Youve set overwrite, AND YOU ARE ACTUALLY OVERWRITING A FILE RIGHT NOW DUDE: %s",
+                path,
             )
             sure = input("YOU SURE ABOUT THIS!?!?! Type Y/y if you are: ")
             if sure.lower() != "y":
-                print("aborting save")
+                logger.info("aborting save")
                 return None
 
         # If filebump is selected get current version from the filesystem instead'
@@ -264,15 +304,16 @@ class UtdKatalog:
             current_version = self._extract_version()  # Returns int
             target_version = latest_version + 1
             if current_version != latest_version:
-                print(
-                    f"""Filebump actually changing the versioning number to {target_version},
-                    this might indicate you opened an older file than the newest available..."""
+                logger.info(
+                    """Filebump actually changing the versioning number to %s,
+                    this might indicate you opened an older file than the newest available...""",
+                    str(target_version),
                 )
                 sure = input(
                     "You sure you dont want to check if you opened an older file? Y/y: "
                 )
                 if sure.lower() != "y":
-                    print("aborting save")
+                    logger.info("aborting save")
                     return None
                 path = self._bump_path(path, target_version)
 
@@ -289,34 +330,46 @@ class UtdKatalog:
         # Validity?
 
         path_metadata = ""
-        if UtdFellesConfig().MILJO == "PROD":
+        if REGION == "ON_PREM":
             self.data.to_parquet(path)
             path_kat = Path(path)
             if self.metadata:
-                # print("storing metadata in prod")
                 path_metadata = (
                     path_kat.parent / (str(path_kat.stem) + "__META")
                 ).with_suffix(".json")
-                # print(path_metadata)
                 with open(path_metadata, "w") as metafile:
                     metafile.write(json.dumps(self.metadata))
-        elif UtdFellesConfig().MILJO == "DAPLA":
+        elif REGION == "DAPLA":
             dp.write_pandas(self.data, path)
             if self.metadata:
                 path_metadata = path.replace(".parquet", "_META.json")
                 with dp.FileClient.gcs_open(path_metadata, "w") as metafile:
                     metafile.write(self.metadata)
-        print(f"Wrote file to {path}")
-        print(f"Wrote metadata to {path_metadata}")
+        logger.info(
+            "Wrote file to %s. Wrote metadata to %s", str(path), str(path_metadata)
+        )
         return None
 
     def diff_against_dataset(
         self, dataset: pd.DataFrame, key_col_data: str = "", merge_both: bool = False
     ) -> dict[str, pd.DataFrame]:
+        """Compares the idents in a dataset against the Katalog.
+
+        Args:
+            dataset (pd.DataFrame): The dataset to compare against.
+            key_col_data (str): The column name in the dataset that should be used as the key. Defaults to "".
+            merge_both (bool): If True, the katalog's data is merged onto the data, where there is a match on the "in_both" dataset. Defaults to False.
+
+        Returns:
+            dict[str, pd.DataFrame]: A dictionary containing the following keys:
+                - only_in_dataset: A dataframe containing the rows in the dataset that are not in the Katalog.
+                - in_both: A dataframe containing the rows in the Katalog that are also in the dataset.
+                - only_in_katalog: A dataframe containing the rows in the Katalog that are not in the dataset.
+        """
         if not key_col_data:
             key_col_data = self.key_col
         ids_in_kat = list(self.data[self.key_col].unique())
-        ids_in_dataset = list(dataset[ket_col_data].unique())
+        ids_in_dataset = list(dataset[key_col_data].unique())
         both_ids = [ident for ident in [ids_in_dataset] if ident in ids_in_kat]
         in_both_df = self.data[self.data[self.key_col].isin(both_ids)].copy()
         if merge_both:
@@ -339,7 +392,19 @@ class UtdKatalog:
         col: str = "",
         level: int = 0,
         key_col: str = "",
-    ) -> dict:
+    ) -> dict[str, str]:
+        """Convert one of the columns in the Katalog to a dict, with the ident as the keys (usually).
+
+        Usually you will only specify the "col"-parameter.
+
+        Args:
+            col (str): The column from the Katalog to convert to the values in the dict. Defaults to "".
+            level (int): The level (length of string-positions) of the ident to use as the key. Defaults to 0 (All).
+            key_col (str): The column to use as the key. Defaults to "". Will use the setting on the Katalog attributes if not specified.
+
+        Returns:
+            dict[str, str]: A dictionary of the two columns from the Katalog.
+        """
         if not key_col:  # If not passed in to function
             key_col = self.key_col
         if not key_col:  # If not registred in class-instance
@@ -362,6 +427,24 @@ class UtdKatalog:
         ordered: bool = False,
         remove_unused: bool = False,
     ) -> pd.DataFrame:
+        """Applies the katalog onto a dataset as if it was a format (dict).
+
+        Args:
+            df (pd.DataFrame): The dataset to apply the katalog onto.
+            catalog_col_name (str): The column name in the katalog to apply. Defaults to "".
+            data_key_col_name (str): The column name in the dataset to apply the katalog onto. Defaults to "".
+            catalog_key_col_name (str): The column name in the katalog to use as the key. Defaults to "".
+            new_col_data_name (str): The column name to use in the dataset. Defaults to "".
+            level (int): The level (length of string-positions) of the ident to use as the key. Defaults to 0 (All).
+            ordered (bool): If True, the resulting column will be ordered. Defaults to False.
+            remove_unused (bool): If True, unused categories will be removed. Defaults to False.
+
+        Returns:
+            pd.DataFrame: The dataset with the katalog applied.
+
+        Raise:
+            ValueError: Something went wrong when trying to convert to a categorical column.
+        """
         # Guessing on key column name
         if not data_key_col_name:
             data_key_col_name = catalog_key_col_name
@@ -378,12 +461,12 @@ class UtdKatalog:
         if not new_col_data_name:
             new_col_data_name = catalog_col_name
 
-        print(
-            f"""
-        {new_col_data_name=}
-        {data_key_col_name=}
-        {catalog_col_name=}
-        {catalog_key_col_name=}"""
+        logger.info(
+            "new_col_data_name=%s data_key_col_name=%s catalog_col_name=%s catalog_key_col_name=%s",
+            str(new_col_data_name),
+            str(data_key_col_name),
+            str(catalog_col_name),
+            str(catalog_key_col_name),
         )
 
         mapping = self.to_dict(
@@ -400,8 +483,10 @@ class UtdKatalog:
                 series = series.cat.remove_unused_categories()
             df[new_col_data_name] = series
         except ValueError as e:
-            print(
-                f"Couldnt convert column {new_col_data_name} to categorical because of error: {e}"
+            logger.warning(
+                "Couldnt convert column %s to categorical because of error: %s",
+                str(new_col_data_name),
+                str(e),
             )
 
         return df
