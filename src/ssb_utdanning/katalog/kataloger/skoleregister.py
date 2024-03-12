@@ -35,7 +35,7 @@ def skoleregister_dates() -> dict[str, Path]:
     date_paths_dict = dict()
     if REGION == "ON_PREM":
         base_path = "/ssb/stamme01/utd/kat/skolereg/"
-        paths = [Path(x) for x in glob.glob(base_path + "*.sas7bdat")]
+        paths = [Path(x) for x in glob.glob(base_path + "*.parquet")]
         date_paths = sorted([x for x in paths if x.stem[1:].isdigit()])
         date_paths_dict = {x.stem[1:5]: x for x in date_paths}
         # print(year_paths_dict.keys())

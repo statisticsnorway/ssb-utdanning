@@ -6,12 +6,15 @@ import importlib
 import importlib.metadata
 
 import toml
+import os
 
-from ssb_utdanning.format.formats import UtdFormat
+
 from ssb_utdanning.utdanning_logger import logger
+from ssb_utdanning.format.formats import UtdFormat
+from ssb_utdanning.katalog.katalog import UtdKatalog
 
 # Mypy wants an "explicit export?"
-__all__ = ["logger", "UtdFormat"]
+__all__ = ["logger", "UtdFormat", "UtdKatalog"]
 
 
 # Split into function for testing
@@ -22,12 +25,18 @@ def _try_getting_pyproject_toml(e: Exception | None = None) -> str:
     else:
         passed_excep = e
     try:
-        version: str = toml.load("../pyproject.toml")["tool"]["poetry"]["version"]
+        currdir = os.getcwd()
+        for _ in range(40):
+            if "pyproject.toml" in os.listdir():
+                break
+            os.chdir("../")
+        version: str = toml.load("pyproject.toml")["tool"]["poetry"]["version"]
+        os.chdir(currdir)
         return version
     except Exception as e:
         version_missing: str = "0.0.0"
         print(
-            f"Error from ssb-klass-pythons __init__, not able to get version-number, setting it to {version_missing}: {passed_excep}"
+            f"Error from ssb-utdannings __init__, not able to get version-number, setting it to {version_missing}: {passed_excep}"
         )
         return version_missing
 
@@ -37,17 +46,3 @@ try:
     __version__ = importlib.metadata.version("ssb-utdanning")
 except importlib.metadata.PackageNotFoundError as e:
     __version__ = _try_getting_pyproject_toml(e)
-
-
-__all__ = []
-local_imports = {
-    "format.formats": ["info_stored_formats", "get_format", "UtdFormat"],
-}
-
-# Loop that imports local files into this namespace and appends to __all__ for star imports
-for file, funcs in local_imports.items():
-    for func in funcs:
-        globals()[func] = getattr(
-            importlib.import_module(f"ssb_utdanning.{file}", func), func
-        )
-        __all__.append(func)

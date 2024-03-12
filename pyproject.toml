@@ -9,6 +9,9 @@ homepage = "https://github.com/statisticsnorway/ssb-utdanning"
 repository = "https://github.com/statisticsnorway/ssb-utdanning"
 documentation = "https://statisticsnorway.github.io/ssb-utdanning"
 classifiers = ["Development Status :: 2 - Pre-Alpha"]
+packages = [
+    { include = "ssb_utdanning", from = "src" },
+]
 
 [tool.poetry.urls]
 Changelog = "https://github.com/statisticsnorway/ssb-utdanning/releases"
@@ -51,6 +54,12 @@ myst-parser = { version = ">=0.16.1" }
 ipykernel = ">=6.0.0"
 
 
+
+
+[[tool.poetry.source]]
+name = "nexus"
+url = "http://pl-nexuspro-p.ssb.no:8081/repository/pypi-proxy/simple"
+priority = "default"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

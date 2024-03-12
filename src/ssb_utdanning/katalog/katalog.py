@@ -34,7 +34,8 @@ if TYPE_CHECKING:
 # Local imports
 from fagfunksjoner import auto_dtype
 
-from ssb_utdanning.config import REGION
+from ssb_utdanning.config import REGION, PROD_KATALOGER
+from ssb_utdanning.paths.get_paths import get_path_latest
 
 REQUIRED_COLS = ["username", "edited_time", "expiry_date", "validity"]
 
@@ -45,17 +46,33 @@ class UtdKatalog:
     def __init__(
         self,
         path: str | Path,
-        key_col: str,
-        versioned: bool = True,
+        key_cols: list[str] | str | None = None,
         **metadata: str | bool,
     ) -> None:
         """Create an instance of UtdKatalog with some baseline attributes."""
-        # We want the path as a string, because of gs:// and similar in dapla-addresses
+        # Correct for the  using "shortname" like "skolereg"
         self.path: str = str(path)
-        self.key_col = key_col
-        self.versioned = versioned
+        if isinstance(path, str) and "/" not in path:
+            glob_patterns = [v["glob"] for k, v in PROD_KATALOGER.items() if k.lower().startswith(path.lower())]
+            if glob_patterns:
+                self.path = get_path_latest(glob_patterns[0])
+                
+        if key_cols is None:
+            print("key_cols er None")
+            key_cols_from_conf = [v["key_cols"] for k, v in PROD_KATALOGER.items() if k.lower().startswith(path.lower())]
+            print(key_cols_from_conf)
+            if key_cols_from_conf:
+                print("inni her")
+                self.key_cols = key_cols_from_conf[0]
+            
+        elif isinstance(key_cols, str):
+            self.key_cols = [key_cols]
+        else:
+            self.key_cols = key_cols       
+
+        
         self.metadata: dict[str, str | bool] = metadata
-        self._correct_path()
+        #self._correct_path()
         self.get_data(self.path)
 
         # Make metadata available directly below object as attributes?
@@ -84,28 +101,19 @@ class UtdKatalog:
             new_metadata |= metadata
         new_metadata |= {
             # "path": self.path,  # Should this always be guessed from placement? Not included in metadata?
-            "key_col": self.key_col,
-            "versioned": self.versioned,
+            "key_cols": self.key_cols,
         }
         self.metadata = new_metadata
         return new_metadata
 
     def _correct_path(self) -> None:
         """Sas-people are used to not specifying file-extension, this method makes an effort looking for the file in storage."""
-        # If the katalog is versioned,
         # and the path contains no version,
         # and the user has not specified full path (depends on extension present), pick the newest one.
         # Meaning if the user specifies the version number, they should get that instead
         version = self._extract_version()
         _, _, _, ext = self._split_path(self.path)
         has_no_ext = not ext
-        if self.versioned and not version and has_no_ext:
-            self._path_to_newest_version()
-            logger.info(
-                "Swapping path to %s, since the katalog is versioned, but the provided path isnt, and you have given no file extension",
-                str(self.path),
-            )
-
         if not (self.path.endswith(".parquet") or self.path.endswith(".sas7bdat")):
             if os.path.isfile(self.path + ".parquet"):
                 self.path = self.path.rstrip(".") + ".parquet"
@@ -288,7 +296,7 @@ class UtdKatalog:
             path = os.path.join(os.path.split(path)[0], "".join([file, ext]))
 
         # Automatic versioning
-        if self.versioned and bump_version:
+        if bump_version:
             path = self._bump_path(path)
 
         # Check that we are not writing to an existing file
@@ -380,23 +388,23 @@ class UtdKatalog:
                 - only_in_katalog: A dataframe containing the rows in the Katalog that are not in the dataset.
         """
         if not key_col_data:
-            key_col_data = self.key_col
-        ids_in_kat = list(self.data[self.key_col].unique())
+            key_col_data = self.key_cols
+        ids_in_kat = list(self.data[self.key_cols].unique())
         ids_in_dataset = list(dataset[key_col_data].unique())
         both_ids = [ident for ident in [ids_in_dataset] if ident in ids_in_kat]
-        in_both_df = self.data[self.data[self.key_col].isin(both_ids)].copy()
+        in_both_df = self.data[self.data[self.key_cols].isin(both_ids)].copy()
         if merge_both:
             in_both_df = dataset[dataset[key_col_data].isin(both_ids)].merge(
                 (in_both_df.drop(columns=REQUIRED_COLS)),
                 how="left",
                 left_on=key_col_data,
-                right_on=self.key_col,
+                right_on=self.key_cols,
             )
         return {
             "only_in_dataset": dataset[~dataset[key_col_data].isin(both_ids)].copy(),
             "in_both": in_both_df,
             "only_in_katalog": self.data[
-                ~self.data[self.key_col].isin(both_ids)
+                ~self.data[self.key_cols].isin(both_ids)
             ].copy(),
         }
 
@@ -419,7 +427,7 @@ class UtdKatalog:
             dict[str, str]: A dictionary of the two columns from the Katalog.
         """
         if not key_col:  # If not passed in to function
-            key_col = self.key_col
+            key_col = self.key_cols
         if not key_col:  # If not registred in class-instance
             key_col = self.data.columns[0]  # Just pick the first column
         if not col:
@@ -462,7 +470,7 @@ class UtdKatalog:
         if not data_key_col_name:
             data_key_col_name = catalog_key_col_name
         if not data_key_col_name:
-            data_key_col_name = self.key_col
+            data_key_col_name = self.key_cols
         if not data_key_col_name:
             self.data.columns[0]
         if not catalog_key_col_name:

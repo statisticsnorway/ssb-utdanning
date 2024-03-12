@@ -100,6 +100,7 @@ def evaluate_skolereg_merge(
     Returns:
         tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: Three dataframes, one for the orgnr-merge, one for the orgnrbed-merge, and one for the innfil-merge.
     """
+    
     kobler_orgnr = innfil.loc[innfil[orgnr_col_innfil].isin(skolereg["orgnr"])]
 
     logger.info(

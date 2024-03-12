@@ -14,6 +14,7 @@ PROD_FORMATS_PATH (str): The path to the production formats.
 """
 
 import os
+import datetime
 
 ENVIR = os.environ.get("DAPLA_ENVIRONMENT", "TEST")
 SERVICE = os.environ.get("DAPLA_SERVICE", "JUPYTERLAB")
@@ -23,7 +24,20 @@ TESTING = False
 MOCKING = False
 
 DATETIME_FORMAT = "%Y-%m-%dT%H-%M-%S"
+DEFAULT_DATE = datetime.datetime(2020, 1, 1)
 
 PROD_FORMATS_PATH = "/ssb/stamme01/utd/utd-felles/formater/"
 PROD_SKOLEREG_PATH = "/ssb/stamme01/utd/kat/skolereg/"
 PROD_VIGO_PATH = "/ssb/stamme01/utd/katalog/vigo/"
+
+
+FOUR_DIGITS = ("[0-9]")*4
+TWO_DIGITS = ("[0-9]")*2
+
+PROD_KATALOGER = {
+    "skolereg": {
+        "glob": f"/ssb/stamme01/utd/kat/skolereg/skolereg_p{FOUR_DIGITS}-{TWO_DIGITS}_v*.parquet",
+        "key_cols": ["orgnr", "orgnrbed"],
+    }
+        
+}
