@@ -8,7 +8,11 @@ from ssb_utdanning.katalog.katalog import REQUIRED_COLS
 
 
 def create_new_utd_katalog(
-    path: str, key_col_name: str, extra_cols: list[str] | None = None
+    path: str,
+    key_col_name: str,
+    extra_cols: list[str] | None = None,
+    versioned: bool = True,
+    **metadata: str,
 ) -> UtdKatalog:
     """Make a new, empty Katalog.
 
@@ -16,6 +20,8 @@ def create_new_utd_katalog(
         path (str): Path the katalog should be stored to.
         key_col_name (str): Name of the key column.
         extra_cols (list[str]): Extra columns to add to the katalog. Defaults to an empty list (None).
+        versioned (bool): If True, the katalog will be versioned. Defaults to True.
+        **metadata: Additional metadata to add to the katalog.
 
     Returns:
         UtdKatalog: The new katalog.
@@ -28,7 +34,8 @@ def create_new_utd_katalog(
     df = pd.DataFrame({col: [] for col in cols})
 
     # Ask for metadata / Recommend not making katalog
-    metadata = {}
+    if not metadata:
+        metadata = {}
     metadata["team"] = input("Ansvarlig team for katalogen: ")
     # Hva mer?
 
@@ -36,7 +43,7 @@ def create_new_utd_katalog(
         "Add more metadata to the catalogue.metadata before saving if you want. "
     )
 
-    result = UtdKatalog(path, key_col_name, **metadata)
+    result = UtdKatalog(path, key_col_name, versioned=versioned, **metadata)
     result.data = df
     return result
 

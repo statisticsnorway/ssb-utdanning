@@ -10,6 +10,9 @@ import toml
 from ssb_utdanning.format.formats import UtdFormat
 from ssb_utdanning.utdanning_logger import logger
 
+# Mypy wants an "explicit export?"
+__all__ = ["logger", "UtdFormat"]
+
 
 # Split into function for testing
 def _try_getting_pyproject_toml(e: Exception | None = None) -> str:

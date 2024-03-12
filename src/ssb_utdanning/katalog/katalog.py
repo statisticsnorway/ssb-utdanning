@@ -19,6 +19,7 @@ import os
 from datetime import datetime
 from io import StringIO
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import dapla as dp
 
@@ -27,9 +28,13 @@ import pandas as pd
 
 from ssb_utdanning import logger
 
+if TYPE_CHECKING:
+    pass
+
 # Local imports
+from fagfunksjoner import auto_dtype
+
 from ssb_utdanning.config import REGION
-from ssb_utdanning.data.dtypes import auto_dtype
 
 REQUIRED_COLS = ["username", "edited_time", "expiry_date", "validity"]
 
@@ -39,20 +44,21 @@ class UtdKatalog:
 
     def __init__(
         self,
-        path: str,
+        path: str | Path,
         key_col: str,
         versioned: bool = True,
-        **metadata: dict[str, str],
+        **metadata: str | bool,
     ) -> None:
         """Create an instance of UtdKatalog with some baseline attributes."""
-        self.path = path
+        # We want the path as a string, because of gs:// and similar in dapla-addresses
+        self.path: str = str(path)
         self.key_col = key_col
         self.versioned = versioned
-        self.metadata: dict[str, str] = metadata
+        self.metadata: dict[str, str | bool] = metadata
         self._correct_path()
-        # self.get_data(self.path)
+        self.get_data(self.path)
 
-        # Make metadata available directly below object
+        # Make metadata available directly below object as attributes?
         # for key, value in self.metadata.items():
         #    setattr(self, key, value)
 
@@ -69,14 +75,14 @@ class UtdKatalog:
         return result
 
     def _update_metadata(
-        self, metadata: dict[str, str] | None = None
-    ) -> dict[str, str]:
-        new_metadata = {}
+        self, metadata: dict[str, str | bool] | None = None
+    ) -> dict[str, str | bool]:
+        new_metadata: dict[str, str | bool] = {}
         if hasattr(self, "metadata"):
-            new_metadata = new_metadata | self.metadata
-        if metadata:
-            new_metadata = new_metadata | metadata
-        new_metadata = new_metadata | {
+            new_metadata |= self.metadata
+        if isinstance(metadata, dict):
+            new_metadata |= metadata
+        new_metadata |= {
             # "path": self.path,  # Should this always be guessed from placement? Not included in metadata?
             "key_col": self.key_col,
             "versioned": self.versioned,
@@ -115,7 +121,7 @@ class UtdKatalog:
             self.get_data()
             return None
         if not isinstance(self.data, pd.DataFrame):
-            self.get_data()
+            self.get_data()  # type: ignore[unreachable]
 
     def _path_to_newest_version(self) -> None:
         self.path = self.get_latest_version_path()
@@ -148,20 +154,23 @@ class UtdKatalog:
         )
         return self.path
 
-    def get_data(self, path: str = "") -> tuple[pd.DataFrame, dict[str, str]]:
+    def get_data(
+        self, path: str = ""
+    ) -> None | tuple[pd.DataFrame, dict[str, str | bool]]:
         """Get the data and metadata for the catalogue, dependant on the environment we are in.
 
         Args:
             path (str): The path to the file to open. Defaults to "".
 
         Returns:
-            tuple[pd.DataFrame, dict[str, str]]: The dataframe and metadata for the catalogue.
+            None | tuple[pd.DataFrame, dict[str, str|bool]]: The dataframe and metadata for the catalogue. Returns None, if you're not sure.p
 
         Raises:
             OSError: If the file extension is not parquet or sas7bdat.
         """
         if not path:
-            path = self.path
+            path = str(self.path)
+
         # Warn user if not opening the latest version?
         if self.get_latest_version_path() != self.path:
             sure = input(
@@ -180,30 +189,31 @@ class UtdKatalog:
                 with open(path_metadata) as metafile:
                     metadata = json.load(metafile)
             if path_kat.suffix == ".parquet":
-                df = pd.read_parquet(path_kat)
+                df_get_data: pd.DataFrame = pd.read_parquet(path_kat)
             elif path_kat.suffix == ".sas7bdat":
-                df = auto_dtype(pd.read_sas(path_kat))
+                df_get_data = auto_dtype(pd.read_sas(path_kat))
             else:
                 raise OSError(
                     f"Can only open parquet and sas7bdat, you gave me {path_kat.suffix}"
                 )
         elif REGION == "DAPLA":
-            path_metadata = path.replace(".parquet", "_META.json")
+            path_metadata_dapla: str = path.replace(".parquet", "_META.json")
             try:
-                with dp.FileClient.gcs_open(path_metadata, "r") as metafile:
+                with dp.FileClient.gcs_open(str(path_metadata_dapla), "r") as metafile:
                     metadata = json.load(metafile)
             except FileNotFoundError:
                 metadata = {}
-            df = dp.read_pandas(path)
-
+            result: pd.DataFrame = dp.read_pandas(path)
+            df_get_data = result
         # Insert missing columns into dataframe?
         for col in REQUIRED_COLS:
-            if col not in df.columns:
-                df[col] = ""
-                df[col] = df[col].astype("string[pyarrow]")
+            if col not in df_get_data.columns:
+                df_get_data[col] = ""
+                df_get_data[col] = df_get_data[col].astype("string[pyarrow]")
 
         self._update_metadata(metadata)
-        self.data = df
+        self.data = df_get_data
+        return df_get_data, metadata
 
     def _split_path(self, path: str = "") -> tuple[str, str, str, str]:
         if not path:
@@ -258,6 +268,9 @@ class UtdKatalog:
         Raises:
             ValueError: If existing_file is not one of the valid options.
             OSError: If the file already exists on the path and existing_file is not set to "overwrite" or "filebump".
+
+        Returns:
+            None
         """
         if not path:
             path = self.path
@@ -334,17 +347,17 @@ class UtdKatalog:
             self.data.to_parquet(path)
             path_kat = Path(path)
             if self.metadata:
-                path_metadata = (
+                path_metadata_combine = (
                     path_kat.parent / (str(path_kat.stem) + "__META")
                 ).with_suffix(".json")
-                with open(path_metadata, "w") as metafile:
-                    metafile.write(json.dumps(self.metadata))
+                with path_metadata_combine.open("w") as metafile:
+                    json.dump(self.metadata, metafile)
         elif REGION == "DAPLA":
             dp.write_pandas(self.data, path)
             if self.metadata:
                 path_metadata = path.replace(".parquet", "_META.json")
                 with dp.FileClient.gcs_open(path_metadata, "w") as metafile:
-                    metafile.write(self.metadata)
+                    json.dump(self.metadata, metafile)
         logger.info(
             "Wrote file to %s. Wrote metadata to %s", str(path), str(path_metadata)
         )
@@ -380,7 +393,7 @@ class UtdKatalog:
                 right_on=self.key_col,
             )
         return {
-            "only_in_dataset": dataset[dataset[~key_col_data].isin(both_ids)].copy(),
+            "only_in_dataset": dataset[~dataset[key_col_data].isin(both_ids)].copy(),
             "in_both": in_both_df,
             "only_in_katalog": self.data[
                 ~self.data[self.key_col].isin(both_ids)

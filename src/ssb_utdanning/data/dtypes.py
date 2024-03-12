@@ -19,6 +19,9 @@ def dtype_store_json(
         df (pd.DataFrame): Dataframe to store dtypes from.
         json_path (str): Path to json file to store dtypes in.
         filesystem (gcsfs.GCSFileSystem): If working on google, provide the GCSFileSystem.
+
+    Returns:
+        None
     """
     dtype_metadata = {}
     for col, dtype in df.dtypes.items():

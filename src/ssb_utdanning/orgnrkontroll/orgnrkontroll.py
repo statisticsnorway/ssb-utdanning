@@ -2,6 +2,7 @@ import os
 
 import pandas as pd
 
+from ssb_utdanning import UtdKatalog
 from ssb_utdanning import logger
 from ssb_utdanning.config import PROD_SKOLEREG_PATH
 from ssb_utdanning.config import PROD_VIGO_PATH
@@ -34,14 +35,16 @@ def get_skolereg(aar: str | int = "latest") -> pd.DataFrame:
         skolereg_filename = skolereg_files[0]
         logger.info("Henter nyeste skoleregfil %s", skolereg_filename)
     else:
-        skolereg_filename = [file for file in skolereg_files if file[1:5] == str(aar)]
-        if len(skolereg_filename) != 1:
+        skolereg_files_filtered = [
+            file for file in skolereg_files if file[1:5] == str(aar)
+        ]
+        if len(skolereg_files_filtered) != 1:
             raise ValueError("Cant pick a single skolereg-file.")
-        skolereg_filename = skolereg_filename[0]
+        skolereg_filename = skolereg_files_filtered[0]
         logger.info("Henter skoleregfil %s", skolereg_filename)
 
     skolereg_filename = "testskolereg_" + skolereg_filename
-    return pd.read_parquet(PROD_SKOLEREG_PATH + skolereg_filename)
+    return UtdKatalog(PROD_SKOLEREG_PATH + skolereg_filename)
 
 
 def get_vigo_skole(aar: str | int = "latest") -> pd.DataFrame:
@@ -70,10 +73,10 @@ def get_vigo_skole(aar: str | int = "latest") -> pd.DataFrame:
         vigo_filename = vigo_files[0]
         logger.info("Henter nyeste vigo skolefil %s", vigo_filename)
     else:
-        vigo_filename = [file for file in vigo_files if file[1:5] == str(aar)]
-        if len(vigo_filename) != 1:
+        vigo_files_filtered = [file for file in vigo_files if file[1:5] == str(aar)]
+        if len(vigo_files_filtered) != 1:
             raise ValueError("Cant pick a single vigo-skole file.")
-        vigo_filename = vigo_filename[0]
+        vigo_filename = vigo_files_filtered[0]
         logger.info("Henter vigo skolefil %s", vigo_filename)
 
     vigo_filename = "testvigoskole_" + vigo_filename
@@ -136,8 +139,17 @@ def evaluate_vigo_skole_merge(
     koblet_ikke_skolereg: pd.DataFrame,
     vigo: pd.DataFrame,
     fskolenr_innfil: str = "fskolenr",
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Evaluate the potential merge between vigo skole for the rows that did not match against skolereg."""
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Evaluate the potential merge between vigo skole for the rows that did not match against skolereg.
+
+    Args:
+        koblet_ikke_skolereg (pd.DataFrame): The dataframe to evaluate.
+        vigo (pd.DataFrame): The dataframe to evaluate against.
+        fskolenr_innfil (str): The column name of the 'fskolenr' variable in the innfil. Defaults to 'fskolenr'.
+
+    Returns:
+        tuple[pd.DataFrame, pd.DataFrame]: Two dataframes, one for the fskolenr-merge, and one for the ones who did not merge.
+    """
     logger.info(
         "Evaluerer kobling mot vigo skoleverk for de %s radene på innfila som ikke koblet mot skolereg på orgnr/orgnrbed",
         str(len(koblet_ikke_skolereg)),
@@ -165,7 +177,20 @@ def merge_skolereg(
     skolereg: pd.DataFrame | None = None,
     aar: str | int = "latest",
 ) -> pd.DataFrame:
-    """Merge skolereg on orgnr and orgnrbed, returning a concated dataframe of both merges."""
+    """Merge skolereg on orgnr and orgnrbed, returning a concated dataframe of both merges.
+
+    Args:
+        kobler_orgnr (pd.DataFrame): The dataframe to merge on orgnr.
+        kobler_orgnrbed (pd.DataFrame): The dataframe to merge on orgnrbed?
+        skolereg_keep_cols (set[str] | None): The columns to keep from skolereg. Defaults to None.
+        orgnr_col_innfil (str): The column name of the 'orgnr' variable in the innfil. Defaults to 'orgnr'.
+        orgnrbed_col_innfil (str): The column name of the 'orgnrbed' variable in the innfil. Defaults to 'orgnrbed'.
+        skolereg (pd.DataFrame | None): The dataframe to merge on. Defaults to None.
+        aar (str | int): The year to use for the skolereg-file. Defaults to 'latest'.
+
+    Returns:
+        pd.DataFrame: The merged dataframe.
+    """
     # optional import of skolereg
     if not isinstance(skolereg, pd.DataFrame):
         skolereg = get_skolereg(aar)
@@ -201,15 +226,37 @@ def merge_vigo_skole(
     vigo_keep_cols: set[str] | str = "all",
     vigo: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    """Merge vigo skole-file onto the file resulting from the earlier run merge from skolereg."""
+    """Merge vigo skole-file onto the file resulting from the earlier run merge from skolereg.
+
+    Args:
+        kobler_fskolenr (pd.DataFrame): The dataframe to merge on.
+        fskolenr_innfil (str): The column name of the 'fskolenr' variable in the innfil. Defaults to 'fskolenr'.
+        vigo_keep_cols (set[str] | str): The columns to keep from the vigo file. Defaults to 'all'.
+        vigo (pd.DataFrame | None): The vigo file to merge on. Defaults to None.
+
+    Returns:
+        pd.DataFrame: The merged dataframe.
+
+    Raises:
+        TypeError: If vigo_keep_cols is not a set or a string.
+    """
     # optional import of vigo
     if not isinstance(vigo, pd.DataFrame):
         vigo = get_vigo_skole()
 
+    # Making sure vigo_keep_cols is a set of unique column names, including the default
     keep_cols_default = "SKOLENR"
     if vigo_keep_cols == "all":
-        vigo_keep_cols = set(vigo.columns)
-    vigo_keep_cols.add(keep_cols_default)
+        vigo_keep_cols_set = set(vigo.columns)
+    elif isinstance(vigo_keep_cols, str):
+        vigo_keep_cols_set = {vigo_keep_cols}
+    else:
+        vigo_keep_cols_set = vigo_keep_cols
+    if not isinstance(vigo_keep_cols_set, set):
+        raise TypeError(
+            "vigo_keep_cols må være en set eller en str. Dette er ikke en set."
+        )
+    vigo_keep_cols_set.add(keep_cols_default)
 
     logger.info(
         "Følgende variabler blir koblet på fra 'skolereg': %s", str(vigo_keep_cols)
@@ -223,16 +270,30 @@ def merge_vigo_skole(
 def orgnrkontroll(
     innfil: pd.DataFrame,
     skolereg_keep_cols: set[str] | None = None,
-    vigo_keep_cols: str | list[str] = "all",
+    vigo_keep_cols: str | set[str] = "all",
     orgnr_col_innfil: str = "orgnr",
     orgnrbed_col_innfil: str = "orgnrbed",
     fskolenr_innfil: str = "fskolenr",
     aar: str | int = "latest",
     concat_return: bool = False,
 ) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Combines functions in the common pipeline for upper-secondary schools (VGU)."""
+    """Combines functions in the common pipeline for upper-secondary schools (VGU) to add info on orgnr.
+
+    Args:
+        innfil (pd.DataFrame): The dataframe to merge on.
+        skolereg_keep_cols (set[str] | None): The columns to keep from skolereg. Defaults to None.
+        vigo_keep_cols (str | list[str]): The columns to keep from the vigo file. Defaults to 'all'.
+        orgnr_col_innfil (str): The column name of the 'orgnr' variable in the innfil. Defaults to 'orgnr'.
+        orgnrbed_col_innfil (str): The column name of the 'orgnrbed' variable in the innfil. Defaults to 'orgnrbed'.
+        fskolenr_innfil (str): The column name of the 'fskolenr' variable in the innfil. Defaults to 'fskolenr'.
+        aar (str | int): The year to use for the skolereg-file. Defaults to 'latest'.
+        concat_return (bool): Whether to return a concatenated dataframe. Defaults to False.
+
+    Returns:
+        pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: The merged dataframe, or a tuple of the merged dataframe, the merged dataframe from skolereg, and the merged dataframe from vigo.
+    """
     if skolereg_keep_cols is None:
-        skolereg_keep_cols = ["orgnr", "orgnrbed"]
+        skolereg_keep_cols = {"orgnr", "orgnrbed"}
 
     if aar == "latest":
         pass
