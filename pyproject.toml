@@ -19,17 +19,20 @@ Changelog = "https://github.com/statisticsnorway/ssb-utdanning/releases"
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
 toml = ">=0.10.2"
-dapla-toolbelt = ">=2.0.6"
 python-dateutil = "^2.8.2"
-ssb-fagfunksjoner = ">=0.1.0"
-ipysheet = "^0.7.0"
 pandas = "^2.2.0"
 colorama = ">=0.4.6"
+cloudpathlib = { extras = ["gs"], version = ">=0.17.0" }
+dapla-toolbelt = ">=2.0.6"
+ssb-fagfunksjoner = ">=0.1.0"
+ipysheet = "^0.7.0"
+
 # Stubs for Mypy
 pandas-stubs = ">=2.1.1.230928"
 types-python-dateutil = ">=2.8.19.14"
 types-toml = ">=0.10.8.7"
 types-colorama = ">=0.4.15.20240205"
+ssb-datadoc = "^0.8.1"
 
 [tool.poetry.group.dev.dependencies]
 nox = "^2023.4.22"
@@ -52,6 +55,9 @@ typeguard = ">=2.13.3"
 xdoctest = { extras = ["colors"], version = ">=0.15.10" }
 myst-parser = { version = ">=0.16.1" }
 ipykernel = ">=6.0.0"
+
+
+
 
 
 

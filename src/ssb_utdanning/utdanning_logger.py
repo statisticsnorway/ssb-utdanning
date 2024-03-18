@@ -9,6 +9,7 @@ from colorama import Fore
 from colorama import Style
 
 
+
 class ColoredFormatter(logging.Formatter):
     """Colored log formatter."""
 

@@ -11,7 +11,7 @@ from pandas._libs.missing import NAType
 
 from ssb_utdanning import logger
 from ssb_utdanning.config import DATETIME_FORMAT
-from ssb_utdanning.config import PROD_FORMATS_PATH
+from ssb_utdanning.config import FORMATS_PATH
 
 UTDFORMAT_INPUT_TYPE = dict[str | int, Any] | dict[str, Any]
 
@@ -207,7 +207,7 @@ class UtdFormat(dict[Any, Any]):
     def store(
         self,
         format_name: str,
-        output_path: str | Path = PROD_FORMATS_PATH,
+        output_path: str | Path = FORMATS_PATH,
         force: bool = False,
     ) -> None:
         """Stores the UtdFormat instance in a specified output path.
@@ -231,7 +231,7 @@ class UtdFormat(dict[Any, Any]):
 
 
 def info_stored_formats(
-    select_name: str = "", path_prod: str | Path = PROD_FORMATS_PATH
+    select_name: str = "", path_prod: str | Path = FORMATS_PATH
 ) -> pd.DataFrame:
     """In Prodsone, list all json-format-files in format folder.
 
@@ -337,7 +337,7 @@ def get_format(
 
 def store_format_prod(
     formats: dict[str, UtdFormat] | UtdFormat,
-    output_path: str | Path = PROD_FORMATS_PATH,
+    output_path: str | Path = FORMATS_PATH,
 ) -> None:
     """Takes a nested or unnested dictionary and saves it to prodsone-folder as a timestamped json.
 
@@ -346,7 +346,7 @@ def store_format_prod(
             Nested dictionary structure expected if multiple formats are passed. If nested, the first layer of keys should be the format-names.
             The values of the dictionary are the dict contents of the formats.¨
             If unnested, we assume, this is a single format, and we ask for the name using input().
-        output_path (str): Path to store the format data. Not including the filename itself, only the base folder. Defaults to PROD_FORMATS_PATH.
+        output_path (str): Path to store the format data. Not including the filename itself, only the base folder. Defaults to FORMATS_PATH.
 
     Raises:
         NotImplementedError: If the provided formats structure is neither nested nor unnested dictionaries of strings.

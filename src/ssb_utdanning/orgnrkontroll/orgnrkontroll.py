@@ -4,8 +4,8 @@ import pandas as pd
 
 from ssb_utdanning import UtdKatalog
 from ssb_utdanning import logger
-from ssb_utdanning.config import PROD_SKOLEREG_PATH
-from ssb_utdanning.config import PROD_VIGO_PATH
+from ssb_utdanning.config import SKOLEREG_PATH
+from ssb_utdanning.config import VIGO_PATH
 
 
 def get_skolereg(aar: str | int = "latest") -> pd.DataFrame:
@@ -21,7 +21,7 @@ def get_skolereg(aar: str | int = "latest") -> pd.DataFrame:
         ValueError: If a single skolereg for opening, cant be determined.
     """
     # denne delen må kanskje  oppdateres når det er bestemt hvordan vi skal håndtere skolereg
-    files = os.listdir(PROD_SKOLEREG_PATH)
+    files = os.listdir(SKOLEREG_PATH)
     files = [
         file.split("_")[-1] for file in files if file.split("_")[0] == "testskolereg"
     ]
@@ -44,7 +44,7 @@ def get_skolereg(aar: str | int = "latest") -> pd.DataFrame:
         logger.info("Henter skoleregfil %s", skolereg_filename)
 
     skolereg_filename = "testskolereg_" + skolereg_filename
-    return UtdKatalog(PROD_SKOLEREG_PATH + skolereg_filename)
+    return UtdKatalog(SKOLEREG_PATH + skolereg_filename)
 
 
 def get_vigo_skole(aar: str | int = "latest") -> pd.DataFrame:
@@ -60,7 +60,7 @@ def get_vigo_skole(aar: str | int = "latest") -> pd.DataFrame:
         ValueError: If a single vigo-skole-file for opening, cant be determined.
     """
     # denne delen må oppdateres når det er bestemt hvordan vi skal håndtere vigo
-    files = os.listdir(PROD_VIGO_PATH)
+    files = os.listdir(VIGO_PATH)
     files = [
         file.split("_")[-1] for file in files if file.split("_")[0] == "testvigoskole"
     ]
@@ -80,7 +80,7 @@ def get_vigo_skole(aar: str | int = "latest") -> pd.DataFrame:
         logger.info("Henter vigo skolefil %s", vigo_filename)
 
     vigo_filename = "testvigoskole_" + vigo_filename
-    return pd.read_parquet(PROD_VIGO_PATH + vigo_filename)
+    return pd.read_parquet(VIGO_PATH + vigo_filename)
 
 
 def evaluate_skolereg_merge(

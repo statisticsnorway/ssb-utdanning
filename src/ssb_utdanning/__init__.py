@@ -12,9 +12,13 @@ import os
 from ssb_utdanning.utdanning_logger import logger
 from ssb_utdanning.format.formats import UtdFormat
 from ssb_utdanning.katalog.katalog import UtdKatalog
+from ssb_utdanning.data.utd_data import UtdData
+
+
+
 
 # Mypy wants an "explicit export?"
-__all__ = ["logger", "UtdFormat", "UtdKatalog"]
+__all__ = ["logger", "UtdFormat", "UtdKatalog", "UtdData"]
 
 
 # Split into function for testing

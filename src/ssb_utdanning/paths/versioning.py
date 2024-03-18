@@ -1,19 +1,20 @@
-def get_version(path: str) -> int:
-    fileparts = path.split("/")
-    filename = file_parts[-1]
-    filename_ext = filename.split(".")
-    filename_parts = filename_ext[0].split("_")
-    version = filename_parts[-1]
+from pathlib import Path
+from cloudpathlib import CloudPath
+from string import digits
+
+def get_version(path: str | Path | CloudPath) -> int:
+    version = str(path).split(".")[0].split("_")[-1]
     if version.startswith("v"):
-            version = version[1:]
+        version = version[1:]
         if not version.isdigit():
             error_msg = f"{version} is not a digit, cant bump."
             raise ValueError(error_msg)
     return int(version)
 
-def bump_path(path: str, n: int = 1) -> str:
+def bump_path(path: str | Path | CloudPath, n: int = 1) -> str | Path | CloudPath:
     new_version = get_version(path) + n
-    undersc_parts = path.split(".")[0].split("_")[:-1]
-    undersc_parts += [f"v{new_version}", path.split(".")[1]]
-    return "/".join(undersc_parts)
-    
+    if isinstance(path, str):
+        undersc_parts = path.split(".")[0].split("_")[:-1]
+        undersc_parts += [f"v{new_version}"]
+        return "_".join(undersc_parts) + "." + path.split(".")[1]
+    return path.parent / (path.stem.rstrip(digits) + str(new_version) + path.suffix)
