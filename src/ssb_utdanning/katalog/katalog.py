@@ -48,12 +48,18 @@ class UtdKatalog(utd_data.UtdData):
     def __init__(
         self,
         path: str | Path,
-        key_cols: list[str] | str | None = None,
-        **metadata: str | bool,
+        data: pd.DataFrame | None = None,
     ) -> None:
         """Create an instance of UtdKatalog with some baseline attributes."""
+        
+        self._correct_check_path(path)
+        if data is None:
+            self.get_data()
+        else:
+            self.data = data
+        self._metadata_from_path()
+        
         # Correct for the  using "shortname" like "skolereg"
-        self.path: str = str(path)
         if isinstance(path, str) and "/" not in path:
             glob_patterns = [v["glob"] for k, v in KATALOGER.items() if k.lower().startswith(path.lower())]
             if glob_patterns:
@@ -73,13 +79,8 @@ class UtdKatalog(utd_data.UtdData):
             self.key_cols = key_cols       
 
         
-        self.metadata: dict[str, str | bool] = metadata
-        #self._correct_path()
-        self.get_data(self.path)
 
-        # Make metadata available directly below object as attributes?
-        # for key, value in self.metadata.items():
-        #    setattr(self, key, value)
+        
 
 
     def diff_against_dataset(

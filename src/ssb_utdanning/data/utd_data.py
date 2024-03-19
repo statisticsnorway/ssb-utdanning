@@ -26,21 +26,13 @@ class UtdData:
     def __init__(self,
                  path: Path | CloudPath | str,
                  data: pd.DataFrame | None = None) -> str:
-        
-        self.path: Path | CloudPath
-        if REGION == "ON_PREM" and isinstance(path, str):
-            self.path = Path(path)
-        elif REGION == "DAPLA" and isinstance(path, str):
-            self.path = CloudPath(path)
-        print(self.path, type(self.path))
-        self._correct_check_path()
-        
+        self._correct_check_path(path)
         if data is None:
             self.get_data()
         else:
             self.data = data
-            
-        self.metadata = DataDocMetadata(StatisticSubjectMapping(""), dataset_path=str(self.path))
+        self._metadata_from_path()
+        
 
     def __str__(self) -> str:
         """Print some of the content of the Data."""
@@ -54,8 +46,14 @@ class UtdData:
         result += buf.getvalue()
         return result       
 
-    def _correct_check_path(self) -> None:
+    def _correct_check_path(self, path: Path | CloudPath | str) -> None:
         """Sas-people are used to not specifying file-extension, this method makes an effort looking for the file in storage."""
+        self.path: Path | CloudPath
+        if REGION == "ON_PREM" and isinstance(path, str):
+            self.path = Path(path)
+        elif REGION == "DAPLA" and isinstance(path, str):
+            self.path = CloudPath(path)
+        
         if not self.path.suffix == ".parquet" or self.path.suffix  == ".sas7bdat":
             if self.path.with_suffix(".parquet").exists():
                 self.path = self.path.with_suffix(".parquet")
@@ -129,7 +127,8 @@ class UtdData:
         self,
         path: str | Path | CloudPath = "",
         bump_version: bool = True,
-        overwrite_mode: str | OverwriteMode = OverwriteMode.NONE
+        overwrite_mode: str | OverwriteMode = OverwriteMode.NONE,
+        save_metadata: bool = True,
     ) -> None:
         """Stores class to disk in prod or dapla as parquet, also stores metadata as json?
 
@@ -155,7 +154,6 @@ class UtdData:
             raise ValueError(
                 f"Set the existing_file parameter as one of: {[x.value for x in iter(OverwriteMode)]}"
             )
-            
         
         if not path:
             path = self.path
@@ -223,9 +221,13 @@ class UtdData:
         metapath = self.metadata.metadata_document
         metapath = metapath.parent / (pathpath.stem + "__DOC.json")
         self.metadata.metadata_document = metapath
-        self.metadata.write_metadata_document()
-        
+        if store_metadata:
+            self.metadata.write_metadata_document()
+
         logger.info(
             "Wrote file to %s. Wrote metadata to %s.", str(self.path), str(metapath)
         )
         return None
+    
+    def _metadata_from_path(self):
+        self.metadata = DataDocMetadata(StatisticSubjectMapping(""), dataset_path=str(self.path))
