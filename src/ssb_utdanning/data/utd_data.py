@@ -2,7 +2,7 @@ import os, glob, json, enum
 from io import StringIO
 from string import digits
 from pathlib import Path
-from cloudpathlib import CloudPath
+from cloudpathlib import CloudPath, GSPath, GSClient
 import pandas as pd
 
 import dapla as dp
@@ -24,8 +24,20 @@ class OverwriteMode(enum.Enum):
 
 class UtdData:    
     def __init__(self,
-                 path: Path | CloudPath | str,
-                 data: pd.DataFrame | None = None) -> str:
+                 data: pd.DataFrame | None = None,
+                 path: Path | CloudPath | GSPath | str = "",
+                 glob_pattern: str = "",
+                 exclude_keywords: list[str] | None = None,
+                ) -> str:
+        if glob_pattern and path:
+            logger.info("You set both glob pattern and path, will prioritize path.")
+        elif not path and not glob_pattern:
+            error_msg = "You must set either path, or glob_pattern."
+            raise ValueError(error_msg)
+            
+        # Gets a path using glob-pattern
+        if glob_pattern and not path:
+            path = self._find_last_glob(glob_pattern, exclude_keywords)
         self._correct_check_path(path)
         if data is None:
             self.get_data()
@@ -46,13 +58,17 @@ class UtdData:
         result += buf.getvalue()
         return result       
 
-    def _correct_check_path(self, path: Path | CloudPath | str) -> None:
+    def _correct_check_path(self, path: Path | CloudPath | GSPath | str) -> None:
         """Sas-people are used to not specifying file-extension, this method makes an effort looking for the file in storage."""
+        
         self.path: Path | CloudPath
         if REGION == "ON_PREM" and isinstance(path, str):
             self.path = Path(path)
         elif REGION == "DAPLA" and isinstance(path, str):
-            self.path = CloudPath(path)
+            client = GSClient(credentials=dp.AuthClient.fetch_google_credentials())
+            self.path = GSPath(path, client=client)
+            
+        self.periods = get_paths.get_path_dates(self.path)
         
         if not self.path.suffix == ".parquet" or self.path.suffix  == ".sas7bdat":
             if self.path.with_suffix(".parquet").exists():
@@ -64,7 +80,11 @@ class UtdData:
                     "Cant find a sas7bdat or parquetfile at %s...", str(self.path)
                 )
                 return None
-
+            
+    def _find_last_glob(self, glob_pattern: str = "" , exclude_keywords: list[str] | None = None) -> str:
+        return get_paths.get_path_latest(glob_pattern, exclude_keywords)
+    
+            
     def get_similar_paths(self) -> list[str]:
         """Find similarly named files, not including the version number."""
         return sorted(
@@ -98,12 +118,22 @@ class UtdData:
             )
             if not sure.lower() == "y":
                 return None
-
+        logger.info("Opening data from %s", str(self.path))
         if REGION == "ON_PREM":            
             if path.suffix == ".parquet":
                 df_get_data: pd.DataFrame = pd.read_parquet(path)
             elif path.suffix == ".sas7bdat":
                 df_get_data = auto_dtype(pd.read_sas(path))
+            else:
+                raise OSError(
+                    f"Can only open parquet and sas7bdat, you gave me {suffix}"
+                )
+        if REGION == "DAPLA":            
+            if path.suffix == ".parquet":
+                df_get_data: pd.DataFrame = dp.read_pandas(path)
+            elif path.suffix == ".sas7bdat":
+                with dp.FileClient().gcs_open(path, "r") as sasfile:
+                    df_get_data = auto_dtype(pd.read_sas(sasfile))
             else:
                 raise OSError(
                     f"Can only open parquet and sas7bdat, you gave me {suffix}"
@@ -120,9 +150,9 @@ class UtdData:
         return 0
         
     @staticmethod
-    def bump_path(path: str| Path | CloudPath, num_bumps: int = 1) -> str:
+    def bump_path(path: str | Path | CloudPath, num_bumps: int = 1) -> str:
         return versioning.bump_path(path, num_bumps)
-
+        
     def save(
         self,
         path: str | Path | CloudPath = "",
@@ -216,12 +246,14 @@ class UtdData:
             self.data.to_parquet(pathpath)
         elif REGION == "DAPLA":
             dp.write_pandas(self.data, pathpath)
-            
+        
+        # Update path in metadata before saving
         self.metadata.dataset_path = pathpath
         metapath = self.metadata.metadata_document
         metapath = metapath.parent / (pathpath.stem + "__DOC.json")
         self.metadata.metadata_document = metapath
-        if store_metadata:
+        # Actuall save the metadata
+        if save_metadata:
             self.metadata.write_metadata_document()
 
         logger.info(

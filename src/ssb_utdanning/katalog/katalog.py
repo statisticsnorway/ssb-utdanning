@@ -49,6 +49,7 @@ class UtdKatalog(utd_data.UtdData):
         self,
         path: str | Path,
         data: pd.DataFrame | None = None,
+        key_cols: list[str] | str | None = None,
     ) -> None:
         """Create an instance of UtdKatalog with some baseline attributes."""
         

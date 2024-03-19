@@ -25,23 +25,26 @@ def get_path_latest(glob_pattern: str,
                     exclude_keywords: list[str] | None = None) -> list[str]:
     return get_paths(glob_pattern, exclude_keywords)[0]
 
-def get_path_dates(glob_pattern: str,
+def get_paths_dates(glob_pattern: str,
                    exclude_keywords: list[str] | None = None) -> dict[str, str]:
     paths = get_paths(glob_pattern, exclude_keywords)
     result: dict[str, str] = {}
     for path in paths:
-        filename_parts = path.split("/")[-1].split(".")[0].split("_")
-        last_period = filename_parts[-2]
-        last_period_datetime = dateutil.parser.parse(last_period[1:], default=DEFAULT_DATE)
-        
-        first_period = filename_parts[-3]
-        if first_period.startswith("p") and first_period[1:].replace("-","").isdigit():
-            first_period_datetime = dateutil.parser.parse(first_period[1:], default=DEFAULT_DATE)
-            result[path] = (first_period_datetime, last_period_datetime)
-            continue
-        result[path] = (last_period_datetime,)
+        result[path] = get_path_dates(path)
     return result
 
+def get_path_dates(path: str) -> tuple[datetime.datetime]:
+    path = str(path)
+    filename_parts = path.split("/")[-1].split(".")[0].split("_")
+    last_period = filename_parts[-2]
+    last_period_datetime = dateutil.parser.parse(last_period[1:], default=DEFAULT_DATE)
+
+    first_period = filename_parts[-3]
+    if first_period.startswith("p") and first_period[1:].replace("-","").isdigit():
+        first_period_datetime = dateutil.parser.parse(first_period[1:], default=DEFAULT_DATE)
+        return (first_period_datetime, last_period_datetime)
+    return (last_period_datetime,)
+        
 def get_path_reference_date(
     reference_datetime: datetime.datetime | str,
     glob_pattern: str,
