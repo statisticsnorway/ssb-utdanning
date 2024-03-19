@@ -27,7 +27,7 @@
 
 ## Features
 
-- TODO
+- UtdFormat: Mimics SAS-"formats", with ranges, "other" and empty values, subclassing dict, should be applied to columns through something like pandas' map-method.
 
 ## Requirements
 
@@ -38,7 +38,7 @@
 You can install _SSB Utdanning Fellesfunksjoner_ via [pip] from [PyPI]:
 
 ```console
-pip install ssb-utdanning
+poetry add ssb-utdanning
 ```
 
 ## Usage

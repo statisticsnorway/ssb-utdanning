@@ -20,11 +20,11 @@
 1. Kvalitetsrapporter (møte med 831? Martin Skjæveland?)
     1. Kan noen av katalogene være en slags kvalitetsrapport
     1. Lager forenklet kvalitetsrapport kvalitetssjekk_innledende /lager_forenklet_rapport /lager_detaljert_kvalitetsrapport
-1. Datavalidering 
+1. Datavalidering
     1. Finnes i katalog
     1. Finnes i format
-    1. Max/min 
-    
+    1. Max/min
+
 
 
 - Koble på sosbak fra NUDB, hvor mange ganger?
