@@ -13,6 +13,3 @@ ta stilling til om produsksjonsspesifikk logikk skal flyttes fra fellesfunksjone
 skrive om orgnrkontroll
 
 lage forslag kag-nace utledning. vi tror det kanskje skal ligge i produksjonsløpet og ikke i fellesfunksjon
-
-
-
