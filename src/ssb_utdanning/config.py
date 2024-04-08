@@ -6,6 +6,7 @@ Attributes:
     MOCKING (bool): Whether the application is running in mocking mode.
     PROD_FORMATS_PATH (str): The path to the production formats.
 """
+
 import os
 
 TESTING = False
