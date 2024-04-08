@@ -2,11 +2,14 @@ import datetime
 import glob
 import json
 import os
+from pathlib import Path
 from typing import Any
 
 import dateutil.parser
 import pandas as pd
+from pandas._libs.missing import NAType
 
+from ssb_utdanning.config import DATETIME_FORMAT
 from ssb_utdanning.config import PROD_FORMATS_PATH
 
 UTDFORMAT_INPUT_TYPE = dict[str | int, Any] | dict[str, Any]
@@ -34,7 +37,7 @@ class UtdFormat(dict[Any, Any]):
         self.store_ranges()
         self.set_other_as_lowercase()
 
-    def __setitem__(self, key: str | int, value: Any) -> None:
+    def __setitem__(self, key: str | int | float | NAType | None, value: Any) -> None:
         """Overrides the '__setitem__' method of dictionary to perform custom actions on setting items.
 
         Args:
@@ -51,7 +54,7 @@ class UtdFormat(dict[Any, Any]):
             if self.check_if_na(key):
                 self.set_na_value()
 
-    def __missing__(self, key: str | int) -> Any:
+    def __missing__(self, key: str | int | float | NAType | None) -> Any:
         """Overrides the '__missing__' method of dictionary to handle missing keys.
 
         Args:
@@ -69,17 +72,16 @@ class UtdFormat(dict[Any, Any]):
                 self[key] = int_str_confuse
             return int_str_confuse
 
+        if self.check_if_na(key) and self.set_na_value():
+            if self.cached:
+                self[key] = self.na_value
+            return self.na_value
+
         key_in_range = self.look_in_ranges(key)
         if key_in_range:
             if self.cached:
                 self[key] = key_in_range
             return key_in_range
-
-        if self.check_if_na(key):
-            if self.set_na_value():
-                if self.cached:
-                    self[key] = self.na_value
-                return self.na_value
 
         other = self.get("other", "")
         if other:
@@ -93,23 +95,31 @@ class UtdFormat(dict[Any, Any]):
         """Stores ranges based on specified keys in the dictionary."""
         self.ranges: dict[str, tuple[float, float]] = {}
         for key, value in self.items():
-            if isinstance(key, str):
-                if "-" in key and key.count("-") == 1:
-                    bottom, top = key.split("-")[0].strip(), key.split("-")[1].strip()
-                    if (bottom.isdigit() or bottom.lower() == "low") and (
-                        top.isdigit() or top.lower() == "high"
-                    ):
-                        if bottom.lower() == "low":
-                            bottom_float = float("-inf")
-                        else:
-                            bottom_float = float(bottom)
-                        if top.lower() == "high":
-                            top_float = float("inf")
-                        else:
-                            top_float = float(top)
-                        self.ranges[value] = (bottom_float, top_float)
+            if isinstance(key, str) and "-" in key and key.count("-") == 1:
+                self._range_to_floats(key, value)
 
-    def look_in_ranges(self, key: str | int | float) -> None | str:
+    def _range_to_floats(self, key: str, value: str) -> None:
+        """Converts a range key to a tuple of floats.
+
+        Args:
+            key: Key to be converted to a tuple of floats.
+            value (str): Value to be associated with the converted range.
+        """
+        bottom, top = key.split("-")[0].strip(), key.split("-")[1].strip()
+        if (bottom.isdigit() or bottom.lower() == "low") and (
+            top.isdigit() or top.lower() == "high"
+        ):
+            if bottom.lower() == "low":
+                bottom_float = float("-inf")
+            else:
+                bottom_float = float(bottom)
+            if top.lower() == "high":
+                top_float = float("inf")
+            else:
+                top_float = float(top)
+            self.ranges[value] = (bottom_float, top_float)
+
+    def look_in_ranges(self, key: str | int | float | NAType | None) -> None | str:
         """Looks for the specified key within the stored ranges.
 
         Args:
@@ -118,18 +128,17 @@ class UtdFormat(dict[Any, Any]):
         Returns:
             The value associated with the range containing the key, if found; otherwise, None.
         """
-        # print(f"looking in ranges for {key}")
-        try:
-            key = float(key)
-        except ValueError:
-            return None
-        for range_key, (bottom, top) in self.ranges.items():
-            # print(f"Looking in ranges at {range_key}, {bottom=} {top=}")
-            if key >= bottom and key <= top:
-                return range_key
+        if isinstance(key, str | int | float):
+            try:
+                key = float(key)
+            except ValueError:
+                return None
+            for range_key, (bottom, top) in self.ranges.items():
+                if key >= bottom and key <= top:
+                    return range_key
         return None
 
-    def int_str_confuse(self, key: str | int) -> None | Any:
+    def int_str_confuse(self, key: str | int | float | NAType | None) -> None | Any:
         """Handles conversion between integer and string keys.
 
         Args:
@@ -155,10 +164,9 @@ class UtdFormat(dict[Any, Any]):
         """Sets the key 'other' to lowercase if mixed cases are found."""
         found = False
         for key in self:
-            if isinstance(key, str):
-                if key.lower() == "other":
-                    found = True
-                    break
+            if isinstance(key, str) and key.lower() == "other":
+                found = True
+                break
         if found:
             value = self[key]
             del self[key]
@@ -174,9 +182,8 @@ class UtdFormat(dict[Any, Any]):
             if self.check_if_na(key):
                 self.na_value = value
                 return True
-        else:
-            self.na_value = None
-            return False
+        self.na_value = None
+        return False
 
     @staticmethod
     def check_if_na(key: str | Any) -> bool:
@@ -191,14 +198,14 @@ class UtdFormat(dict[Any, Any]):
         if pd.isna(key):
             return True
         if isinstance(key, str):
-            if key in [".", "none", "", "NA", "<NA>", "<NaN>"]:
+            if key in [".", "none", "None", "", "NA", "<NA>", "<NaN>", "nan", "NaN"]:
                 return True
         return False
 
     def store(
         self,
         format_name: str,
-        output_path: str = PROD_FORMATS_PATH,
+        output_path: str | Path = PROD_FORMATS_PATH,
         force: bool = False,
     ) -> None:
         """Stores the UtdFormat instance in a specified output path.
@@ -211,6 +218,8 @@ class UtdFormat(dict[Any, Any]):
         Raises:
             ValueError: If storing a cached UtdFormat might lead to an unexpectedly large number of keys.
         """
+        if not isinstance(output_path, Path):
+            output_path = Path(output_path)
         if self.cached and not force:
             error_msg = """Storing a cached UtdFormat might lead to many more keys than you want.
             Please check the amount of keys before storing.
@@ -220,7 +229,7 @@ class UtdFormat(dict[Any, Any]):
 
 
 def info_stored_formats(
-    select_name: str = "", path_prod: str = PROD_FORMATS_PATH
+    select_name: str = "", path_prod: str | Path = PROD_FORMATS_PATH
 ) -> pd.DataFrame:
     """In Prodsone, list all json-format-files in format folder.
 
@@ -238,16 +247,20 @@ def info_stored_formats(
     Raises:
         OSError: If the specified path_prod directory does not exist.
     """
+    if not isinstance(path_prod, Path):
+        path_prod = Path(path_prod)
     if not os.path.isdir(path_prod):
         raise OSError(f"Cant find folder {path_prod}")
-    all_paths = glob.glob(f"{path_prod}*.json")
+    all_paths = glob.glob(str(path_prod) + "/*.json")
     all_names = [
         "_".join(os.path.split(p)[1].split(".")[0].split("_")[:-1]) for p in all_paths
     ]
     all_dates_original = [
         os.path.split(p)[1].split(".")[0].split("_")[-1] for p in all_paths
     ]
-    all_dates_datetime = [dateutil.parser.parse(d) for d in all_dates_original]
+    all_dates_datetime = [
+        datetime.datetime.strptime(d, DATETIME_FORMAT) for d in all_dates_original
+    ]
     df_info = pd.DataFrame(
         {
             "name": all_names,
@@ -281,6 +294,7 @@ def get_path(name: str, date: str = "latest") -> str | None:
     df_info = df_info.sort_values("date_datetime", ascending=False)
     if len(df_info):
         for _, row in df_info.iterrows():
+            print(row["date_datetime"], date_time)
             if row["date_datetime"] < date_time:
                 format_date = row["date_datetime"]
                 break
@@ -289,22 +303,31 @@ def get_path(name: str, date: str = "latest") -> str | None:
     return None
 
 
-def get_format(name: str, date: str = "latest") -> UtdFormat | None:
+def get_format(
+    name: str = "", date: str = "latest", filepath: str | Path | None = ""
+) -> UtdFormat | None:
     """Retrieves the format from a json-format-file, dependent on the name (start of filename).
 
     Args:
         name (str): Name of the format.
         date (str): Date string to find the format for. Defaults to "latest". If a datetime string, the format with the closest date will be returned.
+        filepath (str): Send in the full path to the format directly, this will ignore the name and date args.
 
     Returns:
         dict or defaultdict: The formatted dictionary or defaultdict for the specified format and date. If the format contains a "other" key, a defaultdict will be returned. If the
             format contains the SAS-value for missing: ".", or another recognized "empty-datatype":
             Many known keys for empty values, will be inserted in the dict, to hopefully map these correctly.
+
+    Raises:
+        ValueError: If no name or filepath is specified.
     """
-    path = get_path(name, date)
-    print("Getting format from", path)
-    if path:
-        with open(path) as format_json:
+    if not name and not filepath:
+        raise ValueError("Please specify a name or filepath.")
+    if not filepath:
+        filepath = get_path(name, date)
+    print("Getting format from", filepath)
+    if filepath:
+        with open(filepath) as format_json:
             ord_dict = json.load(format_json)
         return UtdFormat(ord_dict)
     return None
@@ -312,7 +335,7 @@ def get_format(name: str, date: str = "latest") -> UtdFormat | None:
 
 def store_format_prod(
     formats: dict[str, UtdFormat] | UtdFormat,
-    output_path: str = PROD_FORMATS_PATH,
+    output_path: str | Path = PROD_FORMATS_PATH,
 ) -> None:
     """Takes a nested or unnested dictionary and saves it to prodsone-folder as a timestamped json.
 
@@ -326,6 +349,8 @@ def store_format_prod(
     Raises:
         NotImplementedError: If the provided formats structure is neither nested nor unnested dictionaries of strings.
     """
+    if not isinstance(output_path, Path):
+        output_path = Path(output_path)
     if all([isinstance(x, dict) for x in formats.values()]):
         nested = True
     elif all([isinstance(x, str) for x in formats.values()]):
@@ -334,20 +359,20 @@ def store_format_prod(
     else:
         raise NotImplementedError("Expecting a nested or unnested dict of strings.")
 
-    now = datetime.datetime.now().isoformat("T", "seconds")
+    now = datetime.datetime.now().isoformat("T", "seconds").replace(":", "-")
     if nested:
         formats_nested: dict[str, UtdFormat] = formats
         for format_name, format_content in formats_nested.items():
             if is_different_from_last_time(format_name, format_content):
                 with open(
-                    os.path.join(output_path, f"{format_name}_{now}.json"), "w"
+                    output_path / (format_name + "_" + now + ".json"), "w"
                 ) as json_file:
                     json.dump(format_content, json_file)
     elif not nested and isinstance(formats, UtdFormat):
         format_not_nested: UtdFormat = formats
         if is_different_from_last_time(format_name, format_not_nested):
             with open(
-                os.path.join(output_path, f"{format_name}_{now}.json"), "w"
+                output_path / (format_name + "_" + now + ".json"), "w"
             ) as json_file:
                 json.dump(format_not_nested, json_file)
 
