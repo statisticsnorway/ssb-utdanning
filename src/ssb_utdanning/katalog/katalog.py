@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 from fagfunksjoner import auto_dtype
 
 from ssb_utdanning.config import REGION, KATALOGER
-from ssb_utdanning.paths.get_paths import get_path_latest
+from ssb_utdanning.paths import get_paths
 from ssb_utdanning import logger
 from ssb_utdanning.data import utd_data
 
@@ -47,45 +47,44 @@ class UtdKatalog(utd_data.UtdData):
 
     def __init__(
         self,
-        path: str | Path,
-        data: pd.DataFrame | None = None,
         key_cols: list[str] | str | None = None,
+        data: pd.DataFrame | None = None,
+        path: Path | CloudPath | GSPath | str = "",
+        glob_pattern: str = "",
+        exclude_keywords: list[str] | None = None,
     ) -> None:
         """Create an instance of UtdKatalog with some baseline attributes."""
-        
+                
+        # Correct for the  using "shortname" like "skolereg"
+        if isinstance(path, str) and "/" not in path:
+            glob_patterns = [v["glob"] for k, v in KATALOGER.items() if k.lower().startswith(path.lower())]
+            if glob_patterns:
+                self.path = get_paths.get_path_latest(glob_patterns[0])
+                
         self._correct_check_path(path)
         if data is None:
             self.get_data()
         else:
             self.data = data
         self._metadata_from_path()
-        
-        # Correct for the  using "shortname" like "skolereg"
-        if isinstance(path, str) and "/" not in path:
-            glob_patterns = [v["glob"] for k, v in KATALOGER.items() if k.lower().startswith(path.lower())]
-            if glob_patterns:
-                self.path = get_path_latest(glob_patterns[0])
                 
+        # Get key_cols from config if possible, make sure it is a list of strings
         if key_cols is None:
-            print("key_cols er None")
             key_cols_from_conf = [v["key_cols"] for k, v in KATALOGER.items() if k.lower().startswith(path.lower())]
-            print(key_cols_from_conf)
+            logger.info("Found key cols in config: %s", key_cols_from_conf)
             if key_cols_from_conf:
-                print("inni her")
                 self.key_cols = key_cols_from_conf[0]
-            
         elif isinstance(key_cols, str):
             self.key_cols = [key_cols]
         else:
             self.key_cols = key_cols       
 
-        
-
-        
-
-
     def diff_against_dataset(
-        self, dataset: pd.DataFrame, key_col_data: str = "", merge_both: bool = False
+        self,
+        dataset: pd.DataFrame,
+        key_col_data: str = "",
+        merge_both: bool = False,
+        return_lengths: bool = False,
     ) -> dict[str, pd.DataFrame]:
         """Compares the idents in a dataset against the Katalog.
 
@@ -113,13 +112,19 @@ class UtdKatalog(utd_data.UtdData):
                 left_on=key_col_data,
                 right_on=self.key_cols,
             )
-        return {
+        
+        result = {
             "only_in_dataset": dataset[~dataset[key_col_data].isin(both_ids)].copy(),
             "in_both": in_both_df,
             "only_in_katalog": self.data[
                 ~self.data[self.key_cols].isin(both_ids)
             ].copy(),
         }
+        if return_lengths:
+            for key, value in result.items():
+                result[key] = len(value)
+            return result
+        return result
 
     def to_dict(
         self,
