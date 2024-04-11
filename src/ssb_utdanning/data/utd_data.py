@@ -14,7 +14,6 @@ from ssb_utdanning import logger
 from ssb_utdanning.config import REGION
 from ssb_utdanning.paths import get_paths, versioning
 
-
 class OverwriteMode(enum.Enum):
     """Enum for overwrite codes."""
     overwrite = "overwrite"
@@ -34,11 +33,12 @@ class UtdData:
         elif not path and not glob_pattern:
             error_msg = "You must set either path, or glob_pattern."
             raise ValueError(error_msg)
-            
+         
         # Gets a path using glob-pattern
         if glob_pattern and not path:
             path = self._find_last_glob(glob_pattern, exclude_keywords)
-        self._correct_check_path(path)
+        self.path = path
+        self._correct_check_path(self.path)
         if data is None:
             self.get_data()
         else:
@@ -129,15 +129,12 @@ class UtdData:
                     f"Can only open parquet and sas7bdat, you gave me {suffix}"
                 )
         if REGION == "DAPLA":            
-            if path.suffix == ".parquet":
-                df_get_data: pd.DataFrame = dp.read_pandas(path)
-            elif path.suffix == ".sas7bdat":
+            if path.suffix == ".sas7bdat":
                 with dp.FileClient().gcs_open(path, "r") as sasfile:
                     df_get_data = auto_dtype(pd.read_sas(sasfile))
             else:
-                raise OSError(
-                    f"Can only open parquet and sas7bdat, you gave me {suffix}"
-                )
+                df_get_data: pd.DataFrame = dp.read_pandas(path)
+
         
         self.data = df_get_data
         return df_get_data
