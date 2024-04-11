@@ -62,6 +62,7 @@ ipykernel = ">=6.0.0"
 
 
 
+
 [[tool.poetry.source]]
 name = "nexus"
 url = "http://pl-nexuspro-p.ssb.no:8081/repository/pypi-proxy/simple"
