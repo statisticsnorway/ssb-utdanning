@@ -19,6 +19,7 @@ import os
 from datetime import datetime
 from io import StringIO
 from pathlib import Path
+from cloudpathlib import CloudPath, GSPath, GSClient
 from typing import TYPE_CHECKING
 
 import dapla as dp
@@ -34,20 +35,20 @@ if TYPE_CHECKING:
 # Local imports
 from fagfunksjoner import auto_dtype
 
-from ssb_utdanning.config import REGION, KATALOGER
+from ssb_utdanning.config import REGION
 from ssb_utdanning.paths import get_paths
 from ssb_utdanning import logger
-from ssb_utdanning.data import utd_data
+from ssb_utdanning.data.utd_data import UtdData
 
 REQUIRED_COLS = ["username", "edited_time", "expiry_date", "validity"]
 
 
-class UtdKatalog(utd_data.UtdData):
-    """The main class for Katalogs at 360."""
+class UtdKatalog(UtdData):
+    """The main class for Katalogs."""
 
     def __init__(
         self,
-        key_cols: list[str] | str | None = None,
+        key_cols: list[str] | str,
         data: pd.DataFrame | None = None,
         path: Path | CloudPath | GSPath | str = "",
         glob_pattern: str = "",
@@ -55,37 +56,25 @@ class UtdKatalog(utd_data.UtdData):
     ) -> None:
         """Create an instance of UtdKatalog with some baseline attributes."""
                 
-        # Correct for the  using "shortname" like "skolereg"
-        if isinstance(path, str) and "/" not in path:
-            glob_patterns = [v["glob"] for k, v in KATALOGER.items() if k.lower().startswith(path.lower())]
-            if glob_patterns:
-                self.path = get_paths.get_path_latest(glob_patterns[0])
-                
-        self._correct_check_path(path)
-        if data is None:
-            self.get_data()
+        super().__init__(data, path, glob_pattern, exclude_keywords)
+        
+        if isinstance(key_cols, str):
+            self.key_cols: list[str] = [key_cols]
         else:
-            self.data = data
-        self._metadata_from_path()
-                
-        # Get key_cols from config if possible, make sure it is a list of strings
-        if key_cols is None:
-            key_cols_from_conf = [v["key_cols"] for k, v in KATALOGER.items() if k.lower().startswith(path.lower())]
-            logger.info("Found key cols in config: %s", key_cols_from_conf)
-            if key_cols_from_conf:
-                self.key_cols = key_cols_from_conf[0]
-        elif isinstance(key_cols, str):
-            self.key_cols = [key_cols]
-        else:
-            self.key_cols = key_cols       
+            if not all([isinstance(col, str) for col in key_cols]):
+                error_msg = "Excpecting all key_cols in iterable to be strings."
+                raise TypeError(error_msg)
+            self.key_cols = key_cols
+    
 
-    def diff_against_dataset(
+    def merge_on(
         self,
-        dataset: pd.DataFrame,
-        key_col_data: str = "",
-        merge_both: bool = False,
+        dataset: pd.DataFrame | UtdData,
+        key_col_in_data: str,
+        keep_cols: list[str] | None = None,
+        merge: bool = False,
         return_lengths: bool = False,
-    ) -> dict[str, pd.DataFrame]:
+    ) -> pd.DataFrame:
         """Compares the idents in a dataset against the Katalog.
 
         Args:
@@ -99,33 +88,43 @@ class UtdKatalog(utd_data.UtdData):
                 - in_both: A dataframe containing the rows in the Katalog that are also in the dataset.
                 - only_in_katalog: A dataframe containing the rows in the Katalog that are not in the dataset.
         """
-        if not key_col_data:
-            key_col_data = self.key_cols
-        ids_in_kat = list(self.data[self.key_cols].unique())
-        ids_in_dataset = list(dataset[key_col_data].unique())
-        both_ids = [ident for ident in [ids_in_dataset] if ident in ids_in_kat]
-        in_both_df = self.data[self.data[self.key_cols].isin(both_ids)].copy()
-        if merge_both:
-            in_both_df = dataset[dataset[key_col_data].isin(both_ids)].merge(
-                (in_both_df.drop(columns=REQUIRED_COLS)),
-                how="left",
-                left_on=key_col_data,
-                right_on=self.key_cols,
-            )
         
-        result = {
-            "only_in_dataset": dataset[~dataset[key_col_data].isin(both_ids)].copy(),
-            "in_both": in_both_df,
-            "only_in_katalog": self.data[
-                ~self.data[self.key_cols].isin(both_ids)
-            ].copy(),
-        }
-        if return_lengths:
-            for key, value in result.items():
-                result[key] = len(value)
-            return result
+        if keep_cols is None:
+            keep_cols_kat: set[str] = set(self.data.columns)
+            keep_cols_kat.remove(key_col_in_data)
+        else:
+            keep_cols_kat = set(keep_cols)
+        parts: list[pd.DataFrame] = []
+        if isinstance(dataset, pd.DataFrame):
+            rest: pd.DataFrame = dataset
+        else:
+            rest = dataset.data
+        
+        for col in self.key_cols:
+            if (self.data[col].value_counts() > 1).any():
+                error_msg = f"Looks like duplicate entries in the catalog column {col}"
+                raise ValueError(error_msg)
+            keep_cols_copy = keep_cols_kat.copy()
+            keep_cols_copy.add(col)
+            temp = rest.merge(
+                self.data[list(keep_cols_copy)],
+                left_on=key_col_in_data,
+                right_on=col,
+                how="left",
+                indicator=True,
+            )
+            new_cat = f"{col}_both"
+            temp["_merge"] = temp["_merge"].cat.add_categories([new_cat])
+            temp.loc[temp["_merge"] == "both", "_merge"] = new_cat
+            parts += [temp[temp["_merge"] == new_cat].copy()]
+            rest = rest[~rest[key_col_in_data].isin(self.data[col])]
+        parts += [rest]
+        result = pd.concat(parts)
+        result["_merge"] = result["_merge"].fillna("left_only")
+        logger.info("\n%s", result["_merge"].value_counts(dropna=False))
         return result
-
+    
+            
     def to_dict(
         self,
         col: str = "",

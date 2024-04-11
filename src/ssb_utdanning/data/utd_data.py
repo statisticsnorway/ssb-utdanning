@@ -43,7 +43,8 @@ class UtdData:
             self.get_data()
         else:
             self.data = data
-        self._metadata_from_path()
+        if self.path.is_file():
+            self._metadata_from_path()
         
 
     def __str__(self) -> str:

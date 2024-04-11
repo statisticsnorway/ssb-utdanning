@@ -45,7 +45,9 @@ formatter = ColoredFormatter(
 )
 handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(formatter)
+logger = logging.getLogger()
+while logger.hasHandlers():
+    logger.removeHandler(logger.handlers[0])
 logger = logging.getLogger(__name__)
-logger.handlers[:] = []
-logger.addHandler(handler)
+#logger.addHandler(handler)
 logger.setLevel(logging.INFO)
