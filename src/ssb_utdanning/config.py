@@ -48,5 +48,4 @@ else:
             "glob": f"/ssb/stamme01/utd/kat/skolereg/skolereg_p{FOUR_DIGITS}-{TWO_DIGITS}_v*.parquet",
             "key_cols": ["orgnr", "orgnrbed"],
         }
-
     }

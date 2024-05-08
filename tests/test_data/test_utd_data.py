@@ -1,14 +1,15 @@
+import os
 from ssb_utdanning import UtdData
 from pathlib import Path
 import unittest
-import os
 import pandas as pd
 from create_mock_data import create_mock_data
 import shutil
 import glob
 import sys
-
 from string import digits
+# from ssb_utdanning.config import REGION
+os.environ['DAPLA_REGION'] = 'ON_PREM'
 
 
 class TestUtdData(unittest.TestCase):
@@ -69,9 +70,12 @@ class TestUtdData(unittest.TestCase):
         self.assertIsInstance(data.data, pd.DataFrame)
         self.assertTrue(self.data.equals(data.data))
         
-    def test_str(self):
-        data = UtdData(self.data, self.path_to_file)
-        print(str(data))
+    def test_str_(self):
+        self.setUp()
+        data = UtdData(path=self.path_to_file)
+        self.assertEqual(data.path.__str__(), str(self.path_to_file))
+        # print(data.path.__str__())
+        
         
     def test_correct_check_path(self):
         self.setUp()
@@ -98,6 +102,29 @@ class TestUtdData(unittest.TestCase):
         data = UtdData(path=path_bumped)
         data.path=self.path_to_file
         self.assertTrue(data.get_latest_version_path() == path_bumped)
+    
+    def test_save(self):
+        self.setUp()
+        data = UtdData(path=self.path_to_file)
+        data.save(path=self.path_to_file)
+        del data
+        self.setUp()
+        data = UtdData(path=self.path_to_file)
+        data.save(path=self.path_to_file,
+                 overwrite_mode='filebump')
+        del data
+        self.setUp()
+        data = UtdData(path=self.path_to_file)
+        with self.assertRaises(AttributeError):
+            data.save(path=self.path_to_file,
+                      overwrite_mode='non_existant_mode')
+            
+        del data
+        self.setUp()
+        data = UtdData(path=self.path_to_file)
+        with self.assertRaises(OSError):
+            data.save(path=self.path_to_file,
+                      bump_version=False)
 
         
     def tearDown(self) -> None:
@@ -108,16 +135,14 @@ class TestUtdData(unittest.TestCase):
 # test = TestUtdData()
 # test.setUp()
 # test.test_init()
+# test.test_str_()
 # test.test_correct_check_path()
 # test.test_get_latest_version_path()
-# test.test_get_data()
-#test.tearDown()
+# test.test_save()
+# test.tearDown()
+# +
+# os.environ.get('DAPLA_REGION')
 # -
 
-glob.glob('mock_data/*')
-
-os.environ['DAPLA_REGION'] = 'DAPLA'
-# del os.environ['DAPLA_REGION']
-os.environ.get("DAPLA_REGION", "ON_PREM")
 
 

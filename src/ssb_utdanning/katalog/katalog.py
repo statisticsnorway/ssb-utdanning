@@ -55,7 +55,7 @@ class UtdKatalog(UtdData):
         exclude_keywords: list[str] | None = None,
     ) -> None:
         """Create an instance of UtdKatalog with some baseline attributes."""
-                
+     
         super().__init__(data, path, glob_pattern, exclude_keywords)
         
         if isinstance(key_cols, str):
@@ -91,7 +91,8 @@ class UtdKatalog(UtdData):
         
         if keep_cols is None:
             keep_cols_kat: set[str] = set(self.data.columns)
-            keep_cols_kat.remove(key_col_in_data)
+            # keep_cols_kat.remove(key_col_in_data)
+            keep_cols_kat = keep_cols_kat - set(self.key_cols)
         else:
             keep_cols_kat = set(keep_cols)
         parts: list[pd.DataFrame] = []
@@ -102,8 +103,9 @@ class UtdKatalog(UtdData):
         
         for col in self.key_cols:
             if (self.data[col].value_counts() > 1).any():
-                error_msg = f"Looks like duplicate entries in the catalog column {col}"
-                raise ValueError(error_msg)
+                logger.warning(f"Looks like duplicate entries in the catalog column {col}")
+                # error_msg = f"Looks like duplicate entries in the catalog column {col}"
+                # raise ValueError(error_msg)
             keep_cols_copy = keep_cols_kat.copy()
             keep_cols_copy.add(col)
             temp = rest.merge(
@@ -122,6 +124,8 @@ class UtdKatalog(UtdData):
         result = pd.concat(parts)
         result["_merge"] = result["_merge"].fillna("left_only")
         logger.info("\n%s", result["_merge"].value_counts(dropna=False))
+        if len(result)>len(dataset):
+            logger.warning('Merge resulted in additional rows. Duplicated may need to be handled') 
         return result
     
             
@@ -144,7 +148,7 @@ class UtdKatalog(UtdData):
             dict[str, str]: A dictionary of the two columns from the Katalog.
         """
         if not key_col:  # If not passed in to function
-            key_col = self.key_cols
+            key_col = self.key_cols[0]
         if not key_col:  # If not registred in class-instance
             key_col = self.data.columns[0]  # Just pick the first column
         if not col:
@@ -187,7 +191,7 @@ class UtdKatalog(UtdData):
         if not data_key_col_name:
             data_key_col_name = catalog_key_col_name
         if not data_key_col_name:
-            data_key_col_name = self.key_cols
+            data_key_col_name = self.key_cols[0]
         if not data_key_col_name:
             self.data.columns[0]
         if not catalog_key_col_name:

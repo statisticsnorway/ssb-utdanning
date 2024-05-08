@@ -14,6 +14,7 @@ from ssb_utdanning import logger
 from ssb_utdanning.config import REGION
 from ssb_utdanning.paths import get_paths, versioning
 
+
 class OverwriteMode(enum.Enum):
     """Enum for overwrite codes."""
     overwrite = "overwrite"
@@ -44,8 +45,7 @@ class UtdData:
         else:
             self.data = data
         if self.path.is_file():
-            self._metadata_from_path()
-        
+            self._metadata_from_path() 
 
     def __str__(self) -> str:
         """Print some of the content of the Data."""
@@ -57,7 +57,10 @@ class UtdData:
         buf = StringIO()
         self.data.info(buf=buf)
         result += buf.getvalue()
-        return result       
+        return result
+    
+    def __len__(self):
+        return len(self.data)
 
     def _correct_check_path(self, path: Path | CloudPath | GSPath | str) -> None:
         """Sas-people are used to not specifying file-extension, this method makes an effort looking for the file in storage."""
@@ -65,10 +68,10 @@ class UtdData:
         self.path: Path | CloudPath
         if REGION == "ON_PREM" and isinstance(path, str):
             self.path = Path(path)
-        elif REGION == "DAPLA" and isinstance(path, str):
-            client = GSClient(credentials=dp.AuthClient.fetch_google_credentials())
-            self.path = GSPath(path, client=client)
-            
+        elif REGION == "BIP" and isinstance(path, str):
+            # client = GSClient(credentials=dp.AuthClient.fetch_google_credentials())
+            # self.path = GSPath(path, client=client)
+            self.path = GSPath(path)
         self.periods = get_paths.get_path_dates(self.path)
         
         if not self.path.suffix == ".parquet" or self.path.suffix  == ".sas7bdat":
@@ -129,7 +132,7 @@ class UtdData:
                 raise OSError(
                     f"Can only open parquet and sas7bdat, you gave me {suffix}"
                 )
-        if REGION == "DAPLA":            
+        if REGION == "BIP":            
             if path.suffix == ".sas7bdat":
                 with dp.FileClient().gcs_open(path, "r") as sasfile:
                     df_get_data = auto_dtype(pd.read_sas(sasfile))
@@ -173,20 +176,29 @@ class UtdData:
             None
         """
         # Replace string with enum attr
+        print(overwrite_mode, type(overwrite_mode))
         if isinstance(overwrite_mode, str):
             overwrite_mode_enum = getattr(OverwriteMode, overwrite_mode)
+            try:
+                overwrite_mode_enum = getattr(OverwriteMode, overwrite_mode)
+            except AttributeError as e:
+                overwrite_mode_enum = OverwriteMode.NONE
+                logger.warning(f"Set the existing_file parameter as one of: {[x.value for x in iter(OverwriteMode)]}")
         else:
             overwrite_mode_enum = overwrite_mode
-        # Check that overwrite_mode now is in enum
-        if overwrite_mode_enum not in OverwriteMode:
-            raise ValueError(
-                f"Set the existing_file parameter as one of: {[x.value for x in iter(OverwriteMode)]}"
-            )
+        # print(overwrite_mode_enum)
+        # else:
+        # print(overwrite_mode_enum)
+        # # Check that overwrite_mode now is in enum
+        # if overwrite_mode_enum not in [x.value for x in iter(OverwriteMode)]:
+        #     raise ValueError(
+        #         f"Set the existing_file parameter as one of: {[x.value for x in iter(OverwriteMode)]}"
+        #     )
         
         if not path:
             path = self.path
         pathpath: Path | CloudPath
-        if isinstance(path, str) and REGION == "DAPLA":
+        if isinstance(path, str) and REGION == "BIP":
             pathpath = CloudPath(path)
         else:
             pathpath = Path(path)
@@ -242,7 +254,7 @@ class UtdData:
 
         if REGION == "ON_PREM":
             self.data.to_parquet(pathpath)
-        elif REGION == "DAPLA":
+        elif REGION == "BIP":
             dp.write_pandas(self.data, pathpath)
         
         # Update path in metadata before saving

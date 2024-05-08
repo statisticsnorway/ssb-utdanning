@@ -1,337 +1,217 @@
 import os
-
 import pandas as pd
-
 from ssb_utdanning import UtdKatalog
+from ssb_utdanning import UtdData
 from ssb_utdanning import logger
-from ssb_utdanning.config import SKOLEREG_PATH
-from ssb_utdanning.config import VIGO_PATH
+from ssb_utdanning.config import SKOLEREG_PATH, VIGO_PATH
+import ssb_utdanning.paths.get_paths as utdpaths
+import datetime
+import dateutil.parser
 
 
-def get_skolereg(aar: str | int = "latest") -> pd.DataFrame:
-    """Get skolereg by year from prodsone path, with option to get the latest version as default.
+def get_skolereg(year: str | int = 'latest',
+                 sub_category: str = ''
+                ) -> UtdKatalog:
+    """
+    Retrieves an `UtdKatalog` instance representing school registration data for a given year
+    and sub-category. If no sub-category is specified, it excludes all predefined categories, i.e barnehage, vgskoler, grunnskoler, test.
 
     Args:
-        aar (str | int): The year you want to get the skolereg from.
+        year (str | int, optional): The year for which the data is to be retrieved. Can be
+                                    an integer representing the year or 'latest' for the
+                                    most recent data. Defaults to 'latest'.
+        sub_category (str, optional): A specific sub-category of school data to be retrieved.
+                                      Options include 'barnehage', 'vgskoler', 'test', 'grunnskoler'.
+                                      Defaults to an empty string, which means no specific sub-category.
 
     Returns:
-        pd.DataFrame: The opened dataframe of the available skolereg.
+        UtdKatalog: An instance of UtdKatalog configured with the appropriate file pattern,
+                    key columns, and exclusions based on the inputs.
 
     Raises:
-        ValueError: If a single skolereg for opening, cant be determined.
+        ValueError: If the specified sub-category is not recognized.
     """
-    # denne delen må kanskje  oppdateres når det er bestemt hvordan vi skal håndtere skolereg
-    files = os.listdir(SKOLEREG_PATH)
-    files = [
-        file.split("_")[-1] for file in files if file.split("_")[0] == "testskolereg"
-    ]
-
-    skolereg_files = [
-        file for file in files if file.endswith(".parquet") and file.startswith("g")
-    ]
-
-    skolereg_files.sort(reverse=True)
-    if aar == "latest":
-        skolereg_filename = skolereg_files[0]
-        logger.info("Henter nyeste skoleregfil %s", skolereg_filename)
+    possible_subcategories = ['barnehage', 'vgskoler', 'test', 'grunnskoler', '']
+    if sub_category not in possible_subcategories:
+        raise ValueError(
+            f"sub-category {sub_category} not found in pre-defined sub-categories: {possible_subcategories}")
+    if not sub_category:
+        exclude_keywords = possible_subcategories[:-1]
     else:
-        skolereg_files_filtered = [
-            file for file in skolereg_files if file[1:5] == str(aar)
-        ]
-        if len(skolereg_files_filtered) != 1:
-            raise ValueError("Cant pick a single skolereg-file.")
-        skolereg_filename = skolereg_files_filtered[0]
-        logger.info("Henter skoleregfil %s", skolereg_filename)
+        exclude_keywords = [cat for cat in possible_subcategories if cat not in sub_category]
+        
+    if year=='latest':
+        return UtdKatalog(glob_pattern=SKOLEREG_PATH + f'skolereg_{sub_category}*.parquet',
+                          key_cols=['orgnr', 'orgnrbed'],
+                          exclude_keywords=exclude_keywords
+                     )
+    return UtdKatalog(glob_pattern=SKOLEREG_PATH + f'skolereg_{sub_category}*{year}*.parquet',
+                      key_cols=['orgnr', 'orgnrbed'],
+                      exclude_keywords=exclude_keywords
+                     )
 
-    skolereg_filename = "testskolereg_" + skolereg_filename
-    return UtdKatalog(SKOLEREG_PATH + skolereg_filename)
 
-
-def get_vigo_skole(aar: str | int = "latest") -> pd.DataFrame:
-    """Get vigo skole-file by year from prodsone path, with option to get the latest version as default.
+def get_vigo_skole(year: str | int = 'latest')-> UtdKatalog:
+    """
+    Retrieves an `UtdKatalog` instance representing VIGO school data for a specified year.
+    If no year is specified, it fetches data for the most recent year.
 
     Args:
-        aar (str | int): The year you want to get the vigo-skole file from.
+        year (str | int, optional): The year for which the data is to be retrieved. Can be
+                                    an integer representing the year or 'latest' for the
+                                    most recent data. Defaults to 'latest'.
 
     Returns:
-        pd.DataFrame: The opened dataframe of the available vigo-skole-file.
+        UtdKatalog: An instance of UtdKatalog configured with the appropriate file pattern
+                    and key columns for accessing VIGO school data.
+    """
+    if year == 'latest':
+        return UtdKatalog(glob_pattern=VIGO_PATH + 'vigo_skole_testfil_slett*.parquet',
+                          key_cols=['SKOLENR']
+                         )
+    return UtdKatalog(glob_pattern=VIGO_PATH + f'vigo_skole_testfil_slett*{year}*.parquet',
+                          key_cols=['SKOLENR']
+                         )
+
+
+def orgnrkontroll_func(data: pd.DataFrame | UtdData,
+                  year: str | int = 'latest',
+                  skolereg_keep_cols: set[str] | list[str] | None = None,
+                  vigo_keep_cols: set[str] | list[str] | None = None,
+                  orgnr_col_innfil: str = "orgnr",
+                  orgnrbed_col_innfil: str = "orgnrbed",
+                  fskolenr_col_innfil: str = 'fskolenr',
+                  skolereg_subcategory: str = ''
+                 ) -> pd.DataFrame:
+    """
+    Performs data validation and merging operations on educational data from different catalogs.
+    Ensures the integrity of organizational number fields, merges additional data from school
+    and VIGO catalogs, and handles missing data or discrepancies in organizational numbers.
+
+    Args:
+        data (pd.DataFrame | UtdData): The input dataset, either as a DataFrame or UtdData instance.
+        year (str | int, optional): The year of the data to process. Defaults to 'latest'.
+        skolereg_keep_cols (set[str] | list[str] | None, optional): Columns to keep from the skolereg data.
+        vigo_keep_cols (set[str] | list[str] | None, optional): Columns to keep from the VIGO data.
+        orgnr_col_innfil (str, optional): Column name for organizational numbers in the input data. Defaults to "orgnr".
+        orgnrbed_col_innfil (str, optional): Column name for subsidiary organizational numbers in the input data. Defaults to "orgnrbed".
+        fskolenr_col_innfil (str, optional): Column name for school numbers in the input data. Defaults to "fskolenr".
+        skolereg_subcategory (str, optional): Subcategory of school data to filter from the skolereg data.
+
+    Returns:
+        pd.DataFrame | UtdData: The consolidated dataset after validation and merging operations.
 
     Raises:
-        ValueError: If a single vigo-skole-file for opening, cant be determined.
+        ValueError: If essential columns are missing or have duplicates in the input data.
+        TypeError: If 'skolereg_keep_cols' or 'vigo_keep_cols' are not provided in an appropriate format.
     """
-    # denne delen må oppdateres når det er bestemt hvordan vi skal håndtere vigo
-    files = os.listdir(VIGO_PATH)
-    files = [
-        file.split("_")[-1] for file in files if file.split("_")[0] == "testvigoskole"
-    ]
-    vigo_files = [
-        file for file in files if file.endswith(".parquet") and file.startswith("g")
-    ]
+    # import skolereg and vigo_skole
+    skolereg = get_skolereg(year=year, sub_category=skolereg_subcategory)
+    vigo = get_vigo_skole(year=year)
 
-    vigo_files.sort(reverse=True)
-    if aar == "latest":
-        vigo_filename = vigo_files[0]
-        logger.info("Henter nyeste vigo skolefil %s", vigo_filename)
-    else:
-        vigo_files_filtered = [file for file in vigo_files if file[1:5] == str(aar)]
-        if len(vigo_files_filtered) != 1:
-            raise ValueError("Cant pick a single vigo-skole file.")
-        vigo_filename = vigo_files_filtered[0]
-        logger.info("Henter vigo skolefil %s", vigo_filename)
-
-    vigo_filename = "testvigoskole_" + vigo_filename
-    return pd.read_parquet(VIGO_PATH + vigo_filename)
-
-
-def evaluate_skolereg_merge(
-    innfil: pd.DataFrame,
-    skolereg: pd.DataFrame,
-    orgnr_col_innfil: str = "orgnr",
-    orgnrbed_col_innfil: str = "orgnrbed",
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Find how many will merge on the two 'orgnr' variables.
-
-    Args:
-        innfil (pd.DataFrame): The dataframe to evaluate.
-        skolereg (pd.DataFrame): The dataframe to evaluate against.
-        orgnr_col_innfil (str): The column name of the 'orgnr' variable in the innfil. Defaults to 'orgnr'.
-        orgnrbed_col_innfil (str): The column name of the 'orgnrbed' variable in the innfil. Defaults to 'orgnrbed'.
-
-    Returns:
-        tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: Three dataframes, one for the orgnr-merge, one for the orgnrbed-merge, and one for the innfil-merge.
-    """
+    # initial checks
     
-    kobler_orgnr = innfil.loc[innfil[orgnr_col_innfil].isin(skolereg["orgnr"])]
-
-    logger.info(
-        "%s/%s rader fra innfila koblet mot skolereg med %s",
-        str(len(kobler_orgnr)),
-        str(len(innfil)),
-        orgnr_col_innfil,
-    )
-
-    koblet_ikke_orgnr = innfil.loc[~innfil[orgnr_col_innfil].isin(skolereg["orgnr"])]
-
-    kobler_orgnrbed = koblet_ikke_orgnr.loc[
-        koblet_ikke_orgnr[orgnrbed_col_innfil].isin(skolereg["orgnrbed"])
-    ]
-    logger.info(
-        "Av radene som ikke koblet på %s var det %s/%s rader som koblet på %s",
-        orgnr_col_innfil,
-        str(len(kobler_orgnrbed)),
-        str(len(koblet_ikke_orgnr)),
-        orgnrbed_col_innfil,
-    )
-
-    koblet_ikke = koblet_ikke_orgnr.loc[
-        ~koblet_ikke_orgnr[orgnrbed_col_innfil].isin(skolereg["orgnrbed"])
-    ]
-    logger.info(
-        "Totalt var det %s/%s rader fra innfila som ikke koblet på hverken %s eller %s",
-        str(len(koblet_ikke)),
-        str(len(innfil)),
-        orgnr_col_innfil,
-        orgnrbed_col_innfil,
-    )
-    return kobler_orgnr, kobler_orgnrbed, koblet_ikke
-
-
-def evaluate_vigo_skole_merge(
-    koblet_ikke_skolereg: pd.DataFrame,
-    vigo: pd.DataFrame,
-    fskolenr_innfil: str = "fskolenr",
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Evaluate the potential merge between vigo skole for the rows that did not match against skolereg.
-
-    Args:
-        koblet_ikke_skolereg (pd.DataFrame): The dataframe to evaluate.
-        vigo (pd.DataFrame): The dataframe to evaluate against.
-        fskolenr_innfil (str): The column name of the 'fskolenr' variable in the innfil. Defaults to 'fskolenr'.
-
-    Returns:
-        tuple[pd.DataFrame, pd.DataFrame]: Two dataframes, one for the fskolenr-merge, and one for the ones who did not merge.
-    """
-    logger.info(
-        "Evaluerer kobling mot vigo skoleverk for de %s radene på innfila som ikke koblet mot skolereg på orgnr/orgnrbed",
-        str(len(koblet_ikke_skolereg)),
-    )
-    kobler_fskolenr = koblet_ikke_skolereg.loc[
-        koblet_ikke_skolereg[fskolenr_innfil].isin(vigo["SKOLENR"])
-    ]
-    kobler_ikke_fskolenr = koblet_ikke_skolereg.loc[
-        ~koblet_ikke_skolereg[fskolenr_innfil].isin(vigo["SKOLENR"])
-    ]
-    logger.info(
-        "%s/%s koblet på 'fskolenr' mot vigo skoleverk.",
-        str(len(kobler_fskolenr)),
-        str(len(koblet_ikke_skolereg)),
-    )
-    return kobler_fskolenr, kobler_ikke_fskolenr
-
-
-def merge_skolereg(
-    kobler_orgnr: pd.DataFrame,
-    kobler_orgnrbed: pd.DataFrame,
-    skolereg_keep_cols: set[str] | None = None,
-    orgnr_col_innfil: str = "orgnr",
-    orgnrbed_col_innfil: str = "orgnrbed",
-    skolereg: pd.DataFrame | None = None,
-    aar: str | int = "latest",
-) -> pd.DataFrame:
-    """Merge skolereg on orgnr and orgnrbed, returning a concated dataframe of both merges.
-
-    Args:
-        kobler_orgnr (pd.DataFrame): The dataframe to merge on orgnr.
-        kobler_orgnrbed (pd.DataFrame): The dataframe to merge on orgnrbed?
-        skolereg_keep_cols (set[str] | None): The columns to keep from skolereg. Defaults to None.
-        orgnr_col_innfil (str): The column name of the 'orgnr' variable in the innfil. Defaults to 'orgnr'.
-        orgnrbed_col_innfil (str): The column name of the 'orgnrbed' variable in the innfil. Defaults to 'orgnrbed'.
-        skolereg (pd.DataFrame | None): The dataframe to merge on. Defaults to None.
-        aar (str | int): The year to use for the skolereg-file. Defaults to 'latest'.
-
-    Returns:
-        pd.DataFrame: The merged dataframe.
-    """
-    # optional import of skolereg
-    if not isinstance(skolereg, pd.DataFrame):
-        skolereg = get_skolereg(aar)
-
-    keep_cols_default = {"orgnr", "orgnrbed"}
-    if skolereg_keep_cols is None:
-        skolereg_keep_cols = keep_cols_default
-    # making sure 'orgnr'-variables are added to the list of variables to be merged from skolereg
-    skolereg_keep_cols.update(keep_cols_default)
-
-    # performing the merge
-    logger.info(
-        "Følgende variabler blir koblet på fra 'skolereg': %s", str(skolereg_keep_cols)
-    )
-    merged_orgnr = kobler_orgnr.merge(
-        skolereg[skolereg_keep_cols],
-        how="left",
-        left_on=orgnr_col_innfil,
-        right_on="orgnr",
-    )
-    merged_orgnrbed = kobler_orgnrbed.merge(
-        skolereg[skolereg_keep_cols],
-        how="left",
-        left_on=orgnrbed_col_innfil,
-        right_on="orgnrbed",
-    )
-    return pd.concat([merged_orgnr, merged_orgnrbed])
-
-
-def merge_vigo_skole(
-    kobler_fskolenr: pd.DataFrame,
-    fskolenr_innfil: str = "fskolenr",
-    vigo_keep_cols: set[str] | str = "all",
-    vigo: pd.DataFrame | None = None,
-) -> pd.DataFrame:
-    """Merge vigo skole-file onto the file resulting from the earlier run merge from skolereg.
-
-    Args:
-        kobler_fskolenr (pd.DataFrame): The dataframe to merge on.
-        fskolenr_innfil (str): The column name of the 'fskolenr' variable in the innfil. Defaults to 'fskolenr'.
-        vigo_keep_cols (set[str] | str): The columns to keep from the vigo file. Defaults to 'all'.
-        vigo (pd.DataFrame | None): The vigo file to merge on. Defaults to None.
-
-    Returns:
-        pd.DataFrame: The merged dataframe.
-
-    Raises:
-        TypeError: If vigo_keep_cols is not a set or a string.
-    """
-    # optional import of vigo
-    if not isinstance(vigo, pd.DataFrame):
-        vigo = get_vigo_skole()
-
-    # Making sure vigo_keep_cols is a set of unique column names, including the default
-    keep_cols_default = "SKOLENR"
-    if vigo_keep_cols == "all":
-        vigo_keep_cols_set = set(vigo.columns)
-    elif isinstance(vigo_keep_cols, str):
-        vigo_keep_cols_set = {vigo_keep_cols}
+    # check that orgnr-cols are not equal
+    if orgnr_col_innfil == orgnrbed_col_innfil:
+        raise ValueError(
+            f'Orgnr variables should not be equal. Insert two different variables, i.e. orgnr, orgnrbed')
+    
+    # verify that inn-data contains orgnr-cols and fskolenr-col
+    if isinstance(data, UtdData):
+        data_cols = list(data.data.columns)
+        if orgnr_col_innfil not in data_cols or orgnrbed_col_innfil not in data_cols:
+            raise ValueError(
+                f'Inndata does not contain both {orgnr_col_innfil} and {orgnrbed_col_innfil} variables')
+        if fskolenr_col_innfil not in data_cols:
+            raise ValueError(
+                f'Inndata does not contain variable {fskolenr_col_innfil}')
     else:
-        vigo_keep_cols_set = vigo_keep_cols
-    if not isinstance(vigo_keep_cols_set, set):
+        data_cols = list(data.columns)
+        if orgnr_col_innfil not in data_cols or orgnrbed_col_innfil not in data_cols:
+            raise ValueError(
+                f'Inndata does not contain both {orgnr_col_innfil} and {orgnrbed_col_innfil} variables')
+        if fskolenr_col_innfil not in data_cols:
+            raise ValueError(
+                f'Inndata does not contain variable {fskolenr_col_innfil}')
+            
+    # verify that keep cols variables are list or set
+    if type(skolereg_keep_cols) not in [list, set, type(None)]:
         raise TypeError(
-            "vigo_keep_cols må være en set eller en str. Dette er ikke en set."
-        )
-    vigo_keep_cols_set.add(keep_cols_default)
+            'Please insert skolereg_keep_cols as list or set')
+    if type(vigo_keep_cols) not in [list, set, type(None)]:
+        raise TypeError(
+            'Please insert vigo_keep_cols as list or set')
+    
+    # convert keep cols variabels to set
+    if isinstance(skolereg_keep_cols, list):
+        skolereg_keep_cols = set(skolereg_keep_cols)
+    elif isinstance(skolereg_keep_cols, type(None)):
+        skolereg_keep_cols = set(skolereg.data.columns)
+        skolereg_keep_cols.discard('orgnr')
+        skolereg_keep_cols.discard('orgnrbed')
+        skolereg_keep_cols.discard('orgnrforetak')
 
-    logger.info(
-        "Følgende variabler blir koblet på fra 'skolereg': %s", str(vigo_keep_cols)
-    )
-    return kobler_fskolenr.merge(
-        vigo, how="left", left_on=fskolenr_innfil, right_on=keep_cols_default
-    )
-
-
-# legge inn default lsite for skolereg_keep_cols, evt sett den til None, og sleng inn alle kolonnen?
-def orgnrkontroll(
-    innfil: pd.DataFrame,
-    skolereg_keep_cols: set[str] | None = None,
-    vigo_keep_cols: str | set[str] = "all",
-    orgnr_col_innfil: str = "orgnr",
-    orgnrbed_col_innfil: str = "orgnrbed",
-    fskolenr_innfil: str = "fskolenr",
-    aar: str | int = "latest",
-    concat_return: bool = False,
-) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Combines functions in the common pipeline for upper-secondary schools (VGU) to add info on orgnr.
-
-    Args:
-        innfil (pd.DataFrame): The dataframe to merge on.
-        skolereg_keep_cols (set[str] | None): The columns to keep from skolereg. Defaults to None.
-        vigo_keep_cols (str | list[str]): The columns to keep from the vigo file. Defaults to 'all'.
-        orgnr_col_innfil (str): The column name of the 'orgnr' variable in the innfil. Defaults to 'orgnr'.
-        orgnrbed_col_innfil (str): The column name of the 'orgnrbed' variable in the innfil. Defaults to 'orgnrbed'.
-        fskolenr_innfil (str): The column name of the 'fskolenr' variable in the innfil. Defaults to 'fskolenr'.
-        aar (str | int): The year to use for the skolereg-file. Defaults to 'latest'.
-        concat_return (bool): Whether to return a concatenated dataframe. Defaults to False.
-
-    Returns:
-        pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: The merged dataframe, or a tuple of the merged dataframe, the merged dataframe from skolereg, and the merged dataframe from vigo.
-    """
-    if skolereg_keep_cols is None:
-        skolereg_keep_cols = {"orgnr", "orgnrbed"}
-
-    if aar == "latest":
+    if isinstance(vigo_keep_cols, list):
+        vigo_keep_cols = set(vigo_keep_cols)
+        
+    if year == "latest":
         pass
-    elif len(str(aar)) == 4 and str(aar).isdigit():
+    elif len(str(year)) == 4 and str(year).isdigit():
         pass
     else:
-        aar = input("Formatet på aargangsvariabel er feil. Vi trenger YYYY:")
+        year = input("Formatet på aargangsvariabel er feil. Vi trenger YYYY:")
+    
+    # merge skolereg on data on orgnr
+    skolereg.key_cols = ['orgnr']
+    logger.info(f"Merging skolereg on dataset on variable '{orgnr_col_innfil}'")
+    skolereg_orgnr_merged=skolereg.merge_on(dataset = data,
+                                            key_col_in_data = orgnr_col_innfil,
+                                            keep_cols = skolereg_keep_cols
+                                           )
+    skolereg_not_merged_orgnr = skolereg_orgnr_merged.loc[skolereg_orgnr_merged['_merge'] != f'{skolereg.key_cols[0]}_both'].copy()
+    skolereg_orgnr_merged = skolereg_orgnr_merged.loc[skolereg_orgnr_merged['_merge'] == f'{skolereg.key_cols[0]}_both'].copy()
+    
+    # merge skolereg on data on orgnrbed
+    skolereg.key_cols = ['orgnrbed']
+    logger.info(f"Merging skolereg on dataset on variable '{orgnrbed_col_innfil}'")
+    skolereg_not_merged_orgnr = skolereg_not_merged_orgnr[data_cols]
+    skolereg_orgnrbed_merged=skolereg.merge_on(dataset = skolereg_not_merged_orgnr,
+                                               key_col_in_data = orgnrbed_col_innfil,
+                                               keep_cols = skolereg_keep_cols
+                                              )
+    skolereg_not_merged = skolereg_orgnrbed_merged.loc[skolereg_orgnrbed_merged['_merge'] != f'{skolereg.key_cols[0]}_both'].copy()
+    skolereg_orgnrbed_merged = skolereg_orgnrbed_merged.loc[skolereg_orgnrbed_merged['_merge'] == f'{skolereg.key_cols[0]}_both'].copy()
+    
+    # merging vigo_skole catalog on datset on fskolenr
+    logger.info(f"Merging vigo_skole on dataset on variable '{orgnr_col_innfil}'")
+    skolereg_not_merged = skolereg_not_merged[data_cols]
+    vigo_fskolenr_merged=vigo.merge_on(dataset = skolereg_not_merged,
+                                            key_col_in_data = fskolenr_col_innfil,
+                                            keep_cols = vigo_keep_cols
+                                           )
+    vigo_not_merged_fskolenr = vigo_fskolenr_merged.loc[vigo_fskolenr_merged['_merge'] != f'{vigo.key_cols[0]}_both'].copy()
+    vigo_fskolenr_merged = vigo_fskolenr_merged.loc[vigo_fskolenr_merged['_merge'] == f'{vigo.key_cols[0]}_both'].copy()
 
-    skolereg = get_skolereg(aar)
-    vigo = get_vigo_skole(aar)
+    # concatenating partially merged datasets
+    skolereg_orgnr_merged['_merge'] = orgnr_col_innfil
+    skolereg_orgnrbed_merged['_merge'] = orgnrbed_col_innfil
+    vigo_fskolenr_merged['_merge'] = fskolenr_col_innfil
+    vigo_not_merged_fskolenr['_merge'] = None
+    final = pd.concat([skolereg_orgnr_merged, skolereg_orgnrbed_merged, vigo_fskolenr_merged, vigo_not_merged_fskolenr])
+    
+    
+    # final status report
+    print('-'*80)
+    logger.info("Final merge report")
+    print('-'*80)
+    logger.info("\n%s", final["_merge"].value_counts(dropna=False))
+    if len(final)>len(data):
+        n_dups = len(final)-len(data)
+        logger.warning(f"{n_dups} duplicates were found")
+    else:
+        logger.info("Duplicates rows not detected")
+    if isinstance(data, UtdData):
+        return UtdData(data=final, path=data.path)
+    return final
 
-    kobler_orgnr, kobler_orgnrbed, koblet_ikke = evaluate_skolereg_merge(
-        innfil, skolereg, orgnr_col_innfil, orgnrbed_col_innfil
-    )
 
-    kobler_fskolenr, kobler_ikke_fskolenr = evaluate_vigo_skole_merge(koblet_ikke, vigo)
-
-    merged_w_skolereg = merge_skolereg(
-        kobler_orgnr,
-        kobler_orgnrbed,
-        skolereg_keep_cols,
-        orgnr_col_innfil,
-        orgnrbed_col_innfil,
-        skolereg,
-        aar,
-    )
-
-    merged_w_vigo = merge_vigo_skole(
-        kobler_fskolenr, fskolenr_innfil, vigo_keep_cols, vigo
-    )
-
-    if concat_return:
-        logger.info(
-            "Returnerer sammenslått objekt med alle rader fra innfilen som kobler på de ulike filene, og de som ikke kobler."
-        )
-        return pd.concat([merged_w_skolereg, merged_w_vigo, kobler_ikke_fskolenr])
-    logger.info(
-        "Returnerer 3 objekter: de som merger med skolereg, de som merger med vigo, de som ikke merger."
-    )
-    return merged_w_skolereg, merged_w_vigo, kobler_ikke_fskolenr

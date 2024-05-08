@@ -8,10 +8,12 @@ from ssb_utdanning.config import REGION
 from ssb_utdanning.config import DEFAULT_DATE
 
 def get_paths(glob_pattern: str,
-              exclude_keywords: list[str] | None = None) -> list[str]:
+              exclude_keywords: str| list[str] | None = None) -> list[str]:
     if exclude_keywords is None:
         exclude_keywords = []
-    if REGION == "DAPLA":
+    elif isinstance(exclude_keywords, str):
+        exclude_keywords = [exclude_keywords]
+    if REGION == "BIP":
         fs = dp.FileClient().get_gcs_file_system()
         paths = fs.glob(glob_pattern)
     else: 
@@ -33,6 +35,8 @@ def get_paths_dates(glob_pattern: str,
         result[path] = get_path_dates(path)
     return result
 
+
+# the next two modules doesn't work properly. 
 def get_path_dates(path: str) -> tuple[datetime.datetime]:
     path = str(path)
     filename_parts = path.split("/")[-1].split(".")[0].split("_")
@@ -50,10 +54,11 @@ def get_path_reference_date(
     glob_pattern: str,
     exclude_keywords: list[str] | None = None) -> str:
     if isinstance(reference_datetime, str):
-        reference_datetime_dt = dateutil.parser.parse(before_datetime, default=DEFAULT_DATE)
+        reference_datetime_dt = dateutil.parser.parse(reference_datetime, default=DEFAULT_DATE)
     else:
         reference_datetime_dt = reference_datetime
-    paths_datetime = get_path_dates(glob_pattern, exclude_keywords)
+    # paths_datetime = get_path_dates(glob_pattern)
+    paths_datetime = get_paths_dates(glob_pattern, exclude_keywords)
     for path, check_dates in paths_datetime.items():
         if len(check_dates) == 2:
             if check_dates[1] == reference_datetime_dt or check_dates[0] == reference_datetime_dt:
@@ -64,5 +69,5 @@ def get_path_reference_date(
         else:
             if check_dates[0] <= reference_datetime_dt:
                 return path
-    error_msg = f"Cant find a valid version for {reference_datetime}, last datetime is {check_date} for glob pattern {glob_pattern}."
+    error_msg = f"Cant find a valid version for {reference_datetime}, last datetime is {check_dates} for glob pattern {glob_pattern}."
     raise ValueError(error_msg) 
