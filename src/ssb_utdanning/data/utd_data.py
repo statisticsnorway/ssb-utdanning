@@ -18,7 +18,13 @@ from ssb_utdanning.paths import versioning
 
 
 class OverwriteMode(enum.Enum):
-    """Enum for overwrite codes."""
+    """Enum for specifying overwrite behaviors in file operations.
+
+    Attributes:
+        overwrite (str): Allows overwriting of existing files.
+        filebump (str): Bumps the file version if a file already exists, preventing overwriting.
+        NONE (str): Does not allow overwriting; if the file exists, an error is raised.
+    """
 
     overwrite = "overwrite"
     filebump = "filebump"
