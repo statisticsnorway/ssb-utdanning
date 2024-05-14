@@ -33,6 +33,17 @@ class UtdData:
         glob_pattern: str = "",
         exclude_keywords: list[str] | None = None,
     ) -> str:
+        """Initializes the UtdData class with data and path parameters. If glob_pattern is used, it will use the latest file matching the pattern.
+
+        Args:
+            data (pd.DataFrame | None): Initial dataframe to be used. If None, data will be loaded from the specified path.
+            path (Union[Path, CloudPath, GSPath, str]): Path to the file or directory from which the data should be loaded.
+            glob_pattern (str): Glob pattern to find files if no direct path is given.
+            exclude_keywords (List[str] | None): List of keywords to exclude while searching for files using glob pattern.
+
+        Raises:
+            ValueError: If neither path nor glob_pattern are provided.
+        """
         if glob_pattern and path:
             logger.info("You set both glob pattern and path, will prioritize path.")
         elif not path and not glob_pattern:
@@ -52,7 +63,11 @@ class UtdData:
             self._metadata_from_path()
 
     def __str__(self) -> str:
-        """Print some of the content of the Data."""
+        """Provides a string representation of the UtdData object, excluding the data itself for brevity.
+
+        Returns:
+            str: A string representation of the UtdData object's metadata and column info.
+        """
         result = "UtdData content:\n"
         for key, attr in vars(self).items():
             if key != "data":
@@ -63,11 +78,23 @@ class UtdData:
         result += buf.getvalue()
         return result
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """Returns the number of entries in the data.
+
+        Returns:
+            int: Number of entries.
+        """
         return len(self.data)
 
     def _correct_check_path(self, path: Path | CloudPath | GSPath | str) -> None:
-        """Sas-people are used to not specifying file-extension, this method makes an effort looking for the file in storage."""
+        """Checks and corrects the file path, ensuring it has the correct file extension based on the operating region and available file types.
+
+        Args:
+            path (Union[Path, CloudPath, GSPath, str]): The path to check and potentially correct.
+
+        Raises:
+            None
+        """
         self.path: Path | CloudPath
         if REGION == "ON_PREM" and isinstance(path, str):
             self.path = Path(path)
@@ -91,10 +118,23 @@ class UtdData:
     def _find_last_glob(
         self, glob_pattern: str = "", exclude_keywords: list[str] | None = None
     ) -> str:
+        """Finds the last modified file that matches the glob pattern and does not include the excluded keywords.
+
+        Args:
+            glob_pattern (str): The glob pattern to search for.
+            exclude_keywords (List[str] | None): Keywords to exclude from the search.
+
+        Returns:
+            str: The path to the last modified file matching the criteria.
+        """
         return get_paths.get_path_latest(glob_pattern, exclude_keywords)
 
     def get_similar_paths(self) -> list[str]:
-        """Find similarly named files, not including the version number."""
+        """Finds paths that are similar to the current path, excluding versions.
+
+        Returns:
+            List[str]: A sorted list of similar file paths.
+        """
         return sorted(
             self.path.parent.glob(
                 self.path.stem.rstrip(digits) + "*" + self.path.suffix
@@ -102,17 +142,18 @@ class UtdData:
         )
 
     def get_latest_version_path(self) -> str:
-        """Figure out the most recent path/version for the current path."""
+        """Determines the most recent version path for the current file.
+
+        Returns:
+            str: Path of the most recent file version.
+        """
         return self.get_similar_paths()[-1]
 
     def get_data(self) -> None | tuple[pd.DataFrame, dict[str, str | bool]]:
-        """Get the data and metadata for the catalogue, dependant on the environment we are in.
-
-        Args:
-            path (str): The path to the file to open. Defaults to "".
+        """Loads the data from the specified path, or the most recent file version if the specified path is outdated.
 
         Returns:
-            None | tuple[pd.DataFrame, dict[str, str|bool]]: The dataframe and metadata for the catalogue. Returns None, if you're not sure.p
+            None | tuple[pd.DataFrame, dict[str, str|bool]]: The loaded data and metadata if successful, None otherwise.
 
         Raises:
             OSError: If the file extension is not parquet or sas7bdat.
@@ -147,6 +188,14 @@ class UtdData:
         return df_get_data
 
     def get_version(self, path: str | Path | CloudPath = "") -> int:
+        """Gets the version number of the file at the specified path.
+
+        Args:
+            path (Union[str, Path, CloudPath]): The path to check for versioning.
+
+        Returns:
+            int: The version number.
+        """
         if path:
             return versioning.get_version(path)
         if self.path:
@@ -155,6 +204,15 @@ class UtdData:
 
     @staticmethod
     def bump_path(path: str | Path | CloudPath, num_bumps: int = 1) -> str:
+        """Increments the version number in the path.
+
+        Args:
+            path (Union[str, Path, CloudPath]): The file path to increment.
+            num_bumps (int): Number of version increments.
+
+        Returns:
+            str: Updated path with the incremented version number.
+        """
         return versioning.bump_path(path, num_bumps)
 
     def save(
@@ -164,22 +222,18 @@ class UtdData:
         overwrite_mode: str | OverwriteMode = OverwriteMode.NONE,
         save_metadata: bool = True,
     ) -> None:
-        """Stores class to disk in prod or dapla as parquet, also stores metadata as json?
+        """Saves the data and metadata to the specified path, handles versioning and file existence based on provided parameters.
 
         Args:
-            path (str): Path to save the file to. Defaults to "".
-            bump_version (bool): Whether or not to bump the version of the file. Defaults to True.
-            existing_file (str): What to do if the file already exists on the path. Defaults to "". Can also be set to "overwrite" or "filebump".
+            path (Union[str, Path, CloudPath]): Path where the data should be saved. Defaults to the current path of the object.
+            bump_version (bool): Whether to increment the version number of the file.
+            overwrite_mode (Union[str, OverwriteMode]): Specifies the action on file existence. Can be 'none', 'overwrite', or 'filebump'.
+            save_metadata (bool): Whether to save metadata alongside the data.
 
         Raises:
-            ValueError: If existing_file is not one of the valid options.
-            OSError: If the file already exists on the path and existing_file is not set to "overwrite" or "filebump".
-
-        Returns:
-            None
+            ValueError: If an invalid overwrite mode is provided.
+            OSError: If the file already exists and overwrite conditions are not met.
         """
-        # Replace string with enum attr
-        print(overwrite_mode, type(overwrite_mode))
         if isinstance(overwrite_mode, str):
             overwrite_mode_enum = getattr(OverwriteMode, overwrite_mode)
             try:
@@ -191,14 +245,6 @@ class UtdData:
                 )
         else:
             overwrite_mode_enum = overwrite_mode
-        # print(overwrite_mode_enum)
-        # else:
-        # print(overwrite_mode_enum)
-        # # Check that overwrite_mode now is in enum
-        # if overwrite_mode_enum not in [x.value for x in iter(OverwriteMode)]:
-        #     raise ValueError(
-        #         f"Set the existing_file parameter as one of: {[x.value for x in iter(OverwriteMode)]}"
-        #     )
 
         if not path:
             path = self.path
@@ -276,6 +322,7 @@ class UtdData:
         return None
 
     def _metadata_from_path(self):
+        """Extracts metadata from the file path, intended for internal use."""
         self.metadata = DataDocMetadata(
             StatisticSubjectMapping(""), dataset_path=str(self.path)
         )
