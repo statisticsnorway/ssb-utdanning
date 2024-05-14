@@ -1,6 +1,8 @@
 from pathlib import Path
-from cloudpathlib import CloudPath
 from string import digits
+
+from cloudpathlib import CloudPath
+
 
 def get_version(path: str | Path | CloudPath) -> int:
     version = str(path).split(".")[0].split("_")[-1]
@@ -10,6 +12,7 @@ def get_version(path: str | Path | CloudPath) -> int:
             error_msg = f"{version} is not a digit, cant bump."
             raise ValueError(error_msg)
     return int(version)
+
 
 def bump_path(path: str | Path | CloudPath, n: int = 1) -> str | Path | CloudPath:
     new_version = get_version(path) + n

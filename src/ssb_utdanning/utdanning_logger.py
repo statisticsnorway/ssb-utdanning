@@ -9,7 +9,6 @@ from colorama import Fore
 from colorama import Style
 
 
-
 class ColoredFormatter(logging.Formatter):
     """Colored log formatter."""
 
@@ -49,5 +48,5 @@ logger = logging.getLogger()
 while logger.hasHandlers():
     logger.removeHandler(logger.handlers[0])
 logger = logging.getLogger(__name__)
-#logger.addHandler(handler)
+# logger.addHandler(handler)
 logger.setLevel(logging.INFO)

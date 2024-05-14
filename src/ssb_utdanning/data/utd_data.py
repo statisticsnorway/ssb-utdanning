@@ -1,40 +1,44 @@
-import os, glob, json, enum
+import enum
 from io import StringIO
-from string import digits
 from pathlib import Path
-from cloudpathlib import CloudPath, GSPath, GSClient
-import pandas as pd
+from string import digits
 
 import dapla as dp
-from fagfunksjoner import auto_dtype
+import pandas as pd
+from cloudpathlib import CloudPath
+from cloudpathlib import GSPath
 from datadoc.backend.datadoc_metadata import DataDocMetadata
 from datadoc.backend.statistic_subject_mapping import StatisticSubjectMapping
+from fagfunksjoner import auto_dtype
 
 from ssb_utdanning import logger
 from ssb_utdanning.config import REGION
-from ssb_utdanning.paths import get_paths, versioning
+from ssb_utdanning.paths import get_paths
+from ssb_utdanning.paths import versioning
 
 
 class OverwriteMode(enum.Enum):
     """Enum for overwrite codes."""
+
     overwrite = "overwrite"
     filebump = "filebump"
     NONE = ""
 
 
-class UtdData:    
-    def __init__(self,
-                 data: pd.DataFrame | None = None,
-                 path: Path | CloudPath | GSPath | str = "",
-                 glob_pattern: str = "",
-                 exclude_keywords: list[str] | None = None,
-                ) -> str:
+class UtdData:
+    def __init__(
+        self,
+        data: pd.DataFrame | None = None,
+        path: Path | CloudPath | GSPath | str = "",
+        glob_pattern: str = "",
+        exclude_keywords: list[str] | None = None,
+    ) -> str:
         if glob_pattern and path:
             logger.info("You set both glob pattern and path, will prioritize path.")
         elif not path and not glob_pattern:
             error_msg = "You must set either path, or glob_pattern."
             raise ValueError(error_msg)
-         
+
         # Gets a path using glob-pattern
         if glob_pattern and not path:
             path = self._find_last_glob(glob_pattern, exclude_keywords)
@@ -45,7 +49,7 @@ class UtdData:
         else:
             self.data = data
         if self.path.is_file():
-            self._metadata_from_path() 
+            self._metadata_from_path()
 
     def __str__(self) -> str:
         """Print some of the content of the Data."""
@@ -58,13 +62,12 @@ class UtdData:
         self.data.info(buf=buf)
         result += buf.getvalue()
         return result
-    
+
     def __len__(self):
         return len(self.data)
 
     def _correct_check_path(self, path: Path | CloudPath | GSPath | str) -> None:
         """Sas-people are used to not specifying file-extension, this method makes an effort looking for the file in storage."""
-        
         self.path: Path | CloudPath
         if REGION == "ON_PREM" and isinstance(path, str):
             self.path = Path(path)
@@ -73,8 +76,8 @@ class UtdData:
             # self.path = GSPath(path, client=client)
             self.path = GSPath(path)
         self.periods = get_paths.get_path_dates(self.path)
-        
-        if not self.path.suffix == ".parquet" or self.path.suffix  == ".sas7bdat":
+
+        if not self.path.suffix == ".parquet" or self.path.suffix == ".sas7bdat":
             if self.path.with_suffix(".parquet").exists():
                 self.path = self.path.with_suffix(".parquet")
             elif self.path.with_suffix(".sas7bdat").exists():
@@ -84,11 +87,12 @@ class UtdData:
                     "Cant find a sas7bdat or parquetfile at %s...", str(self.path)
                 )
                 return None
-            
-    def _find_last_glob(self, glob_pattern: str = "" , exclude_keywords: list[str] | None = None) -> str:
+
+    def _find_last_glob(
+        self, glob_pattern: str = "", exclude_keywords: list[str] | None = None
+    ) -> str:
         return get_paths.get_path_latest(glob_pattern, exclude_keywords)
-    
-            
+
     def get_similar_paths(self) -> list[str]:
         """Find similarly named files, not including the version number."""
         return sorted(
@@ -96,11 +100,11 @@ class UtdData:
                 self.path.stem.rstrip(digits) + "*" + self.path.suffix
             )
         )
-            
+
     def get_latest_version_path(self) -> str:
         """Figure out the most recent path/version for the current path."""
         return self.get_similar_paths()[-1]
-        
+
     def get_data(self) -> None | tuple[pd.DataFrame, dict[str, str | bool]]:
         """Get the data and metadata for the catalogue, dependant on the environment we are in.
 
@@ -114,7 +118,7 @@ class UtdData:
             OSError: If the file extension is not parquet or sas7bdat.
         """
         path = self.path
-        
+
         # Warn user if not opening the latest version?
         if self.get_latest_version_path() != self.path:
             sure = input(
@@ -123,7 +127,7 @@ class UtdData:
             if not sure.lower() == "y":
                 return None
         logger.info("Opening data from %s", str(self.path))
-        if REGION == "ON_PREM":            
+        if REGION == "ON_PREM":
             if path.suffix == ".parquet":
                 df_get_data: pd.DataFrame = pd.read_parquet(path)
             elif path.suffix == ".sas7bdat":
@@ -132,28 +136,27 @@ class UtdData:
                 raise OSError(
                     f"Can only open parquet and sas7bdat, you gave me {suffix}"
                 )
-        if REGION == "BIP":            
+        if REGION == "BIP":
             if path.suffix == ".sas7bdat":
                 with dp.FileClient().gcs_open(path, "r") as sasfile:
                     df_get_data = auto_dtype(pd.read_sas(sasfile))
             else:
                 df_get_data: pd.DataFrame = dp.read_pandas(path)
 
-        
         self.data = df_get_data
         return df_get_data
-    
+
     def get_version(self, path: str | Path | CloudPath = "") -> int:
         if path:
             return versioning.get_version(path)
         if self.path:
             return versioning.get_version(self.path)
         return 0
-        
+
     @staticmethod
     def bump_path(path: str | Path | CloudPath, num_bumps: int = 1) -> str:
         return versioning.bump_path(path, num_bumps)
-        
+
     def save(
         self,
         path: str | Path | CloudPath = "",
@@ -181,9 +184,11 @@ class UtdData:
             overwrite_mode_enum = getattr(OverwriteMode, overwrite_mode)
             try:
                 overwrite_mode_enum = getattr(OverwriteMode, overwrite_mode)
-            except AttributeError as e:
+            except AttributeError:
                 overwrite_mode_enum = OverwriteMode.NONE
-                logger.warning(f"Set the existing_file parameter as one of: {[x.value for x in iter(OverwriteMode)]}")
+                logger.warning(
+                    f"Set the existing_file parameter as one of: {[x.value for x in iter(OverwriteMode)]}"
+                )
         else:
             overwrite_mode_enum = overwrite_mode
         # print(overwrite_mode_enum)
@@ -194,7 +199,7 @@ class UtdData:
         #     raise ValueError(
         #         f"Set the existing_file parameter as one of: {[x.value for x in iter(OverwriteMode)]}"
         #     )
-        
+
         if not path:
             path = self.path
         pathpath: Path | CloudPath
@@ -247,7 +252,6 @@ class UtdData:
                     logger.info("aborting save")
                     return None
                 pathpath = self.bump_path(pathpath, diff_version)
-                
 
         # Reset the classes path, as when we write somewhere, thats were we should open it from again...
         self.path = pathpath
@@ -256,7 +260,7 @@ class UtdData:
             self.data.to_parquet(pathpath)
         elif REGION == "BIP":
             dp.write_pandas(self.data, pathpath)
-        
+
         # Update path in metadata before saving
         self.metadata.dataset_path = pathpath
         metapath = self.metadata.metadata_document
@@ -270,6 +274,8 @@ class UtdData:
             "Wrote file to %s. Wrote metadata to %s.", str(self.path), str(metapath)
         )
         return None
-    
+
     def _metadata_from_path(self):
-        self.metadata = DataDocMetadata(StatisticSubjectMapping(""), dataset_path=str(self.path))
+        self.metadata = DataDocMetadata(
+            StatisticSubjectMapping(""), dataset_path=str(self.path)
+        )

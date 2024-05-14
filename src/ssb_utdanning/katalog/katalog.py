@@ -12,31 +12,19 @@ View "katalog" as an umbrella-term above these.
 """
 
 # Standard library
-import getpass
-import glob
-import json
-import os
-from datetime import datetime
-from io import StringIO
 from pathlib import Path
-from cloudpathlib import CloudPath, GSPath, GSClient
 from typing import TYPE_CHECKING
-
-import dapla as dp
 
 # External packages
 import pandas as pd
-
-
+from cloudpathlib import CloudPath
+from cloudpathlib import GSPath
 
 if TYPE_CHECKING:
     pass
 
 # Local imports
-from fagfunksjoner import auto_dtype
 
-from ssb_utdanning.config import REGION
-from ssb_utdanning.paths import get_paths
 from ssb_utdanning import logger
 from ssb_utdanning.data.utd_data import UtdData
 
@@ -55,9 +43,8 @@ class UtdKatalog(UtdData):
         exclude_keywords: list[str] | None = None,
     ) -> None:
         """Create an instance of UtdKatalog with some baseline attributes."""
-     
         super().__init__(data, path, glob_pattern, exclude_keywords)
-        
+
         if isinstance(key_cols, str):
             self.key_cols: list[str] = [key_cols]
         else:
@@ -65,7 +52,6 @@ class UtdKatalog(UtdData):
                 error_msg = "Excpecting all key_cols in iterable to be strings."
                 raise TypeError(error_msg)
             self.key_cols = key_cols
-    
 
     def merge_on(
         self,
@@ -88,7 +74,6 @@ class UtdKatalog(UtdData):
                 - in_both: A dataframe containing the rows in the Katalog that are also in the dataset.
                 - only_in_katalog: A dataframe containing the rows in the Katalog that are not in the dataset.
         """
-        
         if keep_cols is None:
             keep_cols_kat: set[str] = set(self.data.columns)
             # keep_cols_kat.remove(key_col_in_data)
@@ -100,10 +85,12 @@ class UtdKatalog(UtdData):
             rest: pd.DataFrame = dataset
         else:
             rest = dataset.data
-        
+
         for col in self.key_cols:
             if (self.data[col].value_counts() > 1).any():
-                logger.warning(f"Looks like duplicate entries in the catalog column {col}")
+                logger.warning(
+                    f"Looks like duplicate entries in the catalog column {col}"
+                )
                 # error_msg = f"Looks like duplicate entries in the catalog column {col}"
                 # raise ValueError(error_msg)
             keep_cols_copy = keep_cols_kat.copy()
@@ -124,11 +111,12 @@ class UtdKatalog(UtdData):
         result = pd.concat(parts)
         result["_merge"] = result["_merge"].fillna("left_only")
         logger.info("\n%s", result["_merge"].value_counts(dropna=False))
-        if len(result)>len(dataset):
-            logger.warning('Merge resulted in additional rows. Duplicated may need to be handled') 
+        if len(result) > len(dataset):
+            logger.warning(
+                "Merge resulted in additional rows. Duplicated may need to be handled"
+            )
         return result
-    
-            
+
     def to_dict(
         self,
         col: str = "",

@@ -13,9 +13,8 @@ DATETIME_FORMAT (str): The datetime format used in filenames.
 PROD_FORMATS_PATH (str): The path to the production formats.
 """
 
-
-import os
 import datetime
+import os
 
 ENVIR = os.environ.get("DAPLA_ENVIRONMENT", "TEST")
 SERVICE = os.environ.get("DAPLA_SERVICE", "JUPYTERLAB")
@@ -27,22 +26,22 @@ MOCKING = False
 DATETIME_FORMAT = "%Y-%m-%dT%H-%M-%S"
 DEFAULT_DATE = datetime.datetime(2020, 1, 1)
 
-FOUR_DIGITS = ("[0-9]")*4
-TWO_DIGITS = ("[0-9]")*2
+FOUR_DIGITS = ("[0-9]") * 4
+TWO_DIGITS = ("[0-9]") * 2
 
 
 if REGION == "DAPLA":
     FORMATS_PATH = ""
     SKOLEREG_PATH = ""
     VIGO_PATH = ""
-    
+
     KATALOGER = {}
 
 else:
     FORMATS_PATH = "/ssb/stamme01/utd/utd-felles/formater/"
     SKOLEREG_PATH = "/ssb/stamme01/utd/kat/skolereg/"
     VIGO_PATH = "/ssb/stamme01/utd/katalog/vigo/"
-    
+
     KATALOGER = {
         "skolereg": {
             "glob": f"/ssb/stamme01/utd/kat/skolereg/skolereg_p{FOUR_DIGITS}-{TWO_DIGITS}_v*.parquet",
