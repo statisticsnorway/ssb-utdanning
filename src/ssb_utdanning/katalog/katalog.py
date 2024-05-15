@@ -165,23 +165,34 @@ class UtdKatalog(UtdData):
         ordered: bool = False,
         remove_unused: bool = False,
     ) -> pd.DataFrame:
-        """Applies the catalog formatting to a DataFrame based on a mapping from the catalog's data.
+        """Applies the catalog formatting to a DataFrame by mapping values from a catalog column to a dataset column
+        based on a key. The function can also set the new column as a categorical type, with options for ordering
+        and removing unused categories.
 
         Args:
-            df (pd.DataFrame): The dataset to apply formatting to.
-            catalog_col_name (str): The column name in the catalog to apply to the dataset.
-            data_key_col_name (str): The column in the dataset to map the catalog data onto.
-            catalog_key_col_name (str): The column in the catalog used as the key for the mapping.
-            new_col_data_name (str): The name for the new column after applying the catalog format.
-            level (int): The level of detail for the key to be used for formatting.
-            ordered (bool): Whether the new column should be treated as an ordered category.
-            remove_unused (bool): Whether to remove unused categories after applying the format.
+            df (pd.DataFrame): The dataset to which the catalog formatting will be applied.
+            catalog_col_name (str): The name of the column in the catalog whose values will be applied to the dataset.
+                                    If not specified, the second column of the catalog data is used by default.
+            data_key_col_name (str): The name of the column in the dataset to which the catalog values will be mapped.
+                                     If not specified, it defaults to the catalog key column name.
+            catalog_key_col_name (str): The name of the key column in the catalog used for mapping. If not specified,
+                                        it defaults to the first key column of the catalog.
+            new_col_data_name (str): The name for the new column in the dataset after applying the catalog format.
+                                     If not specified, it defaults to the catalog column name.
+            level (int): The level of detail (length of string positions) for the key used in formatting. Defaults to 0, which includes all.
+            ordered (bool): Specifies whether the new column should be treated as an ordered categorical. Defaults to False.
+            remove_unused (bool): Whether to remove unused categories from the new categorical column. Defaults to False.
 
         Returns:
             pd.DataFrame: The DataFrame with the new formatting applied.
 
         Raises:
             ValueError: If an error occurs during the conversion to a categorical type.
+
+        Notes:
+            This method involves several default behaviors when parameters are not specified, including defaulting to the second column of
+            the catalog for the value mapping and the first key column for the key mapping. Care should be taken when leaving parameters
+            unspecified to ensure the correct application of the format.
         """
         # Guessing on key column name
         if not data_key_col_name:
