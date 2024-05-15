@@ -235,31 +235,34 @@ class UtdData:
         overwrite_mode: str | OverwriteMode = OverwriteMode.NONE,
         save_metadata: bool = True,
     ) -> None:
-        """Saves the data and optionally the metadata to the specified path, manages file versioning, and checks file existence
-        based on the provided parameters. The method adjusts the file path according to the operating environment and the specified
-        overwrite mode. It also handles automatic versioning and provides interactive confirmation prompts if needed.
+        """Saves the data to a specified path, manages file versioning, and handles file overwriting based on the provided
+        parameters. The method also offers the option to save associated metadata alongside the data.
 
         Args:
-            path (Union[str, Path, CloudPath]): Path where the data should be saved. Defaults to the current path of the object.
-            bump_version (bool): Whether to increment the version number of the file automatically. Defaults to True.
-            overwrite_mode (Union[str, OverwriteMode]): Specifies the action on file existence. Options are 'none', 'overwrite',
-                or 'filebump', as defined in the OverwriteMode enum. Defaults to OverwriteMode.NONE.
-            save_metadata (bool): Whether to save metadata alongside the data. Defaults to True.
+            path (Union[str, Path, CloudPath], optional): The file path where the data should be saved.
+                                                         Defaults to the current object path.
+            bump_version (bool, optional): Whether to automatically increment the file version. Defaults to True.
+            overwrite_mode (Union[str, OverwriteMode], optional): Specifies how to handle existing files at the target path.
+                                                                 Can be 'none', 'overwrite', or 'filebump'. Defaults to OverwriteMode.NONE.
+            save_metadata (bool, optional): Whether to save metadata along with the data. Defaults to True.
 
         Raises:
-            ValueError: If an invalid overwrite mode is provided.
-            OSError: If the file already exists and the overwrite conditions as specified by `overwrite_mode` are not met.
+            ValueError: If the `overwrite_mode` is provided as a string and does not match any valid OverwriteMode.
+            OSError: If the file already exists and the conditions for overwriting are not met as per the `overwrite_mode`.
 
-        Side Effects:
-            Updates `self.path` to reflect the new file location if a save operation is completed.
-            May update `self.metadata` and save it to disk if `save_metadata` is True.
-            Logs information about the operation and any potential warnings or errors.
+        Notes:
+            The method converts string paths to Path or CloudPath based on the runtime environment. The path is also forced
+            to have a '.parquet' suffix. If `bump_version` is enabled, the file path will be adjusted to accommodate a new
+            version number according to existing files in the target directory.
+
+            Interactive prompts are used to confirm overwriting actions when necessary, providing a safety mechanism to prevent
+            accidental data loss.
         """
         if isinstance(overwrite_mode, str):
             overwrite_mode_enum = getattr(OverwriteMode, overwrite_mode)
             try:
                 overwrite_mode_enum = getattr(OverwriteMode, overwrite_mode)
-            except AttributeError:
+            except ValueError:
                 overwrite_mode_enum = OverwriteMode.NONE
                 logger.warning(
                     f"Set the existing_file parameter as one of: {[x.value for x in iter(OverwriteMode)]}"
