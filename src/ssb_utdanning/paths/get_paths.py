@@ -124,9 +124,6 @@ def get_path_dates(path: str) -> tuple[datetime.datetime]:
                                   if the filename includes two date segments ('pYYYYMMDD_pYYYYMMDD'); otherwise, it will contain
                                   only one datetime object if only one date segment is found.
 
-    Raises:
-        ValueError: If the date string does not comply with expected formats or cannot be parsed.
-
     Note:
         The function utilizes the `dateutil.parser.parse` method to convert date strings into datetime objects, which
         allows for flexible parsing but also requires careful handling to avoid misinterpretation of non-standard date formats.
