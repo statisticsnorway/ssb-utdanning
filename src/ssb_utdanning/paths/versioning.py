@@ -18,10 +18,11 @@ def get_version(path: str | Path | CloudPath) -> int:
 
     Returns:
         int: The version number extracted from the file name.
-        
+
     Raises:
-            ValueError: If the version segment in the file name is not prefixed with 'v', or if the
-                        version number following 'v' is not a digit.
+        ValueError: If the version segment in the file name is not prefixed with 'v', or if the
+                    version number following 'v' is not a digit.
+
     Examples:
         - Given a path 'folder/subfolder/file_v10.txt', it will return 10.
         - Given a path 'dataset_v3.parquet', it will return 3.
@@ -51,7 +52,7 @@ def bump_path(path: str | Path | CloudPath, n: int = 1) -> str | Path | CloudPat
     Args:
         path (Union[str, Path, CloudPath]): The original file path whose version needs to be incremented. Can be a string or
                                             a Path-like object.
-        n int: The amount by which the version number should be incremented. Defaults to 1.
+        n (int): The amount by which the version number should be incremented. Defaults to 1.
 
     Returns:
         Union[str, Path, CloudPath]: The new file path with the incremented version number. The type of the returned path matches
