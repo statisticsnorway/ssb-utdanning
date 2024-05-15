@@ -9,7 +9,7 @@ from ssb_utdanning.config import VIGO_PATH
 
 def get_skolereg(year: str | int = "latest", sub_category: str = "") -> UtdKatalog:
     """Retrieves skolereg catalogue.
-    
+
     Retrieves an `UtdKatalog` instance representing school registration data for a given year
     and sub-category. If no sub-category is specified, it excludes all predefined categories, i.e barnehage, vgskoler, grunnskoler, test.
 
@@ -55,7 +55,7 @@ def get_skolereg(year: str | int = "latest", sub_category: str = "") -> UtdKatal
 
 def get_vigo_skole(year: str | int = "latest") -> UtdKatalog:
     """Retrieves vigo-skole catalogue.
-    
+
     Retrieves an `UtdKatalog` instance representing VIGO school data for a specified year.
     If no year is specified, it fetches data for the most recent year.
 
@@ -90,7 +90,7 @@ def orgnrkontroll_func(
     skolereg_subcategory: str = "",
 ) -> pd.DataFrame:
     """Performs merge validation and merges orgnr from skolereg and vigo-skole catalogues.
-    
+
     Performs data validation and merging operations on educational data from different catalogs.
     Ensures the integrity of organizational number fields, merges additional data from school
     and VIGO catalogs, and handles missing data or discrepancies in organizational numbers.

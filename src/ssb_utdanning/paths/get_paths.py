@@ -50,7 +50,7 @@ def get_path_latest(
     glob_pattern: str, exclude_keywords: list[str] | None = None
 ) -> list[str]:
     """Retrieves path for most recent file matching glob pattern.
-    
+
     Retrieves the path of the most recently modified file that matches a specified glob pattern,
     excluding any files containing specified keywords. This function uses the `get_paths` function
     to gather all matching paths, then returns the first path from the sorted list, which represents
@@ -65,10 +65,7 @@ def get_path_latest(
 
     Returns:
         str: The path to the most recent file matching the specified criteria. If no files match,
-             this function will raise an IndexError.
-
-    Raises:
-        IndexError: If `get_paths` returns an empty list (i.e., no files match the criteria).
+             this function will raise an IndexError
     """
     return get_paths(glob_pattern, exclude_keywords)[0]
 
@@ -77,7 +74,7 @@ def get_paths_dates(
     glob_pattern: str, exclude_keywords: list[str] | None = None
 ) -> dict[str, str]:
     """Retrieves dictionary of dates to corresponding paths matching glob pattern.
-    
+
     Retrieves a dictionary mapping each file path that matches a specified glob pattern to a date,
     extracted by the `get_path_dates` function. Files containing any specified exclude keywords are
     omitted from the search.
@@ -97,11 +94,7 @@ def get_paths_dates(
                         with that file, as determined by the `get_path_dates` function. The date format and
                         the exact nature of the date (e.g., modification, creation) depend on the implementation
                         of `get_path_dates`.
-
-    Raises:
-        None directly, but this function's behavior is dependent on `get_paths` and `get_path_dates`, which may
-        raise exceptions related to file access or when parsing dates.
-
+                        
     Note:
         This function assumes that `get_path_dates` is capable of extracting a meaningful date string from each
         path. The specific nature of the date retrieved (creation, modification, etc.) should be documented
@@ -117,10 +110,10 @@ def get_paths_dates(
 # the next two modules doesn't work properly.
 def get_path_dates(path: str) -> tuple[datetime.datetime]:
     """Extracts data information about file from path.
-    
+
     Extracts date information from a given file path based on specific patterns in the filename. This function assumes
     that the filename includes date information encoded within parts of the filename, specifically formatted and
-    separated by underscores. Dates are expected to be in segments prefixed by 'p' or directly as the second last part 
+    separated by underscores. Dates are expected to be in segments prefixed by 'p' or directly as the second last part
     of the filename, following conventions like 'pYYYYMMDD'.
 
     Args:
@@ -159,7 +152,7 @@ def get_path_reference_date(
     exclude_keywords: list[str] | None = None,
 ) -> str:
     """Finds path from glob pattern and reference date.
-    
+
     Finds and returns the file path for files identified by `glob_pattern` whose date or date range matches
     a specified reference date. The function ensures the reference date falls within the date range or on
     the specified date but not on the exact bounds of a date range.

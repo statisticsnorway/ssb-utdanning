@@ -28,7 +28,7 @@ def get_skoleregister(from_date: str = "") -> UtdKatalog:
 
 def skoleregister_dates() -> dict[str, Path]:
     """Retrieves a dictionary of skolereg versions according to date.
-    
+
     Retrieves a dictionary mapping each year extracted from the filenames in the skoleregister directory
     to the corresponding file path. The filenames are expected to contain year information as four digits
     following an underscore.

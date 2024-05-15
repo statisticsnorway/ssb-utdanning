@@ -6,7 +6,7 @@ from ssb_utdanning.katalog.katalog import UtdKatalog
 @lru_cache(1)
 def get_nuskat(path: str = "") -> UtdKatalog:
     """Retrieves nuskat.
-    
+
     Retrieves a UtdKatalog object representing the Nuskat catalog, which is maintained by 360
     and connects additional data to each nus2000 code. This catalog is typically stored in a
     SAS7BDAT file format and provides detailed classifications.
