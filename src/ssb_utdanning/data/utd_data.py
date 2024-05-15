@@ -32,6 +32,31 @@ class OverwriteMode(enum.Enum):
 
 
 class UtdData:
+    """
+    Manages the loading, storage, and access of structured data, providing robust methods for handling data
+    retrieval, path validation, and metadata management based on specified paths or patterns. This class
+    integrates functionality to dynamically load data from local or cloud storage based on specified file
+    paths or glob patterns, manage data versions, and ensure that file paths meet specified criteria before
+    data loading occurs.
+
+    The class also supports optional keyword exclusions for file searches and integrates metadata handling
+    capabilities, making it suitable for applications where data integrity, version control, and comprehensive
+    data management are critical.
+
+    Attributes:
+        data (pd.DataFrame | None): The DataFrame loaded into the instance, either provided at initialization or loaded from the specified path.
+        path (Union[Path, CloudPath, GSPath, str]): The primary file path associated with the data.
+        metadata (DataDocMetadata): Metadata associated with the data, automatically managed based on file path changes or data updates.
+
+    Methods:
+        __init__: Constructor for initializing a new UtdData instance with optional data and path specifications.
+        get_data: Loads data from the specified path if not already loaded.
+        save: Saves the current data and metadata to a specified path, managing file versioning and overwrite behavior.
+        _metadata_from_path: Updates metadata based on the current data path, extracting relevant details as needed.
+
+    This class is designed to be versatile, supporting various data storage formats and environments, and
+    is easily extendable for additional data handling and processing needs.
+    """
     def __init__(
         self,
         data: pd.DataFrame | None = None,
