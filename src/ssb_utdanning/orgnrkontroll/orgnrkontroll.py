@@ -15,9 +15,9 @@ def get_skolereg(year: str | int = "latest", sub_category: str = "") -> UtdKatal
         year (str | int, optional): The year for which the data is to be retrieved. Can be
                                     an integer representing the year or 'latest' for the
                                     most recent data. Defaults to 'latest'.
-        sub_category (str, optional): A specific sub-category of school data to be retrieved.
-                                      Options include 'barnehage', 'vgskoler', 'test', 'grunnskoler'.
-                                      Defaults to an empty string, which means no specific sub-category.
+        sub_category (str): A specific sub-category of school data to be retrieved.
+                            Options include 'barnehage', 'vgskoler', 'test', 'grunnskoler'.
+                            Defaults to an empty string, which means no specific sub-category.
 
     Returns:
         UtdKatalog: An instance of UtdKatalog configured with the appropriate file pattern,
@@ -94,10 +94,10 @@ def orgnrkontroll_func(
         year (str | int, optional): The year of the data to process. Defaults to 'latest'.
         skolereg_keep_cols (set[str] | list[str] | None, optional): Columns to keep from the skolereg data.
         vigo_keep_cols (set[str] | list[str] | None, optional): Columns to keep from the VIGO data.
-        orgnr_col_innfil (str, optional): Column name for organizational numbers in the input data. Defaults to "orgnr".
-        orgnrbed_col_innfil (str, optional): Column name for subsidiary organizational numbers in the input data. Defaults to "orgnrbed".
-        fskolenr_col_innfil (str, optional): Column name for school numbers in the input data. Defaults to "fskolenr".
-        skolereg_subcategory (str, optional): Subcategory of school data to filter from the skolereg data.
+        orgnr_col_innfil (str): Column name for organizational numbers in the input data. Defaults to "orgnr".
+        orgnrbed_col_innfil (str): Column name for subsidiary organizational numbers in the input data. Defaults to "orgnrbed".
+        fskolenr_col_innfil (str): Column name for school numbers in the input data. Defaults to "fskolenr".
+        skolereg_subcategory (str): Subcategory of school data to filter from the skolereg data.
 
     Returns:
         pd.DataFrame | UtdData: The consolidated dataset after validation and merging operations.

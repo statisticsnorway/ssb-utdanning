@@ -27,10 +27,16 @@ def get_skoleregister(from_date: str = "") -> UtdKatalog:
 
 
 def skoleregister_dates() -> dict[str, Path]:
-    """Gets the dates from the skoleregisterfiles, has the date as the key.
+    """Retrieves a dictionary mapping each year extracted from the filenames in the skoleregister directory
+    to the corresponding file path. The filenames are expected to contain year information as four digits
+    following an underscore.
 
     Returns:
-        dict[str, str]: The dates as the key and the path as the value of the skoleregisterfiles.
+        dict[str, Path]: A dictionary where each key is a four-digit year string extracted from the filename,
+                         and each value is the Path object pointing to the corresponding file.
+
+    Raises:
+        NotImplementedError: If the function is called within the DAPLA environment, where it is not yet implemented.
     """
     date_paths_dict = dict()
     if REGION == "ON_PREM":

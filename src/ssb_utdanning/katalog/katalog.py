@@ -32,7 +32,7 @@ REQUIRED_COLS = ["username", "edited_time", "expiry_date", "validity"]
 
 
 class UtdKatalog(UtdData):
-    """The main class for Katalogs."""
+    """The main class for handling catalog-like datasets, extending UtdData with additional catalog-specific functionalities."""
 
     def __init__(
         self,
@@ -42,7 +42,18 @@ class UtdKatalog(UtdData):
         glob_pattern: str = "",
         exclude_keywords: list[str] | None = None,
     ) -> None:
-        """Create an instance of UtdKatalog with some baseline attributes."""
+        """Initializes a UtdKatalog instance with specified key columns and optional data parameters.
+
+        Args:
+            key_cols (list[str] | str): The key column(s) used for merging and indexing within the catalog.
+            data (pd.DataFrame | None): Data to be directly loaded into the UtdKatalog instance.
+            path (Union[Path, CloudPath, GSPath, str]): File path for data loading.
+            glob_pattern (str): Glob pattern to identify data files if path is not specific.
+            exclude_keywords (list[str] | None): Keywords to exclude when searching for data files using the glob pattern.
+
+        Raises:
+            TypeError: If any non-string type is found within key_cols when it's provided as a list.
+        """
         super().__init__(data, path, glob_pattern, exclude_keywords)
 
         if isinstance(key_cols, str):
@@ -61,18 +72,17 @@ class UtdKatalog(UtdData):
         merge: bool = False,
         return_lengths: bool = False,
     ) -> pd.DataFrame:
-        """Compares the idents in a dataset against the Katalog.
+        """Merges catalog data with an external dataset based on a specified key column.
 
         Args:
-            dataset (pd.DataFrame): The dataset to compare against.
-            key_col_data (str): The column name in the dataset that should be used as the key. Defaults to "".
-            merge_both (bool): If True, the katalog's data is merged onto the data, where there is a match on the "in_both" dataset. Defaults to False.
+            dataset (pd.DataFrame | UtdData): The dataset to merge with the catalog.
+            key_col_in_data (str): The key column name in the dataset for merging.
+            keep_cols (list[str] | None): Specific columns to keep from the catalog in the merged data.
+            merge (bool): If True, performs an actual merge operation; otherwise just checks for matching keys.
+            return_lengths (bool): If True, returns a tuple of the merged DataFrame and a dictionary of lengths of each category after merge.
 
         Returns:
-            dict[str, pd.DataFrame]: A dictionary containing the following keys:
-                - only_in_dataset: A dataframe containing the rows in the dataset that are not in the Katalog.
-                - in_both: A dataframe containing the rows in the Katalog that are also in the dataset.
-                - only_in_katalog: A dataframe containing the rows in the Katalog that are not in the dataset.
+            pd.DataFrame: The result of the merge operation, containing data from both the catalog and the input dataset.
         """
         if keep_cols is None:
             keep_cols_kat: set[str] = set(self.data.columns)
@@ -123,17 +133,15 @@ class UtdKatalog(UtdData):
         level: int = 0,
         key_col: str = "",
     ) -> dict[str, str]:
-        """Convert one of the columns in the Katalog to a dict, with the ident as the keys (usually).
-
-        Usually you will only specify the "col"-parameter.
+        """Converts a column from the Katalog data into a dictionary, mapping keys from another column to these values.
 
         Args:
-            col (str): The column from the Katalog to convert to the values in the dict. Defaults to "".
-            level (int): The level (length of string-positions) of the ident to use as the key. Defaults to 0 (All).
-            key_col (str): The column to use as the key. Defaults to "". Will use the setting on the Katalog attributes if not specified.
+            col (str): The column whose values will be used as dictionary values. Defaults to the second column if not specified.
+            level (int): The level (length) of the key entries to be included. Defaults to all if 0.
+            key_col (str): The column to use as keys in the dictionary. Defaults to the first key column specified in key_cols.
 
         Returns:
-            dict[str, str]: A dictionary of the two columns from the Katalog.
+            dict[str, str]: A dictionary mapping keys to values as per the specified columns and level.
         """
         if not key_col:  # If not passed in to function
             key_col = self.key_cols[0]
@@ -157,23 +165,23 @@ class UtdKatalog(UtdData):
         ordered: bool = False,
         remove_unused: bool = False,
     ) -> pd.DataFrame:
-        """Applies the katalog onto a dataset as if it was a format (dict).
+        """Applies the catalog formatting to a DataFrame based on a mapping from the catalog's data.
 
         Args:
-            df (pd.DataFrame): The dataset to apply the katalog onto.
-            catalog_col_name (str): The column name in the katalog to apply. Defaults to "".
-            data_key_col_name (str): The column name in the dataset to apply the katalog onto. Defaults to "".
-            catalog_key_col_name (str): The column name in the katalog to use as the key. Defaults to "".
-            new_col_data_name (str): The column name to use in the dataset. Defaults to "".
-            level (int): The level (length of string-positions) of the ident to use as the key. Defaults to 0 (All).
-            ordered (bool): If True, the resulting column will be ordered. Defaults to False.
-            remove_unused (bool): If True, unused categories will be removed. Defaults to False.
+            df (pd.DataFrame): The dataset to apply formatting to.
+            catalog_col_name (str): The column name in the catalog to apply to the dataset.
+            data_key_col_name (str): The column in the dataset to map the catalog data onto.
+            catalog_key_col_name (str): The column in the catalog used as the key for the mapping.
+            new_col_data_name (str): The name for the new column after applying the catalog format.
+            level (int): The level of detail for the key to be used for formatting.
+            ordered (bool): Whether the new column should be treated as an ordered category.
+            remove_unused (bool): Whether to remove unused categories after applying the format.
 
         Returns:
-            pd.DataFrame: The dataset with the katalog applied.
+            pd.DataFrame: The DataFrame with the new formatting applied.
 
-        Raise:
-            ValueError: Something went wrong when trying to convert to a categorical column.
+        Raises:
+            ValueError: If an error occurs during the conversion to a categorical type.
         """
         # Guessing on key column name
         if not data_key_col_name:

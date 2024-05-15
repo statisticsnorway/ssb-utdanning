@@ -93,20 +93,27 @@ class UtdData:
         return len(self.data)
 
     def _correct_check_path(self, path: Path | CloudPath | GSPath | str) -> None:
-        """Checks and corrects the file path, ensuring it has the correct file extension based on the operating region and available file types.
+        """Checks and corrects the file path by ensuring it has a supported file extension (.parquet or .sas7bdat)
+        based on the operating region and available file types. Converts string paths to appropriate Path or
+        CloudPath objects depending on the operating environment.
 
         Args:
-            path (Union[Path, CloudPath, GSPath, str]): The path to check and potentially correct.
+            path (Union[Path, CloudPath, GSPath, str]): The file path to check and potentially correct. If a string is
+                provided, it will be converted to a Path or CloudPath object depending on the REGION.
 
         Raises:
-            None
+            None: This method does not explicitly raise any exceptions, but may log information if file paths
+                  are not found or are incompatible.
+
+        Side Effects:
+            - Sets the `self.path` attribute to the corrected Path or CloudPath object.
+            - Updates `self.periods` with the dates from the file paths using a helper function `get_path_dates`.
+            - Logs a message if neither a .parquet nor a .sas7bdat file can be found at the specified path.
         """
         self.path: Path | CloudPath
         if REGION == "ON_PREM" and isinstance(path, str):
             self.path = Path(path)
         elif REGION == "BIP" and isinstance(path, str):
-            # client = GSClient(credentials=dp.AuthClient.fetch_google_credentials())
-            # self.path = GSPath(path, client=client)
             self.path = GSPath(path)
         self.periods = get_paths.get_path_dates(self.path)
 
@@ -228,17 +235,25 @@ class UtdData:
         overwrite_mode: str | OverwriteMode = OverwriteMode.NONE,
         save_metadata: bool = True,
     ) -> None:
-        """Saves the data and metadata to the specified path, handles versioning and file existence based on provided parameters.
+        """Saves the data and optionally the metadata to the specified path, manages file versioning, and checks file existence
+        based on the provided parameters. The method adjusts the file path according to the operating environment and the specified
+        overwrite mode. It also handles automatic versioning and provides interactive confirmation prompts if needed.
 
         Args:
             path (Union[str, Path, CloudPath]): Path where the data should be saved. Defaults to the current path of the object.
-            bump_version (bool): Whether to increment the version number of the file.
-            overwrite_mode (Union[str, OverwriteMode]): Specifies the action on file existence. Can be 'none', 'overwrite', or 'filebump'.
-            save_metadata (bool): Whether to save metadata alongside the data.
+            bump_version (bool): Whether to increment the version number of the file automatically. Defaults to True.
+            overwrite_mode (Union[str, OverwriteMode]): Specifies the action on file existence. Options are 'none', 'overwrite',
+                or 'filebump', as defined in the OverwriteMode enum. Defaults to OverwriteMode.NONE.
+            save_metadata (bool): Whether to save metadata alongside the data. Defaults to True.
 
         Raises:
             ValueError: If an invalid overwrite mode is provided.
-            OSError: If the file already exists and overwrite conditions are not met.
+            OSError: If the file already exists and the overwrite conditions as specified by `overwrite_mode` are not met.
+
+        Side Effects:
+            Updates `self.path` to reflect the new file location if a save operation is completed.
+            May update `self.metadata` and save it to disk if `save_metadata` is True.
+            Logs information about the operation and any potential warnings or errors.
         """
         if isinstance(overwrite_mode, str):
             overwrite_mode_enum = getattr(OverwriteMode, overwrite_mode)
