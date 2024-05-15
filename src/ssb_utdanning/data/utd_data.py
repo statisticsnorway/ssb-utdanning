@@ -101,7 +101,7 @@ class UtdData:
             path (Union[Path, CloudPath, GSPath, str]): The file path to check and potentially correct. If a string is
                 provided, it will be converted to a Path or CloudPath object depending on the REGION.
 
-        Raises:
+        Returns:
             None: This method does not explicitly raise any exceptions, but may log information if file paths
                   are not found or are incompatible.
 
@@ -239,15 +239,17 @@ class UtdData:
         parameters. The method also offers the option to save associated metadata alongside the data.
 
         Args:
-            path (Union[str, Path, CloudPath], optional): The file path where the data should be saved.
-                                                         Defaults to the current object path.
-            bump_version (bool, optional): Whether to automatically increment the file version. Defaults to True.
-            overwrite_mode (Union[str, OverwriteMode], optional): Specifies how to handle existing files at the target path.
-                                                                 Can be 'none', 'overwrite', or 'filebump'. Defaults to OverwriteMode.NONE.
-            save_metadata (bool, optional): Whether to save metadata along with the data. Defaults to True.
+            path (Union[str, Path, CloudPath]): The file path where the data should be saved.
+                                                Defaults to the current object path.
+            bump_version (bool): Whether to automatically increment the file version. Defaults to True.
+            overwrite_mode (Union[str, OverwriteMode]): Specifies how to handle existing files at the target path.
+                                                        Can be 'none', 'overwrite', or 'filebump'. Defaults to OverwriteMode.NONE.
+            save_metadata (bool): Whether to save metadata along with the data. Defaults to True.
+
+        Returns:
+            None
 
         Raises:
-            ValueError: If the `overwrite_mode` is provided as a string and does not match any valid OverwriteMode.
             OSError: If the file already exists and the conditions for overwriting are not met as per the `overwrite_mode`.
 
         Notes:

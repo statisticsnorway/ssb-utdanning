@@ -186,9 +186,6 @@ class UtdKatalog(UtdData):
         Returns:
             pd.DataFrame: The DataFrame with the new formatting applied.
 
-        Raises:
-            ValueError: If an error occurs during the conversion to a categorical type.
-
         Notes:
             This method involves several default behaviors when parameters are not specified, including defaulting to the second column of
             the catalog for the value mapping and the first key column for the key mapping. Care should be taken when leaving parameters
