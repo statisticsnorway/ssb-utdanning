@@ -6,19 +6,22 @@ from cloudpathlib import CloudPath
 
 def get_version(path: str | Path | CloudPath) -> int:
     """Extracts version number.
-    
+
     Extracts the version number from a file path where the version is expected to be encoded
     in the filename, typically at the end of the filename just before the file extension and
     prefixed by 'v'. For example, in 'file_v2.txt', the version number is 2.
 
     Args:
-        path (Union[str, Path, CloudPath]): The file path or path object. The path can be a string, 
-                                            or an object from pathlib.Path or a cloud path object that 
+        path (Union[str, Path, CloudPath]): The file path or path object. The path can be a string,
+                                            or an object from pathlib.Path or a cloud path object that
                                             implements similar functionality.
 
     Returns:
         int: The version number extracted from the file name.
-
+        
+    Raises:
+            ValueError: If the version segment in the file name is not prefixed with 'v', or if the
+                        version number following 'v' is not a digit.
     Examples:
         - Given a path 'folder/subfolder/file_v10.txt', it will return 10.
         - Given a path 'dataset_v3.parquet', it will return 3.
@@ -39,9 +42,9 @@ def get_version(path: str | Path | CloudPath) -> int:
 
 def bump_path(path: str | Path | CloudPath, n: int = 1) -> str | Path | CloudPath:
     """Bumps version.
-    
+
     Increments the version number encoded in the file name of the specified path by a given amount. The version number is expected
-    to be at the end of the filename, immediately preceding the file extension and prefixed with 'v', such as 'file_v2.txt'. 
+    to be at the end of the filename, immediately preceding the file extension and prefixed with 'v', such as 'file_v2.txt'.
 
     This function can handle both string paths and Path-like objects (pathlib.Path, CloudPath), updating the version accordingly.
 
@@ -59,8 +62,7 @@ def bump_path(path: str | Path | CloudPath, n: int = 1) -> str | Path | CloudPat
         - For a pathlib.Path object representing 'output/report_v12.csv' and n=2, it returns a Path object for 'output/report_v14.csv'.
 
     Note:
-        The function assumes that the file name ends with a version number formatted as '_v<number>'. If this is not the case,
-        a ValueError is raised. It also assumes that the file name contains only one period, which separates the name from the extension.
+        The function assumes that the file name ends with a version number formatted as '_v<number>'. It also assumes that the file name contains only one period, which separates the name from the extension.
     """
     new_version = get_version(path) + n
     if isinstance(path, str):

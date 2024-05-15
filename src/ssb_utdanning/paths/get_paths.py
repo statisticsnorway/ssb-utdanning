@@ -94,7 +94,7 @@ def get_paths_dates(
                         with that file, as determined by the `get_path_dates` function. The date format and
                         the exact nature of the date (e.g., modification, creation) depend on the implementation
                         of `get_path_dates`.
-                        
+
     Note:
         This function assumes that `get_path_dates` is capable of extracting a meaningful date string from each
         path. The specific nature of the date retrieved (creation, modification, etc.) should be documented
