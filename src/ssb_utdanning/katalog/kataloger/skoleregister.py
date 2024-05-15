@@ -27,7 +27,9 @@ def get_skoleregister(from_date: str = "") -> UtdKatalog:
 
 
 def skoleregister_dates() -> dict[str, Path]:
-    """Retrieves a dictionary mapping each year extracted from the filenames in the skoleregister directory
+    """Retrieves a dictionary of skolereg versions according to date.
+    
+    Retrieves a dictionary mapping each year extracted from the filenames in the skoleregister directory
     to the corresponding file path. The filenames are expected to contain year information as four digits
     following an underscore.
 
@@ -46,6 +48,6 @@ def skoleregister_dates() -> dict[str, Path]:
         date_paths_dict = {x.stem[1:5]: x for x in date_paths}
         # print(year_paths_dict.keys())
         return date_paths_dict
-    elif REGION == "DAPLA":
+    elif REGION == "BIP":
         raise NotImplementedError("Not written for Dapla yet")
     return date_paths_dict

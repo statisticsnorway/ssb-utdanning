@@ -32,7 +32,8 @@ class OverwriteMode(enum.Enum):
 
 
 class UtdData:
-    """
+    """Manages loading, saving and access to metadata.
+
     Manages the loading, storage, and access of structured data, providing robust methods for handling data
     retrieval, path validation, and metadata management based on specified paths or patterns. This class
     integrates functionality to dynamically load data from local or cloud storage based on specified file
@@ -57,6 +58,7 @@ class UtdData:
     This class is designed to be versatile, supporting various data storage formats and environments, and
     is easily extendable for additional data handling and processing needs.
     """
+
     def __init__(
         self,
         data: pd.DataFrame | None = None,
@@ -118,7 +120,9 @@ class UtdData:
         return len(self.data)
 
     def _correct_check_path(self, path: Path | CloudPath | GSPath | str) -> None:
-        """Checks and corrects the file path by ensuring it has a supported file extension (.parquet or .sas7bdat)
+        """Checks and corrects path.
+
+        Checks and corrects the file path by ensuring it has a supported file extension (.parquet or .sas7bdat)
         based on the operating region and available file types. Converts string paths to appropriate Path or
         CloudPath objects depending on the operating environment.
 
@@ -213,7 +217,7 @@ class UtdData:
                 df_get_data = auto_dtype(pd.read_sas(path))
             else:
                 raise OSError(
-                    f"Can only open parquet and sas7bdat, you gave me {suffix}"
+                    f"Can only open parquet and sas7bdat, you gave me {path.suffix}"
                 )
         if REGION == "BIP":
             if path.suffix == ".sas7bdat":
@@ -260,7 +264,9 @@ class UtdData:
         overwrite_mode: str | OverwriteMode = OverwriteMode.NONE,
         save_metadata: bool = True,
     ) -> None:
-        """Saves the data to a specified path, manages file versioning, and handles file overwriting based on the provided
+        """Saves data to path.
+
+        Saves the data to a specified path, manages file versioning, and handles file overwriting based on the provided
         parameters. The method also offers the option to save associated metadata alongside the data.
 
         Args:

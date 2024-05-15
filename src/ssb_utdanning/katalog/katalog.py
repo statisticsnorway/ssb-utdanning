@@ -165,7 +165,9 @@ class UtdKatalog(UtdData):
         ordered: bool = False,
         remove_unused: bool = False,
     ) -> pd.DataFrame:
-        """Applies the catalog formatting to a DataFrame by mapping values from a catalog column to a dataset column
+        """Applies format on DataFrame.
+        
+        Applies the catalog formatting to a DataFrame by mapping values from a catalog column to a dataset column
         based on a key. The function can also set the new column as a categorical type, with options for ordering
         and removing unused categories.
 
