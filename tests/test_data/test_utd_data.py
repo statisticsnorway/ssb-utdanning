@@ -78,7 +78,7 @@ class TestUtdData(unittest.TestCase):
         self.assertIsInstance(data.data, pd.DataFrame)
         self.assertTrue(self.data.equals(data.data))
 
-    def test_str_(self):
+    def test_str(self):
         self.setUp()
         data = UtdData(path=self.path_to_file)
         self.assertEqual(data.path.__str__(), str(self.path_to_file))
@@ -141,14 +141,13 @@ class TestUtdData(unittest.TestCase):
         shutil.rmtree(self.path, ignore_errors=True)
 
 
-# +
-# test = TestUtdData()
-# test.setUp()
-# test.test_init()
-# test.test_str_()
-# test.test_correct_check_path()
-# test.test_get_latest_version_path()
-# test.test_save()
-# test.tearDown()
-# +
-# os.environ.get('DAPLA_REGION')
+test = TestUtdData()
+test.setUp()
+test.test_init()
+test.test_str()
+test.test_correct_check_path()
+test.test_get_latest_version_path()
+test.test_save()
+test.tearDown()
+
+

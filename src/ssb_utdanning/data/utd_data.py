@@ -14,6 +14,8 @@ from fagfunksjoner import auto_dtype
 from ssb_utdanning import logger
 from ssb_utdanning.config import REGION
 from ssb_utdanning.paths import get_paths
+from ssb_utdanning.paths import get_path_dates
+from ssb_utdanning.paths import get_path_latest
 from ssb_utdanning.paths import versioning
 
 
@@ -144,7 +146,7 @@ class UtdData:
             self.path = Path(path)
         elif REGION == "BIP" and isinstance(path, str):
             self.path = GSPath(path)
-        self.periods = get_paths.get_path_dates(self.path)
+        self.periods = get_path_dates(self.path)
 
         if not self.path.suffix == ".parquet" or self.path.suffix == ".sas7bdat":
             if self.path.with_suffix(".parquet").exists():
@@ -169,7 +171,7 @@ class UtdData:
         Returns:
             str: The path to the last modified file matching the criteria.
         """
-        return get_paths.get_path_latest(glob_pattern, exclude_keywords)
+        return get_path_latest(glob_pattern, exclude_keywords)
 
     def get_similar_paths(self) -> list[str]:
         """Finds paths that are similar to the current path, excluding versions.
