@@ -9,6 +9,7 @@ import glob
 import sys
 from string import digits
 from ssb_utdanning.config import REGION
+
 os.environ["DAPLA_REGION"] = "ON_PREM"
 
 
@@ -149,5 +150,3 @@ test.test_correct_check_path()
 test.test_get_latest_version_path()
 test.test_save()
 test.tearDown()
-
-

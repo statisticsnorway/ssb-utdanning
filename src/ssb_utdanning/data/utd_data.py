@@ -13,7 +13,6 @@ from fagfunksjoner import auto_dtype
 
 from ssb_utdanning import logger
 from ssb_utdanning.config import REGION
-from ssb_utdanning.paths import get_paths
 from ssb_utdanning.paths import get_path_dates
 from ssb_utdanning.paths import get_path_latest
 from ssb_utdanning.paths import versioning

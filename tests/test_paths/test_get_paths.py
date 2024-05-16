@@ -19,15 +19,21 @@ class Test_get_paths(unittest.TestCase):
         self.folder_path = template_dir / "mock_data"
         self.tearDown()
         os.makedirs(self.folder_path, exist_ok=True)
-        create_mock_datasets()   
+        create_mock_datasets()
 
     def test_get_paths(self):
-        result = get_paths(glob_pattern=str(self.folder_path) + "/test_data_p2023-10_v*.parquet")
+        result = get_paths(
+            glob_pattern=str(self.folder_path) + "/test_data_p2023-10_v*.parquet"
+        )
         self.assertEqual(len(result), 3)
-        result = get_paths(glob_pattern=str(self.folder_path) + "/test_data*p2023-10_v*.parquet")
+        result = get_paths(
+            glob_pattern=str(self.folder_path) + "/test_data*p2023-10_v*.parquet"
+        )
         self.assertEqual(len(result), 6)
 
-        w_keywords = get_paths(glob_pattern=str(self.folder_path) + "/test_data*.parquet")
+        w_keywords = get_paths(
+            glob_pattern=str(self.folder_path) + "/test_data*.parquet"
+        )
         wo_keywords = get_paths(
             glob_pattern=str(self.folder_path) + "/test_data*.parquet",
             exclude_keywords="excludethiskeyword",
@@ -73,6 +79,7 @@ class Test_get_paths(unittest.TestCase):
         # Clean up test files and folders after tests
         shutil.rmtree(self.folder_path, ignore_errors=True)
 
+
 # +
 # test = Test_get_paths()
 # test.setUp()
@@ -81,5 +88,3 @@ class Test_get_paths(unittest.TestCase):
 # test.test_get_paths_dates()
 # test.test_get_path_reference_date()
 # -
-
-
