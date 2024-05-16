@@ -1,13 +1,13 @@
 import os
 from ssb_utdanning import UtdData
-from pathlib import Path
-import unittest
-import pandas as pd
-from create_mock_data import create_mock_data
-import shutil
-import glob
-import sys
-from string import digits
+# from pathlib import Path
+# import unittest
+# import pandas as pd
+# from create_mock_data import create_mock_data
+# import shutil
+# import glob
+# import sys
+# from string import digits
 
 # from ssb_utdanning.config import REGION
 os.environ["DAPLA_REGION"] = "ON_PREM"
@@ -153,4 +153,3 @@ class TestUtdData(unittest.TestCase):
 # test.tearDown()
 # +
 # os.environ.get('DAPLA_REGION')
-# -
