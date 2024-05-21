@@ -11,7 +11,7 @@ from datadoc.backend.datadoc_metadata import DataDocMetadata
 from datadoc.backend.statistic_subject_mapping import StatisticSubjectMapping
 from fagfunksjoner import auto_dtype
 
-from ssb_utdanning import logger
+from ssb_utdanning.utdanning_logger import logger
 from ssb_utdanning.config import REGION
 from ssb_utdanning.paths import get_path_dates
 from ssb_utdanning.paths import get_path_latest
@@ -379,7 +379,7 @@ class UtdData:
         )
         return None
 
-    def _metadata_from_path(self):
+    def _metadata_from_path(self) -> None:
         """Extracts metadata from the file path, intended for internal use."""
         self.metadata = DataDocMetadata(
             StatisticSubjectMapping(""), dataset_path=str(self.path)

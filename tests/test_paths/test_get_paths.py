@@ -1,8 +1,8 @@
-from ssb_utdanning.paths import get_paths
-from ssb_utdanning.paths import get_path_dates
-from ssb_utdanning.paths import get_path_latest
-from ssb_utdanning.paths import get_path_reference_date
-from ssb_utdanning.paths import get_paths_dates
+from ssb_utdanning.paths.get_paths import get_paths
+from ssb_utdanning.paths.get_paths import get_path_dates
+from ssb_utdanning.paths.get_paths import get_path_latest
+from ssb_utdanning.paths.get_paths import get_path_reference_date
+from ssb_utdanning.paths.get_paths import get_paths_dates
 import unittest
 from pathlib import Path
 import os
@@ -13,7 +13,7 @@ import dateutil.parser
 
 
 class Test_get_paths(unittest.TestCase):
-    def setUp(self) -> None:
+    def setUp(self):
         # setting up folder to store formats
         template_dir = Path(os.getcwd())
         self.folder_path = template_dir / "mock_data"
@@ -78,13 +78,3 @@ class Test_get_paths(unittest.TestCase):
     def tearDown(self):
         # Clean up test files and folders after tests
         shutil.rmtree(self.folder_path, ignore_errors=True)
-
-
-# +
-# test = Test_get_paths()
-# test.setUp()
-# test.test_get_paths()
-# test.test_get_path_latest()
-# test.test_get_paths_dates()
-# test.test_get_path_reference_date()
-# -

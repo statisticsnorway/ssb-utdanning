@@ -2,7 +2,7 @@ import json
 
 import pandas as pd
 
-from ssb_utdanning import logger
+from ssb_utdanning.utdanning_logger import logger
 from ssb_utdanning.katalog import UtdKatalog
 from ssb_utdanning.katalog.katalog import REQUIRED_COLS
 
@@ -12,7 +12,7 @@ def create_new_utd_katalog(
     key_col_name: str,
     extra_cols: list[str] | None = None,
     versioned: bool = True,
-    **metadata: str,
+    **metadata: str | dict[str, str],
 ) -> UtdKatalog:
     """Make a new, empty Katalog.
 
@@ -43,7 +43,7 @@ def create_new_utd_katalog(
         "Add more metadata to the catalogue.metadata before saving if you want. "
     )
 
-    result = UtdKatalog(path, key_col_name, versioned=versioned, **metadata)
+    result = UtdKatalog(path=path, key_cols=key_col_name, **metadata)
     result.data = df
     return result
 
@@ -61,5 +61,5 @@ def open_utd_katalog_from_metadata(meta_path: str) -> UtdKatalog:
         metadata = json.load(jsonmeta)
     file_path = meta_path.replace("__META.json", "")
     return UtdKatalog(
-        file_path, metadata.pop("key_col"), metadata.pop("versioned"), **metadata
+        path=file_path, key_cols=metadata.pop("key_col"), **metadata
     )

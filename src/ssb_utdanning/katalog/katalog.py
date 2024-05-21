@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 # Local imports
 
-from ssb_utdanning import logger
+from ssb_utdanning.utdanning_logger import logger
 from ssb_utdanning.data.utd_data import UtdData
 
 REQUIRED_COLS = ["username", "edited_time", "expiry_date", "validity"]
@@ -68,7 +68,7 @@ class UtdKatalog(UtdData):
         self,
         dataset: pd.DataFrame | UtdData,
         key_col_in_data: str,
-        keep_cols: list[str] | None = None,
+        keep_cols: list[str] | set[str] | None = None,
         merge: bool = False,
         return_lengths: bool = False,
     ) -> pd.DataFrame:

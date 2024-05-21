@@ -8,14 +8,15 @@ import os
 
 import toml
 
+from ssb_utdanning.utdanning_logger import logger
 from ssb_utdanning.data.utd_data import UtdData
 from ssb_utdanning.format.formats import UtdFormat
 from ssb_utdanning.katalog.katalog import UtdKatalog
 from ssb_utdanning.orgnrkontroll.orgnrkontroll import orgnrkontroll_func
-from ssb_utdanning.utdanning_logger import logger
+
 
 # Mypy wants an "explicit export?"
-__all__ = ["logger", "UtdFormat", "UtdKatalog", "UtdData", "orgnrkontroll_func"]
+__all__ = ["logger", "UtdData", "UtdFormat", "UtdKatalog", "orgnrkontroll_func"]
 
 
 # Split into function for testing

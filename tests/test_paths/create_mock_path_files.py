@@ -6,7 +6,7 @@ import pandas as pd
 # np.random.seed(12345)
 
 
-def create_mock_datasets():
+def create_mock_datasets() -> None:
     np.random.seed(12345)
     n = int(2 * 1e2)
     ident = np.random.randint(1000, 1200, n)

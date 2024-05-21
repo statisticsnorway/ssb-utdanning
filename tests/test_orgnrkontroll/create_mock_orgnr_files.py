@@ -4,7 +4,7 @@ from pathlib import Path
 import os
 
 
-def create_mock_skolereg():
+def create_mock_skolereg() -> None:
     template_dir = Path(os.getcwd())
     path = template_dir / "mock_data"
     filename = "vigo_skole_testfil_slett*.parquet"
@@ -36,7 +36,7 @@ def create_mock_skolereg():
                 skolereg.to_parquet(path / f"skolereg_{cat}_p{year}-10_v1.parquet")
 
 
-def create_mock_vigo():
+def create_mock_vigo() -> None:
     template_dir = Path(os.getcwd())
     path = template_dir / "mock_data"
     filename = "vigo_skole_testfil_slett*.parquet"
@@ -53,7 +53,7 @@ def create_mock_vigo():
         vigo.to_parquet(path / f"vigo_skole_testfil_slett_p{year}_v1.parquet")
 
 
-def create_mock_data():
+def create_mock_data() -> None:
     template_dir = Path(os.getcwd())
     path = template_dir / "mock_data"
     filename = "vigo_skole_testfil_slett*.parquet"

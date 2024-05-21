@@ -9,7 +9,7 @@ import dateutil.parser
 import pandas as pd
 from pandas._libs.missing import NAType
 
-from ssb_utdanning import logger
+from ssb_utdanning.utdanning_logger import logger
 from ssb_utdanning.config import DATETIME_FORMAT
 from ssb_utdanning.config import FORMATS_PATH
 

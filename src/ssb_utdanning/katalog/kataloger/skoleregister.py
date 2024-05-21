@@ -20,9 +20,8 @@ def get_skoleregister(from_date: str = "") -> UtdKatalog:
     if not from_date:
         from_date = sorted(skolereg_dates.keys())[-1]
     return UtdKatalog(
-        skolereg_dates[from_date],
-        key_col="orgnr",
-        from_date=from_date,
+        path=skolereg_dates[from_date],
+        key_cols="orgnr"
     )
 
 

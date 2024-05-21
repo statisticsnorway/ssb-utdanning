@@ -37,7 +37,7 @@ class Test_orgnrkontroll(unittest.TestCase):
         create_mock_vigo()
         create_mock_data()
 
-    def get_data_year(self, year):
+    def get_data_year(self, year) -> UtdData:
         return UtdData(glob_pattern=str(self.path) + f"/data_p{year}*.parquet")
 
     def test_get_skolereg(self):

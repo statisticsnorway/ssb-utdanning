@@ -2,7 +2,7 @@ import pandas as pd
 
 from ssb_utdanning import UtdData
 from ssb_utdanning import UtdKatalog
-from ssb_utdanning import logger
+from ssb_utdanning.utdanning_logger import logger
 from ssb_utdanning.config import SKOLEREG_PATH
 from ssb_utdanning.config import VIGO_PATH
 
@@ -88,7 +88,7 @@ def orgnrkontroll_func(
     orgnrbed_col_innfil: str = "orgnrbed",
     fskolenr_col_innfil: str = "fskolenr",
     skolereg_subcategory: str = "",
-) -> pd.DataFrame:
+) -> pd.DataFrame | UtdData:
     """Performs merge validation and merges orgnr from skolereg and vigo-skole catalogues.
 
     Performs data validation and merging operations on educational data from different catalogs.

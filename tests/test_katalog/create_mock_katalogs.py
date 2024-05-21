@@ -6,7 +6,7 @@ import pandas as pd
 # np.random.seed(12345)
 
 
-def create_mock_katalog():
+def create_mock_katalog() -> Path:
     np.random.seed(12345)
     template_dir = Path(os.getcwd())
     path = template_dir / "mock_data" / "test_katalog_p2024_v1.parquet"
@@ -21,7 +21,7 @@ def create_mock_katalog():
     return path
 
 
-def create_mock_dataset():
+def create_mock_dataset() -> Path:
     np.random.seed(12345)
     template_dir = Path(os.getcwd())
     path = template_dir / "mock_data" / "test_data_p2024_v1.parquet"

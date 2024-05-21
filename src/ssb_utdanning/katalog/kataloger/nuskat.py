@@ -26,4 +26,4 @@ def get_nuskat(path: str = "") -> UtdKatalog:
     """
     if not path:
         path = "/ssb/stamme01/utd/nuskat/wk16/nus2000/nus2000.sas7bdat"
-    return UtdKatalog(path, key_col="nus2000")
+    return UtdKatalog(path=path, key_cols="nus2000")

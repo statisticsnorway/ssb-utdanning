@@ -43,12 +43,12 @@ def get_paths(
     for exclude in exclude_keywords:
         paths = [x for x in paths if exclude not in x.split("/")[-1]]
     paths = sorted(paths)[::-1]
-    return paths
+    return list(paths)
 
 
 def get_path_latest(
     glob_pattern: str, exclude_keywords: list[str] | None = None
-) -> list[str]:
+) -> str:
     """Retrieves path for most recent file matching glob pattern.
 
     Retrieves the path of the most recently modified file that matches a specified glob pattern,
@@ -72,7 +72,7 @@ def get_path_latest(
 
 def get_paths_dates(
     glob_pattern: str, exclude_keywords: list[str] | None = None
-) -> dict[str, str]:
+) -> dict[str, tuple] :
     """Retrieves dictionary of dates to corresponding paths matching glob pattern.
 
     Retrieves a dictionary mapping each file path that matches a specified glob pattern to a date,
@@ -108,7 +108,7 @@ def get_paths_dates(
 
 
 # the next two modules doesn't work properly.
-def get_path_dates(path: str) -> tuple[datetime.datetime]:
+def get_path_dates(path: str) -> tuple[datetime.datetime] | tuple[datetime.datetime, datetime.datetime]:
     """Extracts data information about file from path.
 
     Extracts date information from a given file path based on specific patterns in the filename. This function assumes

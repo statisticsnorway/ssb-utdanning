@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 
-def create_mock_data(path: Path | str):
+def create_mock_data(path: Path | str) -> None:
 
     np.random.seed(12345)
 
