@@ -5,7 +5,7 @@ from pathlib import Path
 import os
 import shutil
 from unittest import mock
-from ssb_utdanning.format.formats import UtdFormat
+from ssb_utdanning import UtdFormat
 
 
 def mock_is_different_from_last_time(

@@ -166,25 +166,3 @@ class Test_orgnrkontroll(unittest.TestCase):
     def tearDown(self):
         # Clean up test files and folders after tests
         shutil.rmtree(self.path, ignore_errors=True)
-
-
-# +
-# test = Test_orgnrkontroll()
-# test.setUp()
-# test.test_get_skolereg()
-# test.test_get_vigo_skole()
-# test.test_orgnrkontroll_func()
-
-# +
-# path = '/ssb/stamme01/utd_pii/grskavsl/wk16/MOD/ssb-prod-gro-grunnskole-produkt/klargjorte-data/'
-# filename = 'kag_nudb_p2022_p2023_v1.parquet'
-# data = UtdData(path=path+filename)
-# data.data = data.data[['orgnr', 'orgnrbed', 'orgnrforetak', 'fskolenr']]
-
-# +
-# test = orgnrkontroll_module.orgnrkontroll_func(data,
-#               year=2023,
-#               orgnr_col_innfil= 'orgnr',
-#               orgnrbed_col_innfil = 'orgnrbed',
-#               skolereg_keep_cols=['nace1_sn07', 'nace2_sn07', 'nace3_sn07'])
-# -

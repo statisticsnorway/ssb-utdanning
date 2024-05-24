@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 from ssb_utdanning.format.formats import get_format
-from ssb_utdanning.format.formats import UtdFormat
+from ssb_utdanning import UtdFormat
 
 
 def mock_get_path(filename: str, var2: None) -> Path:
