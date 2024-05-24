@@ -2,9 +2,9 @@ import json
 
 import pandas as pd
 
-from ssb_utdanning.utdanning_logger import logger
 from ssb_utdanning.katalog import UtdKatalog
 from ssb_utdanning.katalog.katalog import REQUIRED_COLS
+from ssb_utdanning.utdanning_logger import logger
 
 
 def create_new_utd_katalog(
@@ -60,6 +60,4 @@ def open_utd_katalog_from_metadata(meta_path: str) -> UtdKatalog:
     with open(meta_path) as jsonmeta:
         metadata = json.load(jsonmeta)
     file_path = meta_path.replace("__META.json", "")
-    return UtdKatalog(
-        path=file_path, key_cols=metadata.pop("key_col"), **metadata
-    )
+    return UtdKatalog(path=file_path, key_cols=metadata.pop("key_col"), **metadata)

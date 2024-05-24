@@ -11,11 +11,11 @@ from datadoc.backend.datadoc_metadata import DataDocMetadata
 from datadoc.backend.statistic_subject_mapping import StatisticSubjectMapping
 from fagfunksjoner import auto_dtype
 
-from ssb_utdanning.utdanning_logger import logger
 from ssb_utdanning.config import REGION
 from ssb_utdanning.paths import get_path_dates
 from ssb_utdanning.paths import get_path_latest
 from ssb_utdanning.paths import versioning
+from ssb_utdanning.utdanning_logger import logger
 
 
 class OverwriteMode(enum.Enum):

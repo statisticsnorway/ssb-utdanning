@@ -2,9 +2,9 @@ import pandas as pd
 
 from ssb_utdanning import UtdData
 from ssb_utdanning import UtdKatalog
-from ssb_utdanning.utdanning_logger import logger
 from ssb_utdanning.config import SKOLEREG_PATH
 from ssb_utdanning.config import VIGO_PATH
+from ssb_utdanning.utdanning_logger import logger
 
 
 def get_skolereg(year: str | int = "latest", sub_category: str = "") -> UtdKatalog:

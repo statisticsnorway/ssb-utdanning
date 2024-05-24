@@ -25,8 +25,8 @@ if TYPE_CHECKING:
 
 # Local imports
 
-from ssb_utdanning.utdanning_logger import logger
 from ssb_utdanning.data.utd_data import UtdData
+from ssb_utdanning.utdanning_logger import logger
 
 REQUIRED_COLS = ["username", "edited_time", "expiry_date", "validity"]
 
