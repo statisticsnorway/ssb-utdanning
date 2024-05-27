@@ -5,15 +5,14 @@ from string import digits
 
 import dapla as dp
 import pandas as pd
-from cloudpathlib import CloudPath
 from cloudpathlib import GSPath
 from datadoc.backend.datadoc_metadata import DataDocMetadata
 from datadoc.backend.statistic_subject_mapping import StatisticSubjectMapping
 from fagfunksjoner import auto_dtype
 
 from ssb_utdanning.config import REGION
-from ssb_utdanning.paths import get_path_dates
-from ssb_utdanning.paths import get_path_latest
+from ssb_utdanning.paths.get_paths import get_path_dates
+from ssb_utdanning.paths.get_paths import get_path_latest
 from ssb_utdanning.paths import versioning
 from ssb_utdanning.utdanning_logger import logger
 
@@ -47,7 +46,7 @@ class UtdData:
 
     Attributes:
         data (pd.DataFrame | None): The DataFrame loaded into the instance, either provided at initialization or loaded from the specified path.
-        path (Union[Path, CloudPath, GSPath, str]): The primary file path associated with the data.
+        path (Union[Path, GSPath, str]): The primary file path associated with the data.
         metadata (DataDocMetadata): Metadata associated with the data, automatically managed based on file path changes or data updates.
 
     Methods:
@@ -63,15 +62,15 @@ class UtdData:
     def __init__(
         self,
         data: pd.DataFrame | None = None,
-        path: Path | CloudPath | GSPath | str = "",
+        path: Path | GSPath | str = "",
         glob_pattern: str = "",
         exclude_keywords: list[str] | None = None,
-    ) -> str:
+    ) -> None:
         """Initializes the UtdData class with data and path parameters. If glob_pattern is used, it will use the latest file matching the pattern.
 
         Args:
             data (pd.DataFrame | None): Initial dataframe to be used. If None, data will be loaded from the specified path.
-            path (Union[Path, CloudPath, GSPath, str]): Path to the file or directory from which the data should be loaded.
+            path (Union[Path, GSPath, str]): Path to the file or directory from which the data should be loaded.
             glob_pattern (str): Glob pattern to find files if no direct path is given.
             exclude_keywords (List[str] | None): List of keywords to exclude while searching for files using glob pattern.
 
@@ -87,8 +86,7 @@ class UtdData:
         # Gets a path using glob-pattern
         if glob_pattern and not path:
             path = self._find_last_glob(glob_pattern, exclude_keywords)
-        self.path = path
-        self._correct_check_path(self.path)
+        self._correct_check_path(path)
         if data is None:
             self.get_data()
         else:
@@ -120,31 +118,33 @@ class UtdData:
         """
         return len(self.data)
 
-    def _correct_check_path(self, path: Path | CloudPath | GSPath | str) -> None:
+    def _correct_check_path(self, path: Path | GSPath | str) -> None:
         """Checks and corrects path.
 
         Checks and corrects the file path by ensuring it has a supported file extension (.parquet or .sas7bdat)
         based on the operating region and available file types. Converts string paths to appropriate Path or
-        CloudPath objects depending on the operating environment.
+        GSPath objects depending on the operating environment.
 
         Args:
-            path (Union[Path, CloudPath, GSPath, str]): The file path to check and potentially correct. If a string is
-                provided, it will be converted to a Path or CloudPath object depending on the REGION.
+            path (Union[Path, GSPath, str]): The file path to check and potentially correct. If a string is
+                provided, it will be converted to a Path or GSPath object depending on the REGION.
 
         Returns:
             None: This method does not explicitly raise any exceptions, but may log information if file paths
                   are not found or are incompatible.
 
         Side Effects:
-            - Sets the `self.path` attribute to the corrected Path or CloudPath object.
+            - Sets the `self.path` attribute to the corrected Path or GSPath object.
             - Updates `self.periods` with the dates from the file paths using a helper function `get_path_dates`.
             - Logs a message if neither a .parquet nor a .sas7bdat file can be found at the specified path.
         """
-        self.path: Path | CloudPath
+        self.path: Path | GSPath
         if REGION == "ON_PREM" and isinstance(path, str):
             self.path = Path(path)
         elif REGION == "BIP" and isinstance(path, str):
             self.path = GSPath(path)
+        else:
+            self.path=Path(path)
         self.periods = get_path_dates(self.path)
 
         if not self.path.suffix == ".parquet" or self.path.suffix == ".sas7bdat":
@@ -179,11 +179,11 @@ class UtdData:
             List[str]: A sorted list of similar file paths.
         """
         return sorted(
-            self.path.parent.glob(
-                self.path.stem.rstrip(digits) + "*" + self.path.suffix
-            )
+                self.path.parent.glob(
+                    self.path.stem.rstrip(digits) + "*" + self.path.suffix
+                )
         )
-
+    
     def get_latest_version_path(self) -> str:
         """Determines the most recent version path for the current file.
 
@@ -192,7 +192,7 @@ class UtdData:
         """
         return self.get_similar_paths()[-1]
 
-    def get_data(self) -> None | tuple[pd.DataFrame, dict[str, str | bool]]:
+    def get_data(self) -> None | pd.DataFrame | tuple[pd.DataFrame, dict[str, str | bool]]:
         """Loads the data from the specified path, or the most recent file version if the specified path is outdated.
 
         Returns:
@@ -211,9 +211,10 @@ class UtdData:
             if not sure.lower() == "y":
                 return None
         logger.info("Opening data from %s", str(self.path))
+        df_get_data: pd.DataFrame
         if REGION == "ON_PREM":
             if path.suffix == ".parquet":
-                df_get_data: pd.DataFrame = pd.read_parquet(path)
+                df_get_data = pd.read_parquet(path)
             elif path.suffix == ".sas7bdat":
                 df_get_data = auto_dtype(pd.read_sas(path))
             else:
@@ -222,19 +223,19 @@ class UtdData:
                 )
         if REGION == "BIP":
             if path.suffix == ".sas7bdat":
-                with dp.FileClient().gcs_open(path, "r") as sasfile:
-                    df_get_data = auto_dtype(pd.read_sas(sasfile))
+                with dp.FileClient().gcs_open(str(path), "r") as sasfile:
+                    df_get_data = auto_dtype(pd.read_sas(str(sasfile)))
             else:
-                df_get_data: pd.DataFrame = dp.read_pandas(path)
+                df_get_data = pd.DataFrame(dp.read_pandas(str(path)))
 
         self.data = df_get_data
         return df_get_data
 
-    def get_version(self, path: str | Path | CloudPath = "") -> int:
+    def get_version(self, path: str | Path | GSPath = "") -> int:
         """Gets the version number of the file at the specified path.
 
         Args:
-            path (Union[str, Path, CloudPath]): The path to check for versioning.
+            path (Union[str, Path, GSPath]): The path to check for versioning.
 
         Returns:
             int: The version number.
@@ -246,11 +247,11 @@ class UtdData:
         return 0
 
     @staticmethod
-    def bump_path(path: str | Path | CloudPath, num_bumps: int = 1) -> str:
+    def bump_path(path: str | Path | GSPath, num_bumps: int = 1) -> str | Path | GSPath:
         """Increments the version number in the path.
 
         Args:
-            path (Union[str, Path, CloudPath]): The file path to increment.
+            path (Union[str, Path, GSPath]): The file path to increment.
             num_bumps (int): Number of version increments.
 
         Returns:
@@ -260,7 +261,7 @@ class UtdData:
 
     def save(
         self,
-        path: str | Path | CloudPath = "",
+        path: str | Path | GSPath = "",
         bump_version: bool = True,
         overwrite_mode: str | OverwriteMode = OverwriteMode.NONE,
         save_metadata: bool = True,
@@ -271,7 +272,7 @@ class UtdData:
         parameters. The method also offers the option to save associated metadata alongside the data.
 
         Args:
-            path (Union[str, Path, CloudPath]): The file path where the data should be saved.
+            path (Union[str, Path, GSPath]): The file path where the data should be saved.
                                                 Defaults to the current object path.
             bump_version (bool): Whether to automatically increment the file version. Defaults to True.
             overwrite_mode (Union[str, OverwriteMode]): Specifies how to handle existing files at the target path.
@@ -285,7 +286,7 @@ class UtdData:
             OSError: If the file already exists and the conditions for overwriting are not met as per the `overwrite_mode`.
 
         Notes:
-            The method converts string paths to Path or CloudPath based on the runtime environment. The path is also forced
+            The method converts string paths to Path or GSPath based on the runtime environment. The path is also forced
             to have a '.parquet' suffix. If `bump_version` is enabled, the file path will be adjusted to accommodate a new
             version number according to existing files in the target directory.
 
@@ -306,9 +307,9 @@ class UtdData:
 
         if not path:
             path = self.path
-        pathpath: Path | CloudPath
+        pathpath: Path | GSPath
         if isinstance(path, str) and REGION == "BIP":
-            pathpath = CloudPath(path)
+            pathpath = GSPath(path)
         else:
             pathpath = Path(path)
         # Force path to be parquet before writing
@@ -316,6 +317,11 @@ class UtdData:
         # Automatic versioning
         if bump_version:
             pathpath = self.bump_path(pathpath)
+        
+        if isinstance(path, str) and REGION == "BIP":
+            pathpath = GSPath(pathpath)
+        else:
+            pathpath = Path(pathpath)
 
         # Check that we are not writing to an existing file
         if overwrite_mode_enum == OverwriteMode.NONE and pathpath.is_file():
@@ -363,12 +369,13 @@ class UtdData:
         if REGION == "ON_PREM":
             self.data.to_parquet(pathpath)
         elif REGION == "BIP":
-            dp.write_pandas(self.data, pathpath)
+            dp.write_pandas(self.data, str(pathpath))
 
         # Update path in metadata before saving
         self.metadata.dataset_path = pathpath
         metapath = self.metadata.metadata_document
-        metapath = metapath.parent / (pathpath.stem + "__DOC.json")
+        if metapath:
+            metapath = metapath.parent / (pathpath.stem + "__DOC.json")
         self.metadata.metadata_document = metapath
         # Actuall save the metadata
         if save_metadata:

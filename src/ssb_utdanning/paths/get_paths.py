@@ -3,6 +3,8 @@ import glob
 
 import dapla as dp
 import dateutil.parser
+from pathlib import Path
+from cloudpathlib import GSPath
 
 from ssb_utdanning.config import DEFAULT_DATE
 from ssb_utdanning.config import REGION
@@ -72,36 +74,34 @@ def get_path_latest(
 
 def get_paths_dates(
     glob_pattern: str, exclude_keywords: list[str] | None = None
-) -> dict[str, tuple]:
-    """Retrieves dictionary of dates to corresponding paths matching glob pattern.
+) -> dict[str, tuple[datetime.datetime] | tuple[datetime.datetime, datetime.datetime]]:
+    """
+    Retrieves a dictionary of dates to corresponding paths matching a glob pattern.
 
-    Retrieves a dictionary mapping each file path that matches a specified glob pattern to a date,
-    extracted by the `get_path_dates` function. Files containing any specified exclude keywords are
-    omitted from the search.
-
-    This function primarily serves to aggregate dates associated with multiple files, typically used
-    in scenarios where file modifications or creation dates are tracked alongside file paths.
+    This function aggregates dates associated with multiple files, typically used in scenarios where file 
+    modifications or creation dates are tracked alongside file paths. It maps each file path that matches 
+    a specified glob pattern to a date, extracted by the `get_path_dates` function. Files containing any 
+    specified exclude keywords are omitted from the search.
 
     Args:
-        glob_pattern (str): The glob pattern used to identify files. This can include paths on a local
+        glob_pattern (str): The glob pattern used to identify files. This can include paths on a local 
                             filesystem or within cloud storage, depending on the execution environment.
         exclude_keywords (list[str] | None, optional): A list of keywords that, if present in a file's path,
-                                                      will cause that file to be excluded from the results.
+                                                      will cause that file to be excluded from the results. 
                                                       Defaults to None, meaning no exclusions are applied.
 
     Returns:
-        dict[str, str]: A dictionary where each key is a file path and each value is the date associated
-                        with that file, as determined by the `get_path_dates` function. The date format and
-                        the exact nature of the date (e.g., modification, creation) depend on the implementation
-                        of `get_path_dates`.
+        dict[str, tuple[datetime.datetime] | tuple[datetime.datetime, datetime.datetime]]: A dictionary where each key is a file path and each value is the date associated
+        with that file, as determined by the `get_path_dates` function. The date format and the exact nature of the date (e.g., modification, creation) depend on the 
+        implementation of `get_path_dates`.
 
     Note:
-        This function assumes that `get_path_dates` is capable of extracting a meaningful date string from each
-        path. The specific nature of the date retrieved (creation, modification, etc.) should be documented
-        in the `get_path_dates` function.
+        This function assumes that `get_path_dates` is capable of extracting a meaningful date string from 
+        each path. The specific nature of the date retrieved (creation, modification, etc.) should be 
+        documented in the `get_path_dates` function.
     """
     paths = get_paths(glob_pattern, exclude_keywords)
-    result: dict[str, str] = {}
+    result: dict[str, tuple[datetime.datetime] | tuple[datetime.datetime, datetime.datetime]] = {}
     for path in paths:
         result[path] = get_path_dates(path)
     return result
@@ -109,22 +109,22 @@ def get_paths_dates(
 
 # the next two modules doesn't work properly.
 def get_path_dates(
-    path: str,
+    path: str | Path | GSPath,
 ) -> tuple[datetime.datetime] | tuple[datetime.datetime, datetime.datetime]:
     """Extracts data information about file from path.
 
     Extracts date information from a given file path based on specific patterns in the filename. This function assumes
     that the filename includes date information encoded within parts of the filename, specifically formatted and
     separated by underscores. Dates are expected to be in segments prefixed by 'p' or directly as the second last part
-    of the filename, following conventions like 'pYYYYMMDD'.
+    of the filename, following conventions like 'pYYYY-MM-DD'.
 
     Args:
         path (str): The full path to the file, from which the filename will be parsed for date information.
 
     Returns:
-        tuple[datetime.datetime]: A tuple containing the parsed datetime objects. The tuple will contain two datetime objects
-                                  if the filename includes two date segments ('pYYYYMMDD_pYYYYMMDD'); otherwise, it will contain
-                                  only one datetime object if only one date segment is found.
+        tuple[datetime.datetime] | tuple[datetime.datetime, datetime.datetime]: A tuple containing the parsed datetime objects.
+        The tuple will contain two datetime objects if the filename includes two date segments ('pYYYY-MM-DD_pYYYY-MM-DD');
+        otherwise, it will contain only one datetime object if only one date segment is found.
 
     Note:
         The function utilizes the `dateutil.parser.parse` method to convert date strings into datetime objects, which

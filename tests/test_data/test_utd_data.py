@@ -32,6 +32,12 @@ class TestUtdData(unittest.TestCase):
         self.assertIsInstance(data.data, pd.DataFrame)
         self.assertEqual(self.path_to_file, data.path)
         self.assertTrue(self.data.equals(data.data))
+        #with Path
+        data = UtdData(self.data, Path(self.path_to_file))
+        self.assertIsInstance(data, UtdData)
+        self.assertIsInstance(data.data, pd.DataFrame)
+        self.assertEqual(self.path_to_file, data.path)
+        self.assertTrue(self.data.equals(data.data))
 
         # if glob and path, path is prioritized
         data = UtdData(

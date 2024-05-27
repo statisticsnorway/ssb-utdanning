@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING
 
 # External packages
 import pandas as pd
-from cloudpathlib import CloudPath
 from cloudpathlib import GSPath
 
 if TYPE_CHECKING:
@@ -38,7 +37,7 @@ class UtdKatalog(UtdData):
         self,
         key_cols: list[str] | str,
         data: pd.DataFrame | None = None,
-        path: Path | CloudPath | GSPath | str = "",
+        path: Path | GSPath | str = "",
         glob_pattern: str = "",
         exclude_keywords: list[str] | None = None,
     ) -> None:
@@ -47,7 +46,7 @@ class UtdKatalog(UtdData):
         Args:
             key_cols (list[str] | str): The key column(s) used for merging and indexing within the catalog.
             data (pd.DataFrame | None): Data to be directly loaded into the UtdKatalog instance.
-            path (Union[Path, CloudPath, GSPath, str]): File path for data loading.
+            path (Union[Path, GSPath, str]): File path for data loading.
             glob_pattern (str): Glob pattern to identify data files if path is not specific.
             exclude_keywords (list[str] | None): Keywords to exclude when searching for data files using the glob pattern.
 

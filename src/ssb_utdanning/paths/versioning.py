@@ -1,10 +1,10 @@
 from pathlib import Path
 from string import digits
 
-from cloudpathlib import CloudPath
+from cloudpathlib import GSPath
 
 
-def get_version(path: str | Path | CloudPath) -> int:
+def get_version(path: str | Path | GSPath) -> int:
     """Extracts version number.
 
     Extracts the version number from a file path where the version is expected to be encoded
@@ -12,7 +12,7 @@ def get_version(path: str | Path | CloudPath) -> int:
     prefixed by 'v'. For example, in 'file_v2.txt', the version number is 2.
 
     Args:
-        path (Union[str, Path, CloudPath]): The file path or path object. The path can be a string,
+        path (Union[str, Path, GSPath]): The file path or path object. The path can be a string,
                                             or an object from pathlib.Path or a cloud path object that
                                             implements similar functionality.
 
@@ -41,21 +41,21 @@ def get_version(path: str | Path | CloudPath) -> int:
     return int(version)
 
 
-def bump_path(path: str | Path | CloudPath, n: int = 1) -> str | Path | CloudPath:
+def bump_path(path: str | Path | GSPath, n: int = 1) -> str | Path | GSPath:
     """Bumps version.
 
     Increments the version number encoded in the file name of the specified path by a given amount. The version number is expected
     to be at the end of the filename, immediately preceding the file extension and prefixed with 'v', such as 'file_v2.txt'.
 
-    This function can handle both string paths and Path-like objects (pathlib.Path, CloudPath), updating the version accordingly.
+    This function can handle both string paths and Path-like objects (pathlib.Path, GSPath), updating the version accordingly.
 
     Args:
-        path (Union[str, Path, CloudPath]): The original file path whose version needs to be incremented. Can be a string or
+        path (Union[str, Path, GSPath]): The original file path whose version needs to be incremented. Can be a string or
                                             a Path-like object.
         n (int): The amount by which the version number should be incremented. Defaults to 1.
 
     Returns:
-        Union[str, Path, CloudPath]: The new file path with the incremented version number. The type of the returned path matches
+        Union[str, Path, GSPath]: The new file path with the incremented version number. The type of the returned path matches
                                      the type of the input path.
 
     Examples:
