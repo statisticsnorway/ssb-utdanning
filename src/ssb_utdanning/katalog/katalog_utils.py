@@ -43,7 +43,7 @@ def create_new_utd_katalog(
         "Add more metadata to the catalogue.metadata before saving if you want. "
     )
 
-    result = UtdKatalog(path=path, key_cols=key_col_name)#, **metadata)
+    result = UtdKatalog(path=path, key_cols=key_col_name)  # , **metadata)
     result.data = df
     return result
 

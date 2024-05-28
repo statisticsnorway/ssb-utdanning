@@ -1,9 +1,9 @@
 import datetime
 import glob
+from pathlib import Path
 
 import dapla as dp
 import dateutil.parser
-from pathlib import Path
 from cloudpathlib import GSPath
 
 from ssb_utdanning.config import DEFAULT_DATE
@@ -75,33 +75,34 @@ def get_path_latest(
 def get_paths_dates(
     glob_pattern: str, exclude_keywords: list[str] | None = None
 ) -> dict[str, tuple[datetime.datetime] | tuple[datetime.datetime, datetime.datetime]]:
-    """
-    Retrieves a dictionary of dates to corresponding paths matching a glob pattern.
+    """Retrieves a dictionary of dates to corresponding paths matching a glob pattern.
 
-    This function aggregates dates associated with multiple files, typically used in scenarios where file 
-    modifications or creation dates are tracked alongside file paths. It maps each file path that matches 
-    a specified glob pattern to a date, extracted by the `get_path_dates` function. Files containing any 
+    This function aggregates dates associated with multiple files, typically used in scenarios where file
+    modifications or creation dates are tracked alongside file paths. It maps each file path that matches
+    a specified glob pattern to a date, extracted by the `get_path_dates` function. Files containing any
     specified exclude keywords are omitted from the search.
 
     Args:
-        glob_pattern (str): The glob pattern used to identify files. This can include paths on a local 
+        glob_pattern (str): The glob pattern used to identify files. This can include paths on a local
                             filesystem or within cloud storage, depending on the execution environment.
         exclude_keywords (list[str] | None, optional): A list of keywords that, if present in a file's path,
-                                                      will cause that file to be excluded from the results. 
+                                                      will cause that file to be excluded from the results.
                                                       Defaults to None, meaning no exclusions are applied.
 
     Returns:
         dict[str, tuple[datetime.datetime] | tuple[datetime.datetime, datetime.datetime]]: A dictionary where each key is a file path and each value is the date associated
-        with that file, as determined by the `get_path_dates` function. The date format and the exact nature of the date (e.g., modification, creation) depend on the 
+        with that file, as determined by the `get_path_dates` function. The date format and the exact nature of the date (e.g., modification, creation) depend on the
         implementation of `get_path_dates`.
 
     Note:
-        This function assumes that `get_path_dates` is capable of extracting a meaningful date string from 
-        each path. The specific nature of the date retrieved (creation, modification, etc.) should be 
+        This function assumes that `get_path_dates` is capable of extracting a meaningful date string from
+        each path. The specific nature of the date retrieved (creation, modification, etc.) should be
         documented in the `get_path_dates` function.
     """
     paths = get_paths(glob_pattern, exclude_keywords)
-    result: dict[str, tuple[datetime.datetime] | tuple[datetime.datetime, datetime.datetime]] = {}
+    result: dict[
+        str, tuple[datetime.datetime] | tuple[datetime.datetime, datetime.datetime]
+    ] = {}
     for path in paths:
         result[path] = get_path_dates(path)
     return result
