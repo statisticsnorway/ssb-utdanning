@@ -146,4 +146,3 @@ class TestUtdData(unittest.TestCase):
     def tearDown(self) -> None:
         # Clean up test files and folders after tests
         shutil.rmtree(self.path, ignore_errors=True)
-
