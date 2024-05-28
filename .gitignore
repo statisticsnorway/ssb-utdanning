@@ -4,18 +4,6 @@
 # template and GitHub's R-ignore template.
 
 
-# Visual Studio Code
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
-# Local History for Visual Studio Code
-.history/
-# Built Visual Studio Code Extensions
-*.vsix
-
 # The section below contains SSB specific ignores, not included in the Python-
 # and R-ignores from GitHub.
 *.csv
@@ -216,3 +204,7 @@ rsconnect/
 
 # ignore poetry in .config
 .poetry/**
+
+# Blaise specific ignores
+*.bdix
+*.bdbx
