@@ -2,10 +2,10 @@ import glob
 import re
 from pathlib import Path
 
-from ssb_utdanning.utdanning_logger import logger
 from ssb_utdanning.config import FORMATS_PATH
 from ssb_utdanning.format.formats import UTDFORMAT_INPUT_TYPE
 from ssb_utdanning.format.formats import UtdFormat
+from ssb_utdanning.utdanning_logger import logger
 
 
 def batch_process_folder_sasfiles(
