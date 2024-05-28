@@ -49,7 +49,7 @@ def get_paths(
 
 
 def get_path_latest(
-    glob_pattern: str, exclude_keywords: list[str] | None = None
+    glob_pattern: str, exclude_keywords: str | list[str] | None = None
 ) -> str:
     """Retrieves path for most recent file matching glob pattern.
 
@@ -61,7 +61,7 @@ def get_path_latest(
     Args:
         glob_pattern (str): The glob pattern used to identify files. This pattern can specify locations
                             within the local filesystem or a cloud storage path, depending on the execution environment.
-        exclude_keywords (list[str] | None): A list of keywords to exclude in the search for files.
+        exclude_keywords (str | list[str] | None): A list of keywords to exclude in the search for files.
                                              Files containing these keywords in their filenames will be ignored.
                                              Defaults to None, which means no exclusions.
 
@@ -73,7 +73,7 @@ def get_path_latest(
 
 
 def get_paths_dates(
-    glob_pattern: str, exclude_keywords: list[str] | None = None
+    glob_pattern: str, exclude_keywords: str | list[str] | None = None
 ) -> dict[str, tuple[datetime.datetime] | tuple[datetime.datetime, datetime.datetime]]:
     """Retrieves a dictionary of dates to corresponding paths matching a glob pattern.
 
@@ -85,7 +85,7 @@ def get_paths_dates(
     Args:
         glob_pattern (str): The glob pattern used to identify files. This can include paths on a local
                             filesystem or within cloud storage, depending on the execution environment.
-        exclude_keywords (list[str] | None, optional): A list of keywords that, if present in a file's path,
+        exclude_keywords (str | list[str] | None, optional): A list of keywords that, if present in a file's path,
                                                       will cause that file to be excluded from the results.
                                                       Defaults to None, meaning no exclusions are applied.
 
@@ -149,7 +149,7 @@ def get_path_dates(
 def get_path_reference_date(
     reference_datetime: datetime.datetime | str,
     glob_pattern: str,
-    exclude_keywords: list[str] | None = None,
+    exclude_keywords: str | list[str] | None = None,
 ) -> str:
     """Finds path from glob pattern and reference date.
 
@@ -162,7 +162,7 @@ def get_path_reference_date(
                                                       it will be parsed into a datetime object.
         glob_pattern (str): The glob pattern to identify relevant files. This pattern should align with how files are
                             named or structured to contain date information.
-        exclude_keywords (list[str] | None, optional): Keywords to exclude certain files from being considered. Files containing
+        exclude_keywords (str | list[str] | None, optional): Keywords to exclude certain files from being considered. Files containing
                                                       any of these keywords in their path will be ignored.
 
     Returns:

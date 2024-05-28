@@ -131,7 +131,7 @@ class UtdKatalog(UtdData):
         col: str = "",
         level: int = 0,
         key_col: str = "",
-    ) -> dict[str, str]:
+    ) -> dict[str, str | int | float]:
         """Converts a column from the Katalog data into a dictionary, mapping keys from another column to these values.
 
         Args:
@@ -140,7 +140,7 @@ class UtdKatalog(UtdData):
             key_col (str): The column to use as keys in the dictionary. Defaults to the first key column specified in key_cols.
 
         Returns:
-            dict[str, str]: A dictionary mapping keys to values as per the specified columns and level.
+            dict[str, str | int | float]: A dictionary mapping keys to values as per the specified columns and level.
         """
         if not key_col:  # If not passed in to function
             key_col = self.key_cols[0]
