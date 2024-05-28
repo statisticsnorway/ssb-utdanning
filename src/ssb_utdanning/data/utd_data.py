@@ -11,9 +11,9 @@ from datadoc.backend.statistic_subject_mapping import StatisticSubjectMapping
 from fagfunksjoner import auto_dtype
 
 from ssb_utdanning.config import REGION
+from ssb_utdanning.paths import versioning
 from ssb_utdanning.paths.get_paths import get_path_dates
 from ssb_utdanning.paths.get_paths import get_path_latest
-from ssb_utdanning.paths import versioning
 from ssb_utdanning.utdanning_logger import logger
 
 
@@ -144,7 +144,7 @@ class UtdData:
         elif REGION == "BIP" and isinstance(path, str):
             self.path = GSPath(path)
         else:
-            self.path=Path(path)
+            self.path = Path(path)
         self.periods = get_path_dates(self.path)
 
         if not self.path.suffix == ".parquet" or self.path.suffix == ".sas7bdat":
@@ -179,11 +179,14 @@ class UtdData:
             List[str]: A sorted list of similar file paths.
         """
         return sorted(
-                self.path.parent.glob(
+            [
+                str(x)
+                for x in self.path.parent.glob(
                     self.path.stem.rstrip(digits) + "*" + self.path.suffix
                 )
+            ]
         )
-    
+
     def get_latest_version_path(self) -> str:
         """Determines the most recent version path for the current file.
 
@@ -192,7 +195,9 @@ class UtdData:
         """
         return self.get_similar_paths()[-1]
 
-    def get_data(self) -> None | pd.DataFrame | tuple[pd.DataFrame, dict[str, str | bool]]:
+    def get_data(
+        self,
+    ) -> None | pd.DataFrame | tuple[pd.DataFrame, dict[str, str | bool]]:
         """Loads the data from the specified path, or the most recent file version if the specified path is outdated.
 
         Returns:
@@ -247,7 +252,7 @@ class UtdData:
         return 0
 
     @staticmethod
-    def bump_path(path: str | Path | GSPath, num_bumps: int = 1) -> str | Path | GSPath:
+    def bump_path(path: Path | GSPath, num_bumps: int = 1) -> Path | GSPath:
         """Increments the version number in the path.
 
         Args:
@@ -256,8 +261,19 @@ class UtdData:
 
         Returns:
             str: Updated path with the incremented version number.
+
+        Raises:
+            TypeError: if type returned by version.bump_path is unrecognized
         """
-        return versioning.bump_path(path, num_bumps)
+        new_path = versioning.bump_path(path, num_bumps)
+        if REGION == "ON_PREM" and isinstance(new_path, str):
+            return Path(new_path)
+        elif REGION == "BIP" and isinstance(new_path, str):
+            return GSPath(new_path)
+        elif not isinstance(new_path, str):
+            return new_path
+        error_msg = "Dont know how to handle a str-path if we dont know where we are."
+        raise TypeError(error_msg)
 
     def save(
         self,
@@ -307,21 +323,19 @@ class UtdData:
 
         if not path:
             path = self.path
+
         pathpath: Path | GSPath
         if isinstance(path, str) and REGION == "BIP":
             pathpath = GSPath(path)
         else:
             pathpath = Path(path)
+
         # Force path to be parquet before writing
         pathpath = pathpath.with_suffix(".parquet")
         # Automatic versioning
+
         if bump_version:
             pathpath = self.bump_path(pathpath)
-        
-        if isinstance(path, str) and REGION == "BIP":
-            pathpath = GSPath(pathpath)
-        else:
-            pathpath = Path(pathpath)
 
         # Check that we are not writing to an existing file
         if overwrite_mode_enum == OverwriteMode.NONE and pathpath.is_file():
