@@ -121,7 +121,7 @@ class TestUtdData(unittest.TestCase):
         create_mock_data(path_bumped)
         data = UtdData(path=path_bumped)
         data.path = self.path_to_file
-        self.assertTrue(data.get_latest_version_path() == path_bumped)
+        self.assertTrue(str(data.get_latest_version_path()) == str(path_bumped))
 
     def test_save(self):
         self.setUp()
@@ -147,13 +147,3 @@ class TestUtdData(unittest.TestCase):
         # Clean up test files and folders after tests
         shutil.rmtree(self.path, ignore_errors=True)
 
-
-# +
-# test = TestUtdData()
-# test.setUp()
-# test.test_init()
-# test.test_str()
-# test.test_correct_check_path()
-# test.test_get_latest_version_path()
-# test.test_save()
-# test.tearDown()

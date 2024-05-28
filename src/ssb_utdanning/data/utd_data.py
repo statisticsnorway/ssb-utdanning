@@ -209,9 +209,9 @@ class UtdData:
         path = self.path
 
         # Warn user if not opening the latest version?
-        if self.get_latest_version_path() != self.path:
+        if str(self.get_latest_version_path()) != str(self.path):
             sure = input(
-                f"You are not opening the latest version of the file: {self.get_latest_version_path()} \n Are you sure? Y/y: "
+                f"You are opening {self.path}, not opening the latest version of the file: {self.get_latest_version_path()} \n Are you sure? Y/y: "
             )
             if not sure.lower() == "y":
                 return None
