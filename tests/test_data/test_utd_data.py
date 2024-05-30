@@ -1,4 +1,8 @@
 import os
+from ssb_utdanning import config
+os.environ["DAPLA_REGION"] = "ON_PREM"
+config.REGION = "ON_PREM"
+
 from ssb_utdanning import UtdData
 from pathlib import Path
 import unittest
@@ -8,9 +12,6 @@ import shutil
 import glob
 import sys
 from string import digits
-from ssb_utdanning.config import REGION
-
-os.environ["DAPLA_REGION"] = "ON_PREM"
 
 
 class TestUtdData(unittest.TestCase):
@@ -148,16 +149,14 @@ class TestUtdData(unittest.TestCase):
         shutil.rmtree(self.path, ignore_errors=True)
 
 
-# +
-# test = TestUtdData()
-# test.setUp()
-# test.test_init()
+test = TestUtdData()
+test.setUp()
+test.test_init()
 # test.test_str()
 # test.test_correct_check_path()
 # test.test_get_latest_version_path()
 # test.test_save()
-# test.tearDown()
-# -
+test.tearDown()
 
 
 

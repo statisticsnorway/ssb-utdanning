@@ -7,4 +7,3 @@ While running it reports on how many are missing join-opportunities. The schools
 from ssb_utdanning.orgnrkontroll.orgnrkontroll import get_skolereg
 from ssb_utdanning.orgnrkontroll.orgnrkontroll import get_vigo_skole
 from ssb_utdanning.orgnrkontroll.orgnrkontroll import orgnrkontroll_func
-from ssb_utdanning.utdanning_logger import logger

@@ -2,19 +2,22 @@ import enum
 from io import StringIO
 from pathlib import Path
 from string import digits
+import concurrent
 
 import dapla as dp
 import pandas as pd
 from cloudpathlib import GSPath
+from ssb_utdanning.utdanning_logger import logger
 from datadoc.backend.datadoc_metadata import DataDocMetadata
 from datadoc.backend.statistic_subject_mapping import StatisticSubjectMapping
+from datadoc.config import get_statistical_subject_source_url
 from fagfunksjoner import auto_dtype
 
-from ssb_utdanning.config import REGION
+from ssb_utdanning import config
 from ssb_utdanning.paths import versioning
 from ssb_utdanning.paths.get_paths import get_path_dates
 from ssb_utdanning.paths.get_paths import get_path_latest
-from ssb_utdanning.utdanning_logger import logger
+
 
 class OverwriteMode(enum.Enum):
     """Enum for specifying overwrite behaviors in file operations.
@@ -140,9 +143,9 @@ class UtdData:
             - Logs a message if neither a .parquet nor a .sas7bdat file can be found at the specified path.
         """
         self.path: Path | GSPath
-        if REGION == "ON_PREM" and isinstance(path, str):
+        if config.REGION == "ON_PREM" and isinstance(path, str):
             self.path = Path(path)
-        elif REGION == "BIP" and isinstance(path, str):
+        elif config.REGION == "BIP" and isinstance(path, str):
             self.path = GSPath(path)
         else:
             self.path = Path(path)
@@ -218,7 +221,7 @@ class UtdData:
                 return None
         logger.info("Opening data from %s", str(self.path))
         df_get_data: pd.DataFrame
-        if REGION == "ON_PREM":
+        if config.REGION == "ON_PREM":
             if path.suffix == ".parquet":
                 df_get_data = pd.read_parquet(path)
             elif path.suffix == ".sas7bdat":
@@ -227,7 +230,7 @@ class UtdData:
                 raise OSError(
                     f"Can only open parquet and sas7bdat, you gave me {path.suffix}"
                 )
-        if REGION == "BIP":
+        if config.REGION == "BIP":
             if path.suffix == ".sas7bdat":
                 with dp.FileClient().gcs_open(str(path), "r") as sasfile:
                     df_get_data = auto_dtype(pd.read_sas(str(sasfile)))
@@ -267,9 +270,9 @@ class UtdData:
             TypeError: if type returned by version.bump_path is unrecognized
         """
         new_path = versioning.bump_path(path, num_bumps)
-        if REGION == "ON_PREM" and isinstance(new_path, str):
+        if config.REGION == "ON_PREM" and isinstance(new_path, str):
             return Path(new_path)
-        elif REGION == "BIP" and isinstance(new_path, str):
+        elif config.REGION == "BIP" and isinstance(new_path, str):
             return GSPath(new_path)
         elif not isinstance(new_path, str):
             return new_path
@@ -326,7 +329,7 @@ class UtdData:
             path = self.path
 
         pathpath: Path | GSPath
-        if isinstance(path, str) and REGION == "BIP":
+        if isinstance(path, str) and config.REGION == "BIP":
             pathpath = GSPath(path)
         else:
             pathpath = Path(path)
@@ -381,9 +384,9 @@ class UtdData:
         # Reset the classes path, as when we write somewhere, thats were we should open it from again...
         self.path = pathpath
 
-        if REGION == "ON_PREM":
+        if config.REGION == "ON_PREM":
             self.data.to_parquet(pathpath)
-        elif REGION == "BIP":
+        elif config.REGION == "BIP":
             dp.write_pandas(self.data, str(pathpath))
 
         # Update path in metadata before saving
@@ -403,6 +406,8 @@ class UtdData:
 
     def _metadata_from_path(self) -> None:
         """Extracts metadata from the file path, intended for internal use."""
-        self.metadata = DataDocMetadata(
-            StatisticSubjectMapping(""), dataset_path=str(self.path)
+        self.metadata = DataDocMetadata(statistic_subject_mapping=StatisticSubjectMapping(
+                concurrent.futures.ThreadPoolExecutor(max_workers=12),
+                get_statistical_subject_source_url()),
+            dataset_path=str(self.path)
         )

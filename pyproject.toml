@@ -26,13 +26,14 @@ cloudpathlib = { extras = ["gs"], version = ">=0.17.0" }
 dapla-toolbelt = ">=2.0.6"
 ssb-fagfunksjoner = ">=0.1.0"
 ipysheet = "^0.7.0"
+ssb-datadoc = "^0.12.0"
 
 # Stubs for Mypy
 pandas-stubs = ">=2.1.1.230928"
 types-python-dateutil = ">=2.8.19.14"
 types-toml = ">=0.10.8.7"
 types-colorama = ">=0.4.15.20240205"
-ssb-datadoc = "^0.8.1"
+
 
 [tool.poetry.group.dev.dependencies]
 nox = "^2023.4.22"
@@ -66,11 +67,6 @@ ipykernel = ">=6.0.0"
 
 
 
-
-[[tool.poetry.source]]
-name = "nexus"
-url = "http://pl-nexuspro-p.ssb.no:8081/repository/pypi-proxy/simple"
-priority = "primary"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

@@ -6,8 +6,7 @@ import dapla as dp
 import dateutil.parser
 from cloudpathlib import GSPath
 
-from ssb_utdanning.config import DEFAULT_DATE
-from ssb_utdanning.config import REGION
+from ssb_utdanning import config
 
 
 def get_paths(
@@ -37,7 +36,7 @@ def get_paths(
         exclude_keywords = []
     elif isinstance(exclude_keywords, str):
         exclude_keywords = [exclude_keywords]
-    if REGION == "BIP":
+    if config.REGION == "BIP":
         fs = dp.FileClient().get_gcs_file_system()
         paths = fs.glob(glob_pattern)
     else:
@@ -135,12 +134,12 @@ def get_path_dates(
     path = str(path)
     filename_parts = path.split("/")[-1].split(".")[0].split("_")
     last_period = filename_parts[-2]
-    last_period_datetime = dateutil.parser.parse(last_period[1:], default=DEFAULT_DATE)
+    last_period_datetime = dateutil.parser.parse(last_period[1:], default=config.DEFAULT_DATE)
 
     first_period = filename_parts[-3]
     if first_period.startswith("p") and first_period[1:].replace("-", "").isdigit():
         first_period_datetime = dateutil.parser.parse(
-            first_period[1:], default=DEFAULT_DATE
+            first_period[1:], default=config.DEFAULT_DATE
         )
         return (first_period_datetime, last_period_datetime)
     return (last_period_datetime,)
@@ -181,7 +180,7 @@ def get_path_reference_date(
     """
     if isinstance(reference_datetime, str):
         reference_datetime_dt = dateutil.parser.parse(
-            reference_datetime, default=DEFAULT_DATE
+            reference_datetime, default=config.DEFAULT_DATE
         )
     else:
         reference_datetime_dt = reference_datetime
