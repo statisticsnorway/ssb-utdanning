@@ -93,7 +93,7 @@ class TestUtdFormat(unittest.TestCase):
         assert utd_format.check_if_na(pd.NA)
         assert utd_format.check_if_na(None)
 
-    def test_allround(self) -> None:
+    def test_NaNs(self) -> None:
         utd_format = UtdFormat(self.range_dict)
         utd_format[np.nan] = "NaN"
         assert utd_format[np.nan] == "NaN"

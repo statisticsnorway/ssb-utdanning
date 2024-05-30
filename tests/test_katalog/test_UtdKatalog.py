@@ -59,8 +59,8 @@ class TestUtdKatalog(unittest.TestCase):
 
         result = katalog.apply_format(data.data)
         self.assertEqual(data_n_col + 1, len(result.columns))
-
-        del data, result
+        
+    def test_aaply_format_parameters(self):
         data = UtdData(path=self.data_path)
         data_n = len(data.data)
         katalog.apply_format(

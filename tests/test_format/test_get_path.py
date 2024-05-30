@@ -26,7 +26,6 @@ def mocked_info_stored_formats(var: str) -> pd.DataFrame:
 )
 def test_get_path(mock_get: mock.MagicMock) -> None:
     path = get_path("test")
-    print(path)
     assert path == "newest_path"
 
     path = get_path("test", date="2023-01-16")
