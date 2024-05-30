@@ -10,3 +10,4 @@ View "katalog" as an umbrella-term above these.
 """
 
 from ssb_utdanning.katalog.katalog import UtdKatalog as UtdKatalog
+from ssb_utdanning.utdanning_logger import logger

@@ -3,6 +3,7 @@
 Usually done pre views.
 """
 
+from ssb_utdanning.utdanning_logger import logger
 from ssb_utdanning.format.formats import UtdFormat
 from ssb_utdanning.format.formats import get_format
 from ssb_utdanning.format.formats import info_stored_formats
