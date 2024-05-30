@@ -24,21 +24,21 @@ class TestUtdData(unittest.TestCase):
         # creating file containing mock data
         create_mock_data(self.path_to_file)
         self.data = pd.read_parquet(self.path_to_file)
-        
+
     def test_simple_init(self):
         data = UtdData(self.data, self.path_to_file)
         self.assertIsInstance(data, UtdData)
         self.assertIsInstance(data.data, pd.DataFrame)
         self.assertEqual(self.path_to_file, data.path)
         self.assertTrue(self.data.equals(data.data))
-        
+
     def test_init_Path(self):
         data = UtdData(self.data, Path(self.path_to_file))
         self.assertIsInstance(data, UtdData)
         self.assertIsInstance(data.data, pd.DataFrame)
         self.assertEqual(self.path_to_file, data.path)
         self.assertTrue(self.data.equals(data.data))
-        
+
     def test_prioritize_path_over_glob(self):
         data = UtdData(
             self.data, self.path_to_file, glob_pattern="ignored_glob_pattern*.parquet"
@@ -47,11 +47,11 @@ class TestUtdData(unittest.TestCase):
         self.assertIsInstance(data.data, pd.DataFrame)
         self.assertEqual(self.path_to_file, data.path)
         self.assertTrue(self.data.equals(data.data))
-    
+
     def test_not_path_not_glob(self):
-         with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError):
             data = UtdData(self.data)
-    
+
     def test_exclude_keywords(self):
         create_mock_data(self.path / "datatest_drop_keyword_p2024-10_v1.parquet")
         filename = "datatest_p2024-10_v1.parquet"
@@ -65,14 +65,14 @@ class TestUtdData(unittest.TestCase):
         self.assertIsInstance(data.data, pd.DataFrame)
         self.assertEqual(path_to_file, data.path)
         self.assertTrue(self.data.equals(data.data))
-        
+
     def test_data_is_none(self):
         data = UtdData(path=self.path_to_file)
         self.assertIsInstance(data, UtdData)
         self.assertIsInstance(data.data, pd.DataFrame)
         self.assertEqual(self.path_to_file, data.path)
         self.assertTrue(self.data.equals(data.data))
-        
+
     def test_glob_pattern(self):
         file_v2 = self.path / "data_p2024-10_v2.parquet"
         create_mock_data(file_v2)
@@ -84,7 +84,7 @@ class TestUtdData(unittest.TestCase):
         self.assertIsInstance(data, UtdData)
         self.assertIsInstance(data.data, pd.DataFrame)
         self.assertTrue(self.data.equals(data.data))
-        
+
     def test_str(self):
         self.setUp()
         data = UtdData(path=self.path_to_file)
@@ -97,7 +97,7 @@ class TestUtdData(unittest.TestCase):
         data.path = None
         data._correct_check_path(str(self.path_to_file))
         self.assertIsInstance(data.path, Path)
-        
+
     def test_correct_check_path_no_suffix(self):
         data = UtdData(path=self.path_to_file)
         data.path = None
@@ -106,7 +106,7 @@ class TestUtdData(unittest.TestCase):
         data._correct_check_path(path_no_suffix)
         print(data.path)
         self.assertEqual(str(data.path).split(".")[-1], "parquet")
-        
+
     def test_correct_check_path_not_found(self):
         data = UtdData(path=self.path_to_file)
         self.assertIsNone(
@@ -136,7 +136,7 @@ class TestUtdData(unittest.TestCase):
         new_path = data.path
         self.assertTrue(str(old_path) != str(new_path))
         self.assertTrue(data.path.exists())
-        
+
     def test_save_filebump(self):
         self.setUp()
         data = UtdData(path=self.path_to_file)
@@ -145,7 +145,7 @@ class TestUtdData(unittest.TestCase):
         new_path = data.path
         self.assertTrue(str(old_path) != str(new_path))
         self.assertTrue(data.path.exists())
-        
+
     def test_save_overwrite_mode(self):
         self.setUp()
         data = UtdData(path=self.path_to_file)
@@ -155,4 +155,3 @@ class TestUtdData(unittest.TestCase):
     def tearDown(self) -> None:
         # Clean up test files and folders after tests
         shutil.rmtree(self.path, ignore_errors=True)
-

@@ -16,6 +16,7 @@ from ssb_utdanning.paths.get_paths import get_path_dates
 from ssb_utdanning.paths.get_paths import get_path_latest
 from ssb_utdanning.utdanning_logger import logger
 
+
 class OverwriteMode(enum.Enum):
     """Enum for specifying overwrite behaviors in file operations.
 
