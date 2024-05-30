@@ -56,11 +56,11 @@ class UtdFormat(dict[Any, Any]):
             if self.check_if_na(key):
                 self.set_na_value()
 
-    def __missing__(self, key: str | int) -> Any:
+    def __missing__(self, key: str | int | float | NAType | None) -> Any:
         """Overrides the '__missing__' method of dictionary to handle missing keys.
 
         Args:
-            key: Key that is missing in the dictionary.
+            key (str | int | float | NAType | None): Key that is missing in the dictionary.
 
         Returns:
             Any: Value of key in any special conditions: confusion int/str, in one of the ranges, NA or if other is defined.
