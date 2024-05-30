@@ -9,7 +9,6 @@ import glob
 import sys
 from string import digits
 from ssb_utdanning.config import REGION
-from typeguard import suppress_type_checks
 
 os.environ["DAPLA_REGION"] = "ON_PREM"
 

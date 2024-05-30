@@ -15,6 +15,7 @@ import shutil
 import ssb_utdanning
 from unittest import mock
 import pandas as pd
+from typeguard import suppress_type_checks
 
 
 @mock.patch(
@@ -42,7 +43,7 @@ class Test_orgnrkontroll(unittest.TestCase):
 
     def test_get_skolereg(self):
         year = 2022
-        result = orgnrkontroll_module.get_skolereg(year=year)
+        result = orgnrkontroll_module.get_skolereg(year=2022)
         self.assertIsInstance(result, UtdKatalog)
         self.assertTrue(len(result.data.columns), 4)
 
@@ -75,7 +76,7 @@ class Test_orgnrkontroll(unittest.TestCase):
         with self.assertRaises(ValueError):
             result = orgnrkontroll_module.orgnrkontroll_func(
                 data=data,
-                year=year,
+                year=2022,
                 orgnr_col_innfil="orgnr",
                 orgnrbed_col_innfil="orgnr",
             )
@@ -88,7 +89,7 @@ class Test_orgnrkontroll(unittest.TestCase):
             self.assertIsInstance(data, UtdData)
             result = orgnrkontroll_module.orgnrkontroll_func(
                 data=data,
-                year=year,
+                year=2022,
                 orgnr_col_innfil="orgnr_non",
                 orgnrbed_col_innfil="orgnrbed",
                 fskolenr_col_innfil="fskolenr",
@@ -99,7 +100,7 @@ class Test_orgnrkontroll(unittest.TestCase):
         with self.assertRaises(ValueError):
             result = orgnrkontroll_module.orgnrkontroll_func(
                 data=data,
-                year=year,
+                year=2022,
                 orgnr_col_innfil="orgnr",
                 orgnrbed_col_innfil="orgnrbed_non",
                 fskolenr_col_innfil="fskolenr",
@@ -110,7 +111,7 @@ class Test_orgnrkontroll(unittest.TestCase):
         with self.assertRaises(ValueError):
             result = orgnrkontroll_module.orgnrkontroll_func(
                 data=data,
-                year=year,
+                year=2022,
                 orgnr_col_innfil="orgnr",
                 orgnrbed_col_innfil="orgnrbed",
                 fskolenr_col_innfil="fskolenr_non",
@@ -124,7 +125,7 @@ class Test_orgnrkontroll(unittest.TestCase):
             self.assertIsInstance(data, pd.DataFrame)
             result = orgnrkontroll_module.orgnrkontroll_func(
                 data=data,
-                year=year,
+                year=2022,
                 orgnr_col_innfil="orgnr_non",
                 orgnrbed_col_innfil="orgnrbed",
                 fskolenr_col_innfil="fskolenr",
@@ -136,7 +137,7 @@ class Test_orgnrkontroll(unittest.TestCase):
         with self.assertRaises(ValueError):
             result = orgnrkontroll_module.orgnrkontroll_func(
                 data=data,
-                year=year,
+                year=2022,
                 orgnr_col_innfil="orgnr",
                 orgnrbed_col_innfil="orgnrbed_non",
                 fskolenr_col_innfil="fskolenr",
@@ -148,7 +149,7 @@ class Test_orgnrkontroll(unittest.TestCase):
         with self.assertRaises(ValueError):
             result = orgnrkontroll_module.orgnrkontroll_func(
                 data=data,
-                year=year,
+                year=2022,
                 orgnr_col_innfil="orgnr",
                 orgnrbed_col_innfil="orgnrbed",
                 fskolenr_col_innfil="fskolenr_non",
@@ -160,12 +161,12 @@ class Test_orgnrkontroll(unittest.TestCase):
         with self.assertRaises(TypeError):
             result = orgnrkontroll_module.orgnrkontroll_func(
                 data=data,
-                year=year,
+                year=2022,
                 skolereg_keep_cols="not set or list",  #
             )
         with self.assertRaises(TypeError):
             result = orgnrkontroll_module.orgnrkontroll_func(
-                data=data, year=year, vigo_keep_cols="not set or list"
+                data=data, year=2022, vigo_keep_cols="not set or list"
             )
 
     def test_merge_on_specific_column(self):
@@ -175,7 +176,7 @@ class Test_orgnrkontroll(unittest.TestCase):
         vigo_keep_cols = ["vigo_var2"]
         result = orgnrkontroll_module.orgnrkontroll_func(
             data=data,
-            year=year,
+            year=2022,
             skolereg_keep_cols=skolereg_keep_cols,
             vigo_keep_cols=vigo_keep_cols,
         )
@@ -185,7 +186,7 @@ class Test_orgnrkontroll(unittest.TestCase):
     def test_verify_merge_result(self):
         data = self.get_data_year(year=2022)
         # general test
-        result = orgnrkontroll_module.orgnrkontroll_func(data=data, year=year)
+        result = orgnrkontroll_module.orgnrkontroll_func(data=data, year=2022)
         self.assertTrue("_merge" in list(result.data.columns))
         self.assertTrue(len(data.data.columns) < len(result.data.columns))
 
