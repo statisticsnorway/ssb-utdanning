@@ -136,11 +136,13 @@ class Test_orgnrkontroll(unittest.TestCase):
         data = self.get_data_year(year=year)
 
         # verify that keep cols variables are list or set
+        @suppress_type_checks
+        def skolereg_not_list(self)
         with self.assertRaises(TypeError):
             result = orgnrkontroll_module.orgnrkontroll_func(
                 data=data,
                 year=year,
-                skolereg_keep_cols="not set or list",
+                skolereg_keep_cols="not set or list", # 
             )
         with self.assertRaises(TypeError):
             result = orgnrkontroll_module.orgnrkontroll_func(

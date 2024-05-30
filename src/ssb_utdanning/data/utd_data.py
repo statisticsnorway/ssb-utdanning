@@ -16,7 +16,6 @@ from ssb_utdanning.paths.get_paths import get_path_dates
 from ssb_utdanning.paths.get_paths import get_path_latest
 from ssb_utdanning.utdanning_logger import logger
 
-
 class OverwriteMode(enum.Enum):
     """Enum for specifying overwrite behaviors in file operations.
 
@@ -77,6 +76,8 @@ class UtdData:
         Raises:
             ValueError: If neither path nor glob_pattern are provided.
         """
+        logger.info('TEST')
+        print('dette er en print')
         if glob_pattern and path:
             logger.info("You set both glob pattern and path, will prioritize path.")
         elif not path and not glob_pattern:
