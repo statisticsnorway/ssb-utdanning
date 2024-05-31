@@ -25,7 +25,7 @@ from typeguard import suppress_type_checks
 )
 @mock.patch(
     "ssb_utdanning.orgnrkontroll.orgnrkontroll.SKOLEREG_PATH",
-    new=os.getcwd() + os.sep + "mock_data" os.sep,
+    new=os.getcwd() + os.sep + "mock_data" + os.sep,
 )
 class Test_orgnrkontroll(unittest.TestCase):
     # @mock.patch('ssb_utdanning.orgnrkontroll.orgnrkontroll.SKOLEREG_PATH', new=str(os.getcwd() + '/mock_data'))
@@ -58,7 +58,8 @@ class Test_orgnrkontroll(unittest.TestCase):
     def test_get_skolereg_subcategory(self):
         result = orgnrkontroll_module.get_skolereg(year=2022, sub_category="vgskoler")
         self.assertTrue(
-            str(result.path).split(os.sep)[-1] == "skolereg_vgskoler_p2022-10_v1.parquet"
+            str(result.path).split(os.sep)[-1]
+            == "skolereg_vgskoler_p2022-10_v1.parquet"
         )
 
     def test_get_vigo_skole(self):
@@ -69,7 +70,8 @@ class Test_orgnrkontroll(unittest.TestCase):
     def test_get_vigo_latest(self):
         result = orgnrkontroll_module.get_vigo_skole()
         self.assertTrue(
-            str(result.path).split(os.sep)[-1], "vigo_skole_testfil_slett_p2023_v1.parquet"
+            str(result.path).split(os.sep)[-1],
+            "vigo_skole_testfil_slett_p2023_v1.parquet",
         )
 
     def test_equal_orgnr_cols(self):
