@@ -21,11 +21,11 @@ from typeguard import suppress_type_checks
 
 @mock.patch(
     "ssb_utdanning.orgnrkontroll.orgnrkontroll.VIGO_PATH",
-    new = str(Path(os.getcwd()) / "mock_data"),
+    new=str(Path(os.getcwd()) / "mock_data"),
 )
 @mock.patch(
     "ssb_utdanning.orgnrkontroll.orgnrkontroll.SKOLEREG_PATH",
-    new = str(Path(os.getcwd()) / "mock_data"),
+    new=str(Path(os.getcwd()) / "mock_data"),
 )
 class Test_orgnrkontroll(unittest.TestCase):
     # @mock.patch('ssb_utdanning.orgnrkontroll.orgnrkontroll.SKOLEREG_PATH', new=str(os.getcwd() + '/mock_data'))
