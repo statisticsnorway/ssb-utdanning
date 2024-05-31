@@ -8,6 +8,7 @@ import os
 
 import toml
 
+import ssb_utdanning.utdanning_logger
 from ssb_utdanning.data import UtdData
 from ssb_utdanning.format import UtdFormat
 from ssb_utdanning.katalog import UtdKatalog

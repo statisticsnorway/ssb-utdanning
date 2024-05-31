@@ -79,7 +79,6 @@ class UtdData:
         Raises:
             ValueError: If neither path nor glob_pattern are provided.
         """
-        utdanning_logger.logger.info("TEST")
         if glob_pattern and path:
             utdanning_logger.logger.info(
                 "You set both glob pattern and path, will prioritize path."

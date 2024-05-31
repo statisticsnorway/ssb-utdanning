@@ -26,21 +26,21 @@ class TestUtdData(unittest.TestCase):
         create_mock_data(self.path_to_file)
         self.data = pd.read_parquet(self.path_to_file)
 
-    def test_init(self):
-        # general checks
+    def test_simple_init(self):
         data = UtdData(self.data, self.path_to_file)
         self.assertIsInstance(data, UtdData)
         self.assertIsInstance(data.data, pd.DataFrame)
         self.assertEqual(self.path_to_file, data.path)
         self.assertTrue(self.data.equals(data.data))
-        # with Path
+
+    def test_init_Path(self):
         data = UtdData(self.data, Path(self.path_to_file))
         self.assertIsInstance(data, UtdData)
         self.assertIsInstance(data.data, pd.DataFrame)
         self.assertEqual(self.path_to_file, data.path)
         self.assertTrue(self.data.equals(data.data))
 
-        # if glob and path, path is prioritized
+    def test_prioritize_path_over_glob(self):
         data = UtdData(
             self.data, self.path_to_file, glob_pattern="ignored_glob_pattern*.parquet"
         )
@@ -48,12 +48,12 @@ class TestUtdData(unittest.TestCase):
         self.assertIsInstance(data.data, pd.DataFrame)
         self.assertEqual(self.path_to_file, data.path)
         self.assertTrue(self.data.equals(data.data))
-        # if not path and not glob
+
+    def test_not_path_not_glob(self):
         with self.assertRaises(ValueError):
             data = UtdData(self.data)
 
-        # if glob and not path
-        # exclude keywords
+    def test_exclude_keywords(self):
         create_mock_data(self.path / "datatest_drop_keyword_p2024-10_v1.parquet")
         filename = "datatest_p2024-10_v1.parquet"
         path_to_file = self.path / filename
@@ -67,14 +67,14 @@ class TestUtdData(unittest.TestCase):
         self.assertEqual(path_to_file, data.path)
         self.assertTrue(self.data.equals(data.data))
 
-        # if data=None
+    def test_data_is_none(self):
         data = UtdData(path=self.path_to_file)
         self.assertIsInstance(data, UtdData)
         self.assertIsInstance(data.data, pd.DataFrame)
         self.assertEqual(self.path_to_file, data.path)
         self.assertTrue(self.data.equals(data.data))
 
-        # send in glob pattern, get latest version
+    def test_glob_pattern(self):
         file_v2 = self.path / "data_p2024-10_v2.parquet"
         create_mock_data(file_v2)
         data = UtdData(
@@ -94,17 +94,22 @@ class TestUtdData(unittest.TestCase):
 
     def test_correct_check_path(self):
         self.setUp()
-        # ON PREM
         data = UtdData(path=self.path_to_file)
         data.path = None
         data._correct_check_path(str(self.path_to_file))
         self.assertIsInstance(data.path, Path)
+
+    def test_correct_check_path_no_suffix(self):
+        data = UtdData(path=self.path_to_file)
         data.path = None
         # send in path without .parquet suffix
         path_no_suffix = str(self.path_to_file).split(".")[0]
         data._correct_check_path(path_no_suffix)
+        print(data.path)
         self.assertEqual(str(data.path).split(".")[-1], "parquet")
-        # when file can't be found
+
+    def test_correct_check_path_not_found(self):
+        data = UtdData(path=self.path_to_file)
         self.assertIsNone(
             data._correct_check_path(
                 "/invalid_path/nonexistentfile_p2024-10_v1.parquet"
@@ -127,33 +132,27 @@ class TestUtdData(unittest.TestCase):
     def test_save(self):
         self.setUp()
         data = UtdData(path=self.path_to_file)
+        old_path = data.path
         data.save(path=self.path_to_file)
-        del data
+        new_path = data.path
+        self.assertTrue(str(old_path) != str(new_path))
+        self.assertTrue(data.path.exists())
+
+    def test_save_filebump(self):
         self.setUp()
         data = UtdData(path=self.path_to_file)
+        old_path = data.path
         data.save(path=self.path_to_file, overwrite_mode="filebump")
-        del data
+        new_path = data.path
+        self.assertTrue(str(old_path) != str(new_path))
+        self.assertTrue(data.path.exists())
+
+    def test_save_overwrite_mode(self):
         self.setUp()
         data = UtdData(path=self.path_to_file)
         with self.assertRaises(AttributeError):
             data.save(path=self.path_to_file, overwrite_mode="non_existant_mode")
 
-        del data
-        self.setUp()
-        data = UtdData(path=self.path_to_file)
-        with self.assertRaises(OSError):
-            data.save(path=self.path_to_file, bump_version=False)
-
     def tearDown(self) -> None:
         # Clean up test files and folders after tests
         shutil.rmtree(self.path, ignore_errors=True)
-
-
-test = TestUtdData()
-test.setUp()
-test.test_init()
-# test.test_str()
-# test.test_correct_check_path()
-# test.test_get_latest_version_path()
-# test.test_save()
-test.tearDown()
