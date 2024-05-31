@@ -42,11 +42,31 @@ formatter = ColoredFormatter(
         "CRITICAL": Fore.RED + Back.WHITE + Style.BRIGHT,
     },
 )
+
+
+
+# Delete Jupyter notebook root logger handler
+logger = logging.getLogger()
+logger.handlers = []
+
+# Create own logger
+logger = logging.getLogger(__name__)
+logger.handlers = []
 handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(formatter)
-logger = logging.getLogger()
-while logger.hasHandlers():
-    logger.removeHandler(logger.handlers[0])
-logger = logging.getLogger(__name__)
-# logger.addHandler(handler)
+logger.addHandler(handler)
+
+# prevent log messages from propagating to the root logger, which might add the unwanted double output.
+logger.propagate = False
+
+# Combine datadocs loggers into ours
+dependent_loggers = [logging.getLogger('datadoc.config'), 
+                     logging.getLogger('datadoc.config'),
+                    logging.getLogger("datadoc.backend.datadoc_metadata")]
+for logr in dependent_loggers:
+    logr.setLevel(logging.INFO)
+    for h in logr.handlers:
+        logr.removeHandler(h)
+        logr.addHandler(handler)
+
 logger.setLevel(logging.INFO)

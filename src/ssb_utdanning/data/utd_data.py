@@ -80,7 +80,6 @@ class UtdData:
             ValueError: If neither path nor glob_pattern are provided.
         """
         logger.info('TEST')
-        print('dette er en print')
         if glob_pattern and path:
             logger.info("You set both glob pattern and path, will prioritize path.")
         elif not path and not glob_pattern:

@@ -12,7 +12,6 @@ from ssb_utdanning.data import UtdData
 from ssb_utdanning.format import UtdFormat
 from ssb_utdanning.katalog import UtdKatalog
 from ssb_utdanning.orgnrkontroll import orgnrkontroll_func
-from ssb_utdanning.utdanning_logger import logger
 
 # Mypy wants an "explicit export?"
 __all__ = ["UtdData", "UtdFormat", "UtdKatalog", "orgnrkontroll_func"]
