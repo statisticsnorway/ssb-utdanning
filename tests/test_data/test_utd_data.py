@@ -1,6 +1,5 @@
 import os
 from ssb_utdanning import config
-os.environ["DAPLA_REGION"] = "ON_PREM"
 config.REGION = "ON_PREM"
 
 from ssb_utdanning import UtdData

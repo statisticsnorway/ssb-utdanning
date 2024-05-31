@@ -62,11 +62,12 @@ logger.propagate = False
 # Combine datadocs loggers into ours
 dependent_loggers = [logging.getLogger('datadoc.config'), 
                      logging.getLogger('datadoc.config'),
-                    logging.getLogger("datadoc.backend.datadoc_metadata")]
+                     logging.getLogger("datadoc.backend.datadoc_metadata"),
+                     logging.getLogger("datadoc.backend.statistic_subject_mapping")]
 for logr in dependent_loggers:
     logr.setLevel(logging.INFO)
-    for h in logr.handlers:
-        logr.removeHandler(h)
-        logr.addHandler(handler)
+    logr.handlers = []
+    logr.addHandler(handler)
+    logr.propagate = False
 
 logger.setLevel(logging.INFO)

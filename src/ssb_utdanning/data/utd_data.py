@@ -7,7 +7,7 @@ import concurrent
 import dapla as dp
 import pandas as pd
 from cloudpathlib import GSPath
-from ssb_utdanning.utdanning_logger import logger
+
 from datadoc.backend.datadoc_metadata import DataDocMetadata
 from datadoc.backend.statistic_subject_mapping import StatisticSubjectMapping
 from datadoc.config import get_statistical_subject_source_url
@@ -17,6 +17,7 @@ from ssb_utdanning import config
 from ssb_utdanning.paths import versioning
 from ssb_utdanning.paths.get_paths import get_path_dates
 from ssb_utdanning.paths.get_paths import get_path_latest
+from ssb_utdanning.utdanning_logger import logger
 
 
 class OverwriteMode(enum.Enum):
