@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ssb-utdanning"
-version = "0.0.2"
+version = "0.0.3"
 description = "SSB Utdanning Fellesfunksjoner"
 authors = ["Carl F. Corneil <cfc@ssb.no>"]
 license = "MIT"
