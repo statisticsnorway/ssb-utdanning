@@ -21,18 +21,18 @@ from typeguard import suppress_type_checks
 
 @mock.patch(
     "ssb_utdanning.orgnrkontroll.orgnrkontroll.VIGO_PATH",
-    new=os.getcwd() + os.sep + "mock_data" + os.sep,
+    new = str(Path(os.getcwd()) / "mock_data"),
 )
 @mock.patch(
     "ssb_utdanning.orgnrkontroll.orgnrkontroll.SKOLEREG_PATH",
-    new=os.getcwd() + os.sep + "mock_data" + os.sep,
+    new = str(Path(os.getcwd()) / "mock_data"),
 )
 class Test_orgnrkontroll(unittest.TestCase):
     # @mock.patch('ssb_utdanning.orgnrkontroll.orgnrkontroll.SKOLEREG_PATH', new=str(os.getcwd() + '/mock_data'))
     def setUp(self) -> None:
         # setting up folder to store formats
         template_dir = Path(os.getcwd())
-        self.path = template_dir / "mock_data" + os.sep
+        self.path = template_dir / "mock_data"
         self.year = 2022
         self.tearDown()
         os.makedirs(self.path, exist_ok=True)
@@ -42,7 +42,7 @@ class Test_orgnrkontroll(unittest.TestCase):
         self.data = self.get_data_year(year=self.year)
 
     def get_data_year(self, year) -> UtdData:
-        return UtdData(glob_pattern=str(self.path) + f"{os.sep}data_p{year}*.parquet")
+        return UtdData(glob_pattern=str(self.path / f"data_p{year}*.parquet"))
 
     def test_get_skolereg(self):
         result = orgnrkontroll_module.get_skolereg(year=self.year)
