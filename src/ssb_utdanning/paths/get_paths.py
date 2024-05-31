@@ -1,5 +1,6 @@
 import datetime
 import glob
+import os
 from pathlib import Path
 
 import dapla as dp
@@ -42,7 +43,7 @@ def get_paths(
     else:
         paths = glob.glob(glob_pattern)
     for exclude in exclude_keywords:
-        paths = [x for x in paths if exclude not in x.split("/")[-1]]
+        paths = [x for x in paths if exclude not in x.split(os.sep)[-1]]
     paths = sorted(paths)[::-1]
     return list(paths)
 
@@ -132,7 +133,7 @@ def get_path_dates(
         It defaults to using a global DEFAULT_DATE as the base date if the date string is incomplete or partially specified.
     """
     path = str(path)
-    filename_parts = path.split("/")[-1].split(".")[0].split("_")
+    filename_parts = path.split(os.sep)[-1].split(".")[0].split("_")
     last_period = filename_parts[-2]
     last_period_datetime = dateutil.parser.parse(
         last_period[1:], default=config.DEFAULT_DATE
