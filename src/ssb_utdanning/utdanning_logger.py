@@ -44,7 +44,6 @@ formatter = ColoredFormatter(
 )
 
 
-
 # Delete Jupyter notebook root logger handler
 logger = logging.getLogger()
 logger.handlers = []
@@ -60,10 +59,12 @@ logger.addHandler(handler)
 logger.propagate = False
 
 # Combine datadocs loggers into ours
-dependent_loggers = [logging.getLogger('datadoc.config'), 
-                     logging.getLogger('datadoc.config'),
-                     logging.getLogger("datadoc.backend.datadoc_metadata"),
-                     logging.getLogger("datadoc.backend.statistic_subject_mapping")]
+dependent_loggers = [
+    logging.getLogger("datadoc.config"),
+    logging.getLogger("datadoc.config"),
+    logging.getLogger("datadoc.backend.datadoc_metadata"),
+    logging.getLogger("datadoc.backend.statistic_subject_mapping"),
+]
 for logr in dependent_loggers:
     logr.setLevel(logging.INFO)
     logr.handlers = []

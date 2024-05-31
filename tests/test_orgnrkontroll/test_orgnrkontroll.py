@@ -135,14 +135,16 @@ class Test_orgnrkontroll(unittest.TestCase):
         data = self.get_data_year(year=self.year)
 
         # verify that keep cols variables are list or set
+
     @suppress_type_checks
     def test_skolereg_not_list(self):
         with self.assertRaises(TypeError):
             result = orgnrkontroll_module.orgnrkontroll_func(
                 data=self.data,
                 year=self.year,
-                skolereg_keep_cols="not set or list", # 
+                skolereg_keep_cols="not set or list",
             )
+
     def test_merge_on_specific_columns(self):
         with self.assertRaises(TypeError):
             result = orgnrkontroll_module.orgnrkontroll_func(
@@ -159,8 +161,8 @@ class Test_orgnrkontroll(unittest.TestCase):
         )
         self.assertTrue(skolereg_keep_cols[0] in list(result.data.columns))
         self.assertTrue(vigo_keep_cols[0] in list(result.data.columns))
-    
-    def test_general_test(self): 
+
+    def test_general_test(self):
         # general test
         result = orgnrkontroll_module.orgnrkontroll_func(data=self.data, year=self.year)
         self.assertTrue("_merge" in list(result.data.columns))

@@ -134,7 +134,9 @@ def get_path_dates(
     path = str(path)
     filename_parts = path.split("/")[-1].split(".")[0].split("_")
     last_period = filename_parts[-2]
-    last_period_datetime = dateutil.parser.parse(last_period[1:], default=config.DEFAULT_DATE)
+    last_period_datetime = dateutil.parser.parse(
+        last_period[1:], default=config.DEFAULT_DATE
+    )
 
     first_period = filename_parts[-3]
     if first_period.startswith("p") and first_period[1:].replace("-", "").isdigit():

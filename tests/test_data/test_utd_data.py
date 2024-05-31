@@ -1,5 +1,6 @@
 import os
 from ssb_utdanning import config
+
 config.REGION = "ON_PREM"
 
 from ssb_utdanning import UtdData
@@ -156,7 +157,3 @@ test.test_init()
 # test.test_get_latest_version_path()
 # test.test_save()
 test.tearDown()
-
-
-
-
