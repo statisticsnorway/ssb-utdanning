@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 
 # Local imports
 
+from ssb_utdanning import utdanning_logger
 from ssb_utdanning.data.utd_data import UtdData
-from ssb_utdanning.utdanning_logger import logger
 
 REQUIRED_COLS = ["username", "edited_time", "expiry_date", "validity"]
 
@@ -97,7 +97,7 @@ class UtdKatalog(UtdData):
 
         for col in self.key_cols:
             if (self.data[col].value_counts() > 1).any():
-                logger.warning(
+                utdanning_logger.logger.warning(
                     f"Looks like duplicate entries in the catalog column {col}"
                 )
                 # error_msg = f"Looks like duplicate entries in the catalog column {col}"
@@ -119,9 +119,11 @@ class UtdKatalog(UtdData):
         parts += [rest]
         result = pd.concat(parts)
         result["_merge"] = result["_merge"].fillna("left_only")
-        logger.info("\n%s", result["_merge"].value_counts(dropna=False))
+        utdanning_logger.logger.info(
+            "\n%s", result["_merge"].value_counts(dropna=False)
+        )
         if len(result) > len(dataset):
-            logger.warning(
+            utdanning_logger.logger.warning(
                 "Merge resulted in additional rows. Duplicated may need to be handled"
             )
         return result
@@ -208,7 +210,7 @@ class UtdKatalog(UtdData):
         if not new_col_data_name:
             new_col_data_name = catalog_col_name
 
-        logger.info(
+        utdanning_logger.logger.info(
             "new_col_data_name=%s data_key_col_name=%s catalog_col_name=%s catalog_key_col_name=%s",
             str(new_col_data_name),
             str(data_key_col_name),
@@ -219,7 +221,7 @@ class UtdKatalog(UtdData):
         mapping = self.to_dict(
             col=catalog_col_name, level=level, key_col=catalog_key_col_name
         )
-        mapping_unique_vals = list(pd.unique(list(mapping.values())))
+        mapping_unique_vals = list(set(mapping.values()))
         df[new_col_data_name] = df[data_key_col_name].map(mapping)
         try:
             series = df[new_col_data_name].copy()
@@ -230,7 +232,7 @@ class UtdKatalog(UtdData):
                 series = series.cat.remove_unused_categories()
             df[new_col_data_name] = series
         except ValueError as e:
-            logger.warning(
+            utdanning_logger.logger.warning(
                 "Couldnt convert column %s to categorical because of error: %s",
                 str(new_col_data_name),
                 str(e),

@@ -1,4 +1,8 @@
 import os
+from ssb_utdanning import config
+
+config.REGION = "ON_PREM"
+
 from ssb_utdanning import UtdData
 from pathlib import Path
 import unittest
@@ -8,9 +12,6 @@ import shutil
 import glob
 import sys
 from string import digits
-from ssb_utdanning.config import REGION
-
-os.environ["DAPLA_REGION"] = "ON_PREM"
 
 
 class TestUtdData(unittest.TestCase):

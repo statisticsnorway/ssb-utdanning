@@ -2,10 +2,10 @@ import glob
 import re
 from pathlib import Path
 
+from ssb_utdanning import utdanning_logger
 from ssb_utdanning.config import FORMATS_PATH
 from ssb_utdanning.format.formats import UTDFORMAT_INPUT_TYPE
 from ssb_utdanning.format.formats import UtdFormat
-from ssb_utdanning.utdanning_logger import logger
 
 
 def batch_process_folder_sasfiles(
@@ -24,7 +24,7 @@ def batch_process_folder_sasfiles(
         output_path = Path(output_path)
 
     for file in glob.glob(str(sas_files_path) + "/*.sas"):
-        logger.info("Processing %s.", file)
+        utdanning_logger.logger.info("Processing %s.", file)
         process_single_sasfile(file, output_path)
 
 
@@ -74,7 +74,7 @@ def parse_sas_script(sas_script_content: str) -> dict[str, dict[str, str]]:
             format_name, format_content = parse_value_part(value_part)
             formats_in_file[format_name] = format_content
     if not formats_in_file:
-        logger.info("%s", str(sas_script_content))
+        utdanning_logger.logger.info("%s", str(sas_script_content))
     return formats_in_file
 
 

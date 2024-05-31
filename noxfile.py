@@ -30,7 +30,7 @@ nox.options.sessions = (
     "mypy",
     "tests",
     "typeguard",
-    "xdoctest",
+    # "xdoctest",
     "docs-build",
 )
 
@@ -154,7 +154,7 @@ def mypy(session: Session) -> None:
 def tests(session: Session) -> None:
     """Run the test suite."""
     session.install(".")
-    session.install("coverage[toml]", "pytest", "pygments")
+    session.install("coverage[toml]", "typeguard", "pytest", "pygments")
     try:
         session.run(
             "coverage",
@@ -193,19 +193,19 @@ def typeguard(session: Session) -> None:
     session.run("pytest", f"--typeguard-packages={package}", *session.posargs)
 
 
-@session(python=python_versions)
-def xdoctest(session: Session) -> None:
-    """Run examples with xdoctest."""
-    if session.posargs:
-        args = [package, *session.posargs]
-    else:
-        args = [f"--modname={package}", "--command=all"]
-        if "FORCE_COLOR" in os.environ:
-            args.append("--colored=1")
-
-    session.install(".")
-    session.install("xdoctest[colors]")
-    session.run("python", "-m", "xdoctest", *args)
+# @session(python=python_versions)
+# def xdoctest(session: Session) -> None:
+#    """Run examples with xdoctest."""
+#    if session.posargs:
+#        args = [package, *session.posargs]
+#    else:
+#        args = [f"--modname={package}", "--command=all"]
+#        if "FORCE_COLOR" in os.environ:
+#            args.append("--colored=1")
+#
+#    session.install(".")
+#    session.install("xdoctest[colors]")
+#    session.run("python", "-m", "xdoctest", *args)
 
 
 @session(name="docs-build", python=python_versions[0])

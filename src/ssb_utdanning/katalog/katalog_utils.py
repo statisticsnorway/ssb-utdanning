@@ -2,9 +2,9 @@ import json
 
 import pandas as pd
 
+from ssb_utdanning import utdanning_logger
 from ssb_utdanning.katalog import UtdKatalog
 from ssb_utdanning.katalog.katalog import REQUIRED_COLS
-from ssb_utdanning.utdanning_logger import logger
 
 
 def create_new_utd_katalog(
@@ -39,7 +39,7 @@ def create_new_utd_katalog(
     metadata["team"] = input("Ansvarlig team for katalogen: ")
     # Hva mer?
 
-    logger.info(
+    utdanning_logger.logger.info(
         "Add more metadata to the catalogue.metadata before saving if you want. "
     )
 

@@ -1,10 +1,12 @@
+import os
+
 import pandas as pd
 
 from ssb_utdanning import UtdData
 from ssb_utdanning import UtdKatalog
+from ssb_utdanning import utdanning_logger
 from ssb_utdanning.config import SKOLEREG_PATH
 from ssb_utdanning.config import VIGO_PATH
-from ssb_utdanning.utdanning_logger import logger
 
 
 def get_skolereg(year: str | int = "latest", sub_category: str = "") -> UtdKatalog:
@@ -42,12 +44,16 @@ def get_skolereg(year: str | int = "latest", sub_category: str = "") -> UtdKatal
 
     if year == "latest":
         return UtdKatalog(
-            glob_pattern=SKOLEREG_PATH + f"skolereg_{sub_category}*.parquet",
+            glob_pattern=os.path.join(
+                SKOLEREG_PATH, f"skolereg_{sub_category}*.parquet"
+            ),
             key_cols=["orgnr", "orgnrbed"],
             exclude_keywords=exclude_keywords,
         )
     return UtdKatalog(
-        glob_pattern=SKOLEREG_PATH + f"skolereg_{sub_category}*{year}*.parquet",
+        glob_pattern=os.path.join(
+            SKOLEREG_PATH, f"skolereg_{sub_category}*{year}*.parquet"
+        ),
         key_cols=["orgnr", "orgnrbed"],
         exclude_keywords=exclude_keywords,
     )
@@ -70,11 +76,13 @@ def get_vigo_skole(year: str | int = "latest") -> UtdKatalog:
     """
     if year == "latest":
         return UtdKatalog(
-            glob_pattern=VIGO_PATH + "vigo_skole_testfil_slett*.parquet",
+            glob_pattern=os.path.join(VIGO_PATH, "vigo_skole_testfil_slett*.parquet"),
             key_cols=["SKOLENR"],
         )
     return UtdKatalog(
-        glob_pattern=VIGO_PATH + f"vigo_skole_testfil_slett*{year}*.parquet",
+        glob_pattern=os.path.join(
+            VIGO_PATH, f"vigo_skole_testfil_slett*{year}*.parquet"
+        ),
         key_cols=["SKOLENR"],
     )
 
@@ -169,7 +177,9 @@ def orgnrkontroll_func(
 
     # merge skolereg on data on orgnr
     skolereg.key_cols = ["orgnr"]
-    logger.info(f"Merging skolereg on dataset on variable '{orgnr_col_innfil}'")
+    utdanning_logger.logger.info(
+        f"Merging skolereg on dataset on variable '{orgnr_col_innfil}'"
+    )
     skolereg_orgnr_merged = skolereg.merge_on(
         dataset=data, key_col_in_data=orgnr_col_innfil, keep_cols=skolereg_keep_cols
     )
@@ -182,7 +192,9 @@ def orgnrkontroll_func(
 
     # merge skolereg on data on orgnrbed
     skolereg.key_cols = ["orgnrbed"]
-    logger.info(f"Merging skolereg on dataset on variable '{orgnrbed_col_innfil}'")
+    utdanning_logger.logger.info(
+        f"Merging skolereg on dataset on variable '{orgnrbed_col_innfil}'"
+    )
     skolereg_not_merged_orgnr = skolereg_not_merged_orgnr[data_cols]
     skolereg_orgnrbed_merged = skolereg.merge_on(
         dataset=skolereg_not_merged_orgnr,
@@ -197,7 +209,9 @@ def orgnrkontroll_func(
     ].copy()
 
     # merging vigo_skole catalog on datset on fskolenr
-    logger.info(f"Merging vigo_skole on dataset on variable '{orgnr_col_innfil}'")
+    utdanning_logger.logger.info(
+        f"Merging vigo_skole on dataset on variable '{orgnr_col_innfil}'"
+    )
     skolereg_not_merged = skolereg_not_merged[data_cols]
     vigo_fskolenr_merged = vigo.merge_on(
         dataset=skolereg_not_merged,
@@ -227,14 +241,14 @@ def orgnrkontroll_func(
 
     # final status report
     print("-" * 80)
-    logger.info("Final merge report")
+    utdanning_logger.logger.info("Final merge report")
     print("-" * 80)
-    logger.info("\n%s", final["_merge"].value_counts(dropna=False))
+    utdanning_logger.logger.info("\n%s", final["_merge"].value_counts(dropna=False))
     if len(final) > len(data):
         n_dups = len(final) - len(data)
-        logger.warning(f"{n_dups} duplicates were found")
+        utdanning_logger.logger.warning(f"{n_dups} duplicates were found")
     else:
-        logger.info("Duplicates rows not detected")
+        utdanning_logger.logger.info("Duplicates rows not detected")
     if isinstance(data, UtdData):
         return UtdData(data=final, path=data.path)
     return final

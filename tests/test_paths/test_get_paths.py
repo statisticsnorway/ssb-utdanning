@@ -23,35 +23,39 @@ class Test_get_paths(unittest.TestCase):
 
     def test_get_paths(self):
         result = get_paths(
-            glob_pattern=str(self.folder_path) + "/test_data_p2023-10_v*.parquet"
+            glob_pattern=str(self.folder_path)
+            + os.sep
+            + "test_data_p2023-10_v*.parquet"
         )
         self.assertEqual(len(result), 3)
         result = get_paths(
-            glob_pattern=str(self.folder_path) + "/test_data*p2023-10_v*.parquet"
+            glob_pattern=str(self.folder_path)
+            + os.sep
+            + "test_data*p2023-10_v*.parquet"
         )
         self.assertEqual(len(result), 6)
 
         w_keywords = get_paths(
-            glob_pattern=str(self.folder_path) + "/test_data*.parquet"
+            glob_pattern=str(self.folder_path) + os.sep + "test_data*.parquet"
         )
         wo_keywords = get_paths(
-            glob_pattern=str(self.folder_path) + "/test_data*.parquet",
+            glob_pattern=str(self.folder_path) + os.sep + "test_data*.parquet",
             exclude_keywords="excludethiskeyword",
         )
         self.assertTrue(len(w_keywords) - 15 == len(wo_keywords))
 
     def test_get_path_latest(self):
         result = get_path_latest(
-            glob_pattern=str(self.folder_path) + "/test_data*.parquet",
+            glob_pattern=str(self.folder_path) + os.sep + "test_data*.parquet",
             exclude_keywords="excludethiskeyword",
         )
         self.assertEqual(
-            result, str(self.folder_path) + "/test_data_p2024-10_v3.parquet"
+            result, str(self.folder_path) + os.sep + "test_data_p2024-10_v3.parquet"
         )
 
     def test_get_paths_dates(self):
         result = get_paths_dates(
-            glob_pattern=str(self.folder_path) + "/test_data*.parquet",
+            glob_pattern=str(self.folder_path) + os.sep + "test_data*.parquet",
             exclude_keywords="excludethiskeyword",
         )
         self.assertIsInstance(result, dict)
@@ -63,16 +67,17 @@ class Test_get_paths(unittest.TestCase):
     def test_get_path_reference_date(self):
         result = get_path_reference_date(
             reference_datetime="2022-09",
-            glob_pattern=str(self.folder_path) + "/two_dates*.parquet",
+            glob_pattern=str(self.folder_path) + os.sep + "two_dates*.parquet",
         )
         self.assertEqual(
-            result, str(self.folder_path) + "/two_dates_p2021-10_p2022-10_v3.parquet"
+            result,
+            str(self.folder_path) + os.sep + "two_dates_p2021-10_p2022-10_v3.parquet",
         )
 
         with self.assertRaises(ValueError):
             result = get_path_reference_date(
                 reference_datetime="2022-10",
-                glob_pattern=str(self.folder_path) + "/two_dates*.parquet",
+                glob_pattern=str(self.folder_path) + os.sep + "two_dates*.parquet",
             )
 
     def tearDown(self):

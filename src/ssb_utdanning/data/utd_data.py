@@ -1,3 +1,4 @@
+import concurrent
 import enum
 from io import StringIO
 from pathlib import Path
@@ -8,13 +9,14 @@ import pandas as pd
 from cloudpathlib import GSPath
 from datadoc.backend.datadoc_metadata import DataDocMetadata
 from datadoc.backend.statistic_subject_mapping import StatisticSubjectMapping
+from datadoc.config import get_statistical_subject_source_url
 from fagfunksjoner import auto_dtype
 
-from ssb_utdanning.config import REGION
+from ssb_utdanning import config
+from ssb_utdanning import utdanning_logger
 from ssb_utdanning.paths import versioning
 from ssb_utdanning.paths.get_paths import get_path_dates
 from ssb_utdanning.paths.get_paths import get_path_latest
-from ssb_utdanning.utdanning_logger import logger
 
 
 class OverwriteMode(enum.Enum):
@@ -78,7 +80,9 @@ class UtdData:
             ValueError: If neither path nor glob_pattern are provided.
         """
         if glob_pattern and path:
-            logger.info("You set both glob pattern and path, will prioritize path.")
+            utdanning_logger.logger.info(
+                "You set both glob pattern and path, will prioritize path."
+            )
         elif not path and not glob_pattern:
             error_msg = "You must set either path, or glob_pattern."
             raise ValueError(error_msg)
@@ -139,9 +143,9 @@ class UtdData:
             - Logs a message if neither a .parquet nor a .sas7bdat file can be found at the specified path.
         """
         self.path: Path | GSPath
-        if REGION == "ON_PREM" and isinstance(path, str):
+        if config.REGION == "ON_PREM" and isinstance(path, str):
             self.path = Path(path)
-        elif REGION == "BIP" and isinstance(path, str):
+        elif config.REGION == "BIP" and isinstance(path, str):
             self.path = GSPath(path)
         else:
             self.path = Path(path)
@@ -153,7 +157,7 @@ class UtdData:
             elif self.path.with_suffix(".sas7bdat").exists():
                 self.path = self.path.with_suffix(".sas7bdat")
             else:
-                logger.info(
+                utdanning_logger.logger.info(
                     "Cant find a sas7bdat or parquetfile at %s...", str(self.path)
                 )
                 return None
@@ -215,9 +219,9 @@ class UtdData:
             )
             if not sure.lower() == "y":
                 return None
-        logger.info("Opening data from %s", str(self.path))
+        utdanning_logger.logger.info("Opening data from %s", str(self.path))
         df_get_data: pd.DataFrame
-        if REGION == "ON_PREM":
+        if config.REGION == "ON_PREM":
             if path.suffix == ".parquet":
                 df_get_data = pd.read_parquet(path)
             elif path.suffix == ".sas7bdat":
@@ -226,7 +230,7 @@ class UtdData:
                 raise OSError(
                     f"Can only open parquet and sas7bdat, you gave me {path.suffix}"
                 )
-        if REGION == "BIP":
+        if config.REGION == "BIP":
             if path.suffix == ".sas7bdat":
                 with dp.FileClient().gcs_open(str(path), "r") as sasfile:
                     df_get_data = auto_dtype(pd.read_sas(str(sasfile)))
@@ -266,9 +270,9 @@ class UtdData:
             TypeError: if type returned by version.bump_path is unrecognized
         """
         new_path = versioning.bump_path(path, num_bumps)
-        if REGION == "ON_PREM" and isinstance(new_path, str):
+        if config.REGION == "ON_PREM" and isinstance(new_path, str):
             return Path(new_path)
-        elif REGION == "BIP" and isinstance(new_path, str):
+        elif config.REGION == "BIP" and isinstance(new_path, str):
             return GSPath(new_path)
         elif not isinstance(new_path, str):
             return new_path
@@ -315,7 +319,7 @@ class UtdData:
                 overwrite_mode_enum = getattr(OverwriteMode, overwrite_mode)
             except ValueError:
                 overwrite_mode_enum = OverwriteMode.NONE
-                logger.warning(
+                utdanning_logger.logger.warning(
                     f"Set the existing_file parameter as one of: {[x.value for x in iter(OverwriteMode)]}"
                 )
         else:
@@ -325,7 +329,7 @@ class UtdData:
             path = self.path
 
         pathpath: Path | GSPath
-        if isinstance(path, str) and REGION == "BIP":
+        if isinstance(path, str) and config.REGION == "BIP":
             pathpath = GSPath(path)
         else:
             pathpath = Path(path)
@@ -347,13 +351,13 @@ class UtdData:
             """
             raise OSError(error)
         if overwrite_mode_enum == OverwriteMode.overwrite and pathpath.is_file():
-            logger.warning(
+            utdanning_logger.logger.warning(
                 "Youve set overwrite, AND YOU ARE ACTUALLY OVERWRITING A FILE RIGHT NOW DUDE: %s",
                 path,
             )
             sure = input("YOU SURE ABOUT THIS!?!?! Type Y/y if you are: ")
             if sure.lower() != "y":
-                logger.info("aborting save")
+                utdanning_logger.logger.info("aborting save")
                 return None
 
         # If filebump is selected get current version from the filesystem instead
@@ -364,7 +368,7 @@ class UtdData:
             target_version = latest_version + 1
             diff_version = target_version - current_version - 1
             if current_version != latest_version:
-                logger.warning(
+                utdanning_logger.logger.warning(
                     """Filebump actually changing the versioning number to %s,
                     this might indicate you opened an older file than the newest available...""",
                     str(target_version),
@@ -373,16 +377,16 @@ class UtdData:
                     "You sure you dont want to check if you opened an older file? Y/y: "
                 )
                 if sure.lower() != "y":
-                    logger.info("aborting save")
+                    utdanning_logger.logger.info("aborting save")
                     return None
                 pathpath = self.bump_path(pathpath, diff_version)
 
         # Reset the classes path, as when we write somewhere, thats were we should open it from again...
         self.path = pathpath
 
-        if REGION == "ON_PREM":
+        if config.REGION == "ON_PREM":
             self.data.to_parquet(pathpath)
-        elif REGION == "BIP":
+        elif config.REGION == "BIP":
             dp.write_pandas(self.data, str(pathpath))
 
         # Update path in metadata before saving
@@ -395,7 +399,7 @@ class UtdData:
         if save_metadata:
             self.metadata.write_metadata_document()
 
-        logger.info(
+        utdanning_logger.logger.info(
             "Wrote file to %s. Wrote metadata to %s.", str(self.path), str(metapath)
         )
         return None
@@ -403,5 +407,9 @@ class UtdData:
     def _metadata_from_path(self) -> None:
         """Extracts metadata from the file path, intended for internal use."""
         self.metadata = DataDocMetadata(
-            StatisticSubjectMapping(""), dataset_path=str(self.path)
+            statistic_subject_mapping=StatisticSubjectMapping(
+                concurrent.futures.ThreadPoolExecutor(max_workers=12),
+                get_statistical_subject_source_url(),
+            ),
+            dataset_path=str(self.path),
         )
