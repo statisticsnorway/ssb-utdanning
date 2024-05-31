@@ -23,11 +23,15 @@ class Test_get_paths(unittest.TestCase):
 
     def test_get_paths(self):
         result = get_paths(
-            glob_pattern=str(self.folder_path) + os.sep + "test_data_p2023-10_v*.parquet"
+            glob_pattern=str(self.folder_path)
+            + os.sep
+            + "test_data_p2023-10_v*.parquet"
         )
         self.assertEqual(len(result), 3)
         result = get_paths(
-            glob_pattern=str(self.folder_path) + os.sep + "test_data*p2023-10_v*.parquet"
+            glob_pattern=str(self.folder_path)
+            + os.sep
+            + "test_data*p2023-10_v*.parquet"
         )
         self.assertEqual(len(result), 6)
 
@@ -66,7 +70,8 @@ class Test_get_paths(unittest.TestCase):
             glob_pattern=str(self.folder_path) + os.sep + "two_dates*.parquet",
         )
         self.assertEqual(
-            result, str(self.folder_path) + os.sep + "two_dates_p2021-10_p2022-10_v3.parquet"
+            result,
+            str(self.folder_path) + os.sep + "two_dates_p2021-10_p2022-10_v3.parquet",
         )
 
         with self.assertRaises(ValueError):
