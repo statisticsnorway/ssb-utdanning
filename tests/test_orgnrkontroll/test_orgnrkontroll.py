@@ -21,18 +21,18 @@ from typeguard import suppress_type_checks
 
 @mock.patch(
     "ssb_utdanning.orgnrkontroll.orgnrkontroll.VIGO_PATH",
-    new=os.getcwd() + "/mock_data/",
+    new=os.getcwd() + os.sep + "mock_data" + os.sep,
 )
 @mock.patch(
     "ssb_utdanning.orgnrkontroll.orgnrkontroll.SKOLEREG_PATH",
-    new=os.getcwd() + "/mock_data/",
+    new=os.getcwd() + os.sep + "mock_data" os.sep,
 )
 class Test_orgnrkontroll(unittest.TestCase):
     # @mock.patch('ssb_utdanning.orgnrkontroll.orgnrkontroll.SKOLEREG_PATH', new=str(os.getcwd() + '/mock_data'))
     def setUp(self) -> None:
         # setting up folder to store formats
         template_dir = Path(os.getcwd())
-        self.path = template_dir / "mock_data/"
+        self.path = template_dir / "mock_data" + os.sep
         self.year = 2022
         self.tearDown()
         os.makedirs(self.path, exist_ok=True)
@@ -42,7 +42,7 @@ class Test_orgnrkontroll(unittest.TestCase):
         self.data = self.get_data_year(year=self.year)
 
     def get_data_year(self, year) -> UtdData:
-        return UtdData(glob_pattern=str(self.path) + f"/data_p{year}*.parquet")
+        return UtdData(glob_pattern=str(self.path) + f"{os.sep}data_p{year}*.parquet")
 
     def test_get_skolereg(self):
         result = orgnrkontroll_module.get_skolereg(year=self.year)
@@ -52,13 +52,13 @@ class Test_orgnrkontroll(unittest.TestCase):
     def test_get_skolereg_latest(self):
         result = orgnrkontroll_module.get_skolereg()
         self.assertTrue(
-            str(result.path).split("/")[-1] == "skolereg_p2023-10_v1.parquet"
+            str(result.path).split(os.sep)[-1] == "skolereg_p2023-10_v1.parquet"
         )
 
     def test_get_skolereg_subcategory(self):
         result = orgnrkontroll_module.get_skolereg(year=2022, sub_category="vgskoler")
         self.assertTrue(
-            str(result.path).split("/")[-1] == "skolereg_vgskoler_p2022-10_v1.parquet"
+            str(result.path).split(os.sep)[-1] == "skolereg_vgskoler_p2022-10_v1.parquet"
         )
 
     def test_get_vigo_skole(self):
@@ -69,7 +69,7 @@ class Test_orgnrkontroll(unittest.TestCase):
     def test_get_vigo_latest(self):
         result = orgnrkontroll_module.get_vigo_skole()
         self.assertTrue(
-            str(result.path).split("/")[-1], "vigo_skole_testfil_slett_p2023_v1.parquet"
+            str(result.path).split(os.sep)[-1], "vigo_skole_testfil_slett_p2023_v1.parquet"
         )
 
     def test_equal_orgnr_cols(self):
