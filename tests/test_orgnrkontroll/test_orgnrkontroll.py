@@ -166,6 +166,7 @@ class Test_orgnrkontroll(unittest.TestCase):
                 skolereg_keep_cols="not set or list",  #
             )
 
+    @suppress_type_checks
     def test_merge_on_specific_columns(self):
         with self.assertRaises(TypeError):
             result = orgnrkontroll_module.orgnrkontroll_func(

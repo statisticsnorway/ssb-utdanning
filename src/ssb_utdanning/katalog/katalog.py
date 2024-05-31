@@ -221,7 +221,7 @@ class UtdKatalog(UtdData):
         mapping = self.to_dict(
             col=catalog_col_name, level=level, key_col=catalog_key_col_name
         )
-        mapping_unique_vals = list(pd.unique(list(mapping.values())))
+        mapping_unique_vals = list(set(mapping.values()))
         df[new_col_data_name] = df[data_key_col_name].map(mapping)
         try:
             series = df[new_col_data_name].copy()

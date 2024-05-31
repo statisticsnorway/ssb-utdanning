@@ -7,3 +7,5 @@ While running it reports on how many are missing join-opportunities. The schools
 from ssb_utdanning.orgnrkontroll.orgnrkontroll import get_skolereg
 from ssb_utdanning.orgnrkontroll.orgnrkontroll import get_vigo_skole
 from ssb_utdanning.orgnrkontroll.orgnrkontroll import orgnrkontroll_func
+
+__all__ = ["get_skolereg", "get_vigo_skole", "orgnrkontroll_func"]
