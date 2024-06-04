@@ -51,15 +51,14 @@ class Test_orgnrkontroll(unittest.TestCase):
 
     def test_get_skolereg_latest(self):
         result = orgnrkontroll_module.get_skolereg()
-        self.assertTrue(
-            str(result.path).split(os.sep)[-1] == "skolereg_p2023-10_v1.parquet"
+        self.assertEqual(
+            str(result.path).split(os.sep)[-1], "skolereg_p2023-10_v1.parquet"
         )
 
     def test_get_skolereg_subcategory(self):
         result = orgnrkontroll_module.get_skolereg(year=2022, sub_category="vgskoler")
-        self.assertTrue(
-            str(result.path).split(os.sep)[-1]
-            == "skolereg_vgskoler_p2022-10_v1.parquet"
+        self.assertEqual(
+            str(result.path).split(os.sep)[-1], "skolereg_vgskoler_p2022-10_v1.parquet"
         )
 
     def test_get_vigo_skole(self):
@@ -186,14 +185,14 @@ class Test_orgnrkontroll(unittest.TestCase):
             skolereg_keep_cols=skolereg_keep_cols,
             vigo_keep_cols=vigo_keep_cols,
         )
-        self.assertTrue(skolereg_keep_cols[0] in list(result.data.columns))
-        self.assertTrue(vigo_keep_cols[0] in list(result.data.columns))
+        self.assertIn(skolereg_keep_cols[0], list(result.data.columns))
+        self.assertIn(vigo_keep_cols[0], list(result.data.columns))
 
     def test_verify_merge_result(self):
         data = self.get_data_year(year=2022)
         # general test
         result = orgnrkontroll_module.orgnrkontroll_func(data=data, year=2022)
-        self.assertTrue("_merge" in list(result.data.columns))
+        self.assertIn("_merge", list(result.data.columns))
         self.assertTrue(len(self.data.data.columns) < len(result.data.columns))
 
     def tearDown(self):

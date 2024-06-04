@@ -79,6 +79,9 @@ class UtdData:
         Raises:
             ValueError: If neither path nor glob_pattern are provided.
         """
+        # defining global variables for file-suffix
+        self.parquet_suffix = ".parquet"
+        self.sas_suffix = ".sas7bdat"
         if glob_pattern and path:
             utdanning_logger.logger.info(
                 "You set both glob pattern and path, will prioritize path."
@@ -151,11 +154,14 @@ class UtdData:
             self.path = Path(path)
         self.periods = get_path_dates(self.path)
 
-        if not self.path.suffix == ".parquet" or self.path.suffix == ".sas7bdat":
-            if self.path.with_suffix(".parquet").exists():
-                self.path = self.path.with_suffix(".parquet")
-            elif self.path.with_suffix(".sas7bdat").exists():
-                self.path = self.path.with_suffix(".sas7bdat")
+        if (
+            self.path.suffix != self.parquet_suffix
+            or self.path.suffix == self.sas_suffix
+        ):
+            if self.path.with_suffix(self.parquet_suffix).exists():
+                self.path = self.path.with_suffix(self.parquet_suffix)
+            elif self.path.with_suffix(self.sas_suffix).exists():
+                self.path = self.path.with_suffix(self.sas_suffix)
             else:
                 utdanning_logger.logger.info(
                     "Cant find a sas7bdat or parquetfile at %s...", str(self.path)
@@ -217,21 +223,21 @@ class UtdData:
             sure = input(
                 f"You are opening {self.path}, not opening the latest version of the file: {self.get_latest_version_path()} \n Are you sure? Y/y: "
             )
-            if not sure.lower() == "y":
+            if sure.lower() != "y":
                 return None
         utdanning_logger.logger.info("Opening data from %s", str(self.path))
         df_get_data: pd.DataFrame
         if config.REGION == "ON_PREM":
-            if path.suffix == ".parquet":
+            if path.suffix == self.parquet_suffix:
                 df_get_data = pd.read_parquet(path)
-            elif path.suffix == ".sas7bdat":
+            elif path.suffix == self.sas_suffix:
                 df_get_data = auto_dtype(pd.read_sas(path))
             else:
                 raise OSError(
                     f"Can only open parquet and sas7bdat, you gave me {path.suffix}"
                 )
         if config.REGION == "BIP":
-            if path.suffix == ".sas7bdat":
+            if path.suffix == self.sas_suffix:
                 with dp.FileClient().gcs_open(str(path), "r") as sasfile:
                     df_get_data = auto_dtype(pd.read_sas(str(sasfile)))
             else:
@@ -335,7 +341,7 @@ class UtdData:
             pathpath = Path(path)
 
         # Force path to be parquet before writing
-        pathpath = pathpath.with_suffix(".parquet")
+        pathpath = pathpath.with_suffix(self.parquet_suffix)
         # Automatic versioning
 
         if bump_version:
@@ -408,8 +414,8 @@ class UtdData:
         """Extracts metadata from the file path, intended for internal use."""
         self.metadata = DataDocMetadata(
             statistic_subject_mapping=StatisticSubjectMapping(
-                concurrent.futures.ThreadPoolExecutor(max_workers=12),
-                get_statistical_subject_source_url(),
+                executor=concurrent.futures.ThreadPoolExecutor(max_workers=12),
+                source_url=get_statistical_subject_source_url(),
             ),
             dataset_path=str(self.path),
         )

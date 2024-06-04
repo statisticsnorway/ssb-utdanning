@@ -118,16 +118,13 @@ class TestUtdData(unittest.TestCase):
 
     def test_get_latest_version_path(self):
         self.setUp()
-        # latest_file = file_v2 = self.path/"data_p2024-11_v1.parquet"
         path_bumped = UtdData.bump_path(self.path_to_file)
         # checking that bump path return vi+1
-        self.assertTrue(
-            int(str(path_bumped)[-9]) == int(str(self.path_to_file)[-9]) + 1
-        )
+        self.assertEqual(int(str(path_bumped)[-9]), int(str(self.path_to_file)[-9]) + 1)
         create_mock_data(path_bumped)
         data = UtdData(path=path_bumped)
         data.path = self.path_to_file
-        self.assertTrue(str(data.get_latest_version_path()) == str(path_bumped))
+        self.assertEqual(str(data.get_latest_version_path()), str(path_bumped))
 
     def test_save(self):
         self.setUp()
@@ -135,7 +132,7 @@ class TestUtdData(unittest.TestCase):
         old_path = data.path
         data.save(path=self.path_to_file)
         new_path = data.path
-        self.assertTrue(str(old_path) != str(new_path))
+        self.assertNotEqual(str(old_path), str(new_path))
         self.assertTrue(data.path.exists())
 
     def test_save_filebump(self):
@@ -156,3 +153,8 @@ class TestUtdData(unittest.TestCase):
     def tearDown(self) -> None:
         # Clean up test files and folders after tests
         shutil.rmtree(self.path, ignore_errors=True)
+
+
+test = TestUtdData()
+test.setUp()
+test.test_simple_init()

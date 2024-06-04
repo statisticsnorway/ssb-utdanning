@@ -210,7 +210,7 @@ def orgnrkontroll_func(
 
     # merging vigo_skole catalog on datset on fskolenr
     utdanning_logger.logger.info(
-        f"Merging vigo_skole on dataset on variable '{orgnr_col_innfil}'"
+        f"Merging vigo_skole on dataset on variable '{fskolenr_col_innfil}'"
     )
     skolereg_not_merged = skolereg_not_merged[data_cols]
     vigo_fskolenr_merged = vigo.merge_on(
@@ -248,7 +248,7 @@ def orgnrkontroll_func(
         n_dups = len(final) - len(data)
         utdanning_logger.logger.warning(f"{n_dups} duplicates were found")
     else:
-        utdanning_logger.logger.info("Duplicates rows not detected")
+        utdanning_logger.logger.info("No duplicates detected")
     if isinstance(data, UtdData):
         return UtdData(data=final, path=data.path)
     return final

@@ -13,17 +13,12 @@ View "katalog" as an umbrella-term above these.
 
 # Standard library
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 # External packages
 import pandas as pd
 from cloudpathlib import GSPath
 
-if TYPE_CHECKING:
-    pass
-
 # Local imports
-
 from ssb_utdanning import utdanning_logger
 from ssb_utdanning.data.utd_data import UtdData
 
@@ -85,7 +80,6 @@ class UtdKatalog(UtdData):
         """
         if keep_cols is None:
             keep_cols_kat: set[str] = set(self.data.columns)
-            # keep_cols_kat.remove(key_col_in_data)
             keep_cols_kat = keep_cols_kat - set(self.key_cols)
         else:
             keep_cols_kat = set(keep_cols)
@@ -100,8 +94,6 @@ class UtdKatalog(UtdData):
                 utdanning_logger.logger.warning(
                     f"Looks like duplicate entries in the catalog column {col}"
                 )
-                # error_msg = f"Looks like duplicate entries in the catalog column {col}"
-                # raise ValueError(error_msg)
             keep_cols_copy = keep_cols_kat.copy()
             keep_cols_copy.add(col)
             temp = rest.merge(

@@ -38,10 +38,10 @@ class TestUtdKatalog(unittest.TestCase):
         katalog = UtdKatalog(key_cols=["ident"], path=self.katalog_path)
         data = UtdData(path=self.data_path)
         result = katalog.merge_on(dataset=data, key_col_in_data="ident")
-        self.assertTrue("height" in result.columns)
-        self.assertTrue("age" in result.columns)
-        self.assertTrue("sex" in result.columns)
-        self.assertTrue("_merge" in result.columns)
+        self.assertIn("height", result.columns)
+        self.assertIn("age", result.columns)
+        self.assertIn("sex", result.columns)
+        self.assertIn("_merge", result.columns)
         self.assertEqual(len(result), len(data.data))
 
     def test_to_dict(self):
@@ -71,7 +71,7 @@ class TestUtdKatalog(unittest.TestCase):
             catalog_key_col_name="ident",
             new_col_data_name="data_sex",
         )
-        self.assertTrue("data_sex" in data.data.columns)
+        self.assertIn("data_sex", data.data.columns)
         self.assertEqual(len(data.data), data_n)
 
     def tearDown(self):

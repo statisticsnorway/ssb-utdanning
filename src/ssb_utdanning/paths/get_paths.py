@@ -187,7 +187,6 @@ def get_path_reference_date(
         )
     else:
         reference_datetime_dt = reference_datetime
-    # paths_datetime = get_path_dates(glob_pattern)
     paths_datetime = get_paths_dates(glob_pattern, exclude_keywords)
     for path, check_dates in paths_datetime.items():
         if len(check_dates) == 2:
