@@ -114,6 +114,7 @@ class UtdKatalog(UtdData):
         utdanning_logger.logger.info(
             "\n%s", result["_merge"].value_counts(dropna=False)
         )
+        utdanning_logger.logger.info(f"Cols joined to dataset from katalog: {keep_cols_kat}")
         if len(result) > len(dataset):
             utdanning_logger.logger.warning(
                 "Merge resulted in additional rows. Duplicated may need to be handled"

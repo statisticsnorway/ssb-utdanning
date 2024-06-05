@@ -243,11 +243,15 @@ def orgnrkontroll_func(
     utdanning_logger.logger.info(f"{len(skolereg_not_merged[orgnr_col_innfil].unique())} unike orgnr koblet hverken mot 'orgnr' eller 'orgnrbed' i skolereg")
     utdanning_logger.logger.info(f"{len(vigo_not_merged_fskolenr[orgnr_col_innfil].unique())} unike orgnr koblet hverken mot skolereg eller vigo")
     print("-" * 80)
+    utdanning_logger.logger.info(f"Kolonner påført datasett fra skolereg: {skolereg_keep_cols}")
+    utdanning_logger.logger.info(f"Kolonner påført datasett fra vigo: {vigo_keep_cols}")
+    print("-" * 80)
     if len(final) > len(data):
         n_dups = len(final) - len(data)
         utdanning_logger.logger.warning(f"{n_dups} duplicates were found")
     else:
         utdanning_logger.logger.info("No duplicates detected")
+    print("-" * 80)
     if isinstance(data, UtdData):
         return UtdData(data=final, path=data.path)
     return final
