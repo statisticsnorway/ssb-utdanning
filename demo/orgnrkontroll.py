@@ -5,7 +5,10 @@ from ssb_utdanning.orgnrkontroll import get_vigo_skole
 
 get_skolereg().data
 
-get_vigo_skole().data
+vigo = get_vigo_skole().data
+
+for var in vigo.columns:
+    print(var)
 
 path_inn = "/ssb/stamme01/utd_pii/grskavsl/wk16/MOD/ssb-prod-gro-grunnskole-produkt/klargjorte-data/"
 filename_inn = "kag_nudb_p2022_p2023_v1.parquet"
@@ -28,4 +31,6 @@ result = orgnrkontroll_func(
     skolereg_subcategory="",
 )
 
-inndata.path.split("/")
+vars(result.metadata)
+
+rapporter antall skoler/orgnr som kobler/ikke kobler. antall rader per orgnr som ikke koblet
