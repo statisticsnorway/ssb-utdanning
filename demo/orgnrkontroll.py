@@ -14,7 +14,7 @@ path_inn = "/ssb/stamme01/utd_pii/grskavsl/wk16/MOD/ssb-prod-gro-grunnskole-prod
 filename_inn = "kag_nudb_p2022_p2023_v1.parquet"
 inndata = UtdData(path=path_inn + filename_inn)
 inndata.data = inndata.data[
-    ["inn_fnr", "orgnr", "orgnrbed", "orgnrforetak", "fskolenr"]
+    ["inn_fnr", "orgnr", "fskolenr"]
 ]
 inndata.data.drop_duplicates(subset="inn_fnr", inplace=True)
 
@@ -26,11 +26,10 @@ result = orgnrkontroll_func(
     skolereg_keep_cols=["nace1_sn07", "nace2_sn07", "nace3_sn07", "skolekom"],
     vigo_keep_cols=["SKOLENR", "KOMMNR"],
     orgnr_col_innfil="orgnr",
-    orgnrbed_col_innfil="orgnrbed",
     fskolenr_col_innfil="fskolenr",
     skolereg_subcategory="",
 )
 
-vars(result.metadata)
+result
 
 rapporter antall skoler/orgnr som kobler/ikke kobler. antall rader per orgnr som ikke koblet
