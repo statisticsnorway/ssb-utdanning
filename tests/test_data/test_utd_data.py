@@ -42,7 +42,9 @@ class TestUtdData(unittest.TestCase):
 
     def test_prioritize_path_over_glob(self):
         data = UtdData(
-            self.data, self.path_to_file, glob_pattern_latest="ignored_glob_pattern*.parquet"
+            self.data,
+            self.path_to_file,
+            glob_pattern_latest="ignored_glob_pattern*.parquet",
         )
         self.assertIsInstance(data, UtdData)
         self.assertIsInstance(data.data, pd.DataFrame)

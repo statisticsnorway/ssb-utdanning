@@ -76,7 +76,9 @@ def get_vigo_skole(year: str | int = "latest") -> UtdKatalog:
     """
     if year == "latest":
         return UtdKatalog(
-            glob_pattern_latest=os.path.join(VIGO_PATH, "vigo_skole_testfil_slett*.parquet"),
+            glob_pattern_latest=os.path.join(
+                VIGO_PATH, "vigo_skole_testfil_slett*.parquet"
+            ),
             key_cols=["SKOLENR"],
         )
     return UtdKatalog(

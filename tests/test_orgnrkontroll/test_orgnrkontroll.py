@@ -55,9 +55,12 @@ class Test_orgnrkontroll(unittest.TestCase):
         )
 
     def test_get_skolereg_subcategory(self):
-        result = orgnrkontroll_module.get_skolereg(year=self.year, sub_category="vgskoler")
+        result = orgnrkontroll_module.get_skolereg(
+            year=self.year, sub_category="vgskoler"
+        )
         self.assertEqual(
-            str(result.path).split(os.sep)[-1], "skolereg_vgskoler_pself.year-10_v1.parquet"
+            str(result.path).split(os.sep)[-1],
+            "skolereg_vgskoler_pself.year-10_v1.parquet",
         )
 
     def test_get_vigo_skole(self):
