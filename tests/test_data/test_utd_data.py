@@ -42,7 +42,7 @@ class TestUtdData(unittest.TestCase):
 
     def test_prioritize_path_over_glob(self):
         data = UtdData(
-            self.data, self.path_to_file, glob_pattern="ignored_glob_pattern*.parquet"
+            self.data, self.path_to_file, glob_pattern_latest="ignored_glob_pattern*.parquet"
         )
         self.assertIsInstance(data, UtdData)
         self.assertIsInstance(data.data, pd.DataFrame)
@@ -59,7 +59,7 @@ class TestUtdData(unittest.TestCase):
         path_to_file = self.path / filename
         create_mock_data(self.path / filename)
         data = UtdData(
-            glob_pattern=str(self.path) + "/datatest*.parquet",
+            glob_pattern_latest=str(self.path) + "/datatest*.parquet",
             exclude_keywords=["drop", "keyword"],
         )
         self.assertIsInstance(data, UtdData)
@@ -78,7 +78,7 @@ class TestUtdData(unittest.TestCase):
         file_v2 = self.path / "data_p2024-10_v2.parquet"
         create_mock_data(file_v2)
         data = UtdData(
-            glob_pattern=str(self.path) + "/data_*.parquet",
+            glob_pattern_latest=str(self.path) + "/data_*.parquet",
             exclude_keywords=["drop", "keyword"],
         )
         self.assertEqual(file_v2, data.path)
@@ -153,8 +153,3 @@ class TestUtdData(unittest.TestCase):
     def tearDown(self) -> None:
         # Clean up test files and folders after tests
         shutil.rmtree(self.path, ignore_errors=True)
-
-
-test = TestUtdData()
-test.setUp()
-test.test_simple_init()

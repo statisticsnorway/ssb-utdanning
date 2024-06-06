@@ -44,14 +44,14 @@ def get_skolereg(year: str | int = "latest", sub_category: str = "") -> UtdKatal
 
     if year == "latest":
         return UtdKatalog(
-            glob_pattern=os.path.join(
+            glob_pattern_latest=os.path.join(
                 SKOLEREG_PATH, f"skolereg_{sub_category}*.parquet"
             ),
             key_cols=["orgnr", "orgnrbed"],
             exclude_keywords=exclude_keywords,
         )
     return UtdKatalog(
-        glob_pattern=os.path.join(
+        glob_pattern_latest=os.path.join(
             SKOLEREG_PATH, f"skolereg_{sub_category}*{year}*.parquet"
         ),
         key_cols=["orgnr", "orgnrbed"],
@@ -76,11 +76,11 @@ def get_vigo_skole(year: str | int = "latest") -> UtdKatalog:
     """
     if year == "latest":
         return UtdKatalog(
-            glob_pattern=os.path.join(VIGO_PATH, "vigo_skole_testfil_slett*.parquet"),
+            glob_pattern_latest=os.path.join(VIGO_PATH, "vigo_skole_testfil_slett*.parquet"),
             key_cols=["SKOLENR"],
         )
     return UtdKatalog(
-        glob_pattern=os.path.join(
+        glob_pattern_latest=os.path.join(
             VIGO_PATH, f"vigo_skole_testfil_slett*{year}*.parquet"
         ),
         key_cols=["SKOLENR"],

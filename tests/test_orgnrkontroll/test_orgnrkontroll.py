@@ -42,7 +42,7 @@ class Test_orgnrkontroll(unittest.TestCase):
         self.data = self.get_data_year(year=self.year)
 
     def get_data_year(self, year) -> UtdData:
-        return UtdData(glob_pattern=str(self.path / f"data_p{year}*.parquet"))
+        return UtdData(glob_pattern_latest=str(self.path / f"data_p{year}*.parquet"))
 
     def test_get_skolereg(self):
         result = orgnrkontroll_module.get_skolereg(year=self.year)
@@ -56,9 +56,9 @@ class Test_orgnrkontroll(unittest.TestCase):
         )
 
     def test_get_skolereg_subcategory(self):
-        result = orgnrkontroll_module.get_skolereg(year=2022, sub_category="vgskoler")
+        result = orgnrkontroll_module.get_skolereg(year=self.year, sub_category="vgskoler")
         self.assertEqual(
-            str(result.path).split(os.sep)[-1], "skolereg_vgskoler_p2022-10_v1.parquet"
+            str(result.path).split(os.sep)[-1], "skolereg_vgskoler_pself.year-10_v1.parquet"
         )
 
     def test_get_vigo_skole(self):
@@ -73,18 +73,8 @@ class Test_orgnrkontroll(unittest.TestCase):
             "vigo_skole_testfil_slett_p2023_v1.parquet",
         )
 
-    def test_equal_orgnr_cols(self):
-        data = self.get_data_year(year=2022)
-        with self.assertRaises(ValueError):
-            result = orgnrkontroll_module.orgnrkontroll_func(
-                data=self.data,
-                year=self.year,
-                orgnr_col_innfil="orgnr",
-                orgnrbed_col_innfil="orgnr",
-            )
-
     def test_missing_orgnr_col_in_data(self):
-        data = self.get_data_year(year=2022)
+        data = self.get_data_year(year=self.year)
         # inn-data does not contain orgnr-cols and fskolenrcol
         # for inn-data of type UtdData
         with self.assertRaises(ValueError):
@@ -93,35 +83,22 @@ class Test_orgnrkontroll(unittest.TestCase):
                 data=self.data,
                 year=self.year,
                 orgnr_col_innfil="orgnr_non",
-                orgnrbed_col_innfil="orgnrbed",
-                fskolenr_col_innfil="fskolenr",
-            )
-
-    def test_missing_orgnrbed_col_in_data(self):
-        data = self.get_data_year(year=2022)
-        with self.assertRaises(ValueError):
-            result = orgnrkontroll_module.orgnrkontroll_func(
-                data=self.data,
-                year=self.year,
-                orgnr_col_innfil="orgnr",
-                orgnrbed_col_innfil="orgnrbed_non",
                 fskolenr_col_innfil="fskolenr",
             )
 
     def test_missing_fskolnr_col_in_data(self):
-        data = self.get_data_year(year=2022)
+        data = self.get_data_year(year=self.year)
         with self.assertRaises(ValueError):
             result = orgnrkontroll_module.orgnrkontroll_func(
                 data=self.data,
                 year=self.year,
                 orgnr_col_innfil="orgnr",
-                orgnrbed_col_innfil="orgnrbed",
                 fskolenr_col_innfil="fskolenr_non",
             )
 
     def test_missing_orgnr_col_data_is_DataFrame(self):
         # for inn-data of type pd.DataFrame
-        data = self.get_data_year(year=2022)
+        data = self.get_data_year(year=self.year)
         data = data.data
         with self.assertRaises(ValueError):
             self.assertIsInstance(data, pd.DataFrame)
@@ -129,37 +106,23 @@ class Test_orgnrkontroll(unittest.TestCase):
                 data=self.data,
                 year=self.year,
                 orgnr_col_innfil="orgnr_non",
-                orgnrbed_col_innfil="orgnrbed",
-                fskolenr_col_innfil="fskolenr",
-            )
-
-    def test_missing_orgnrbed_col_data_is_DataFrame(self):
-        data = self.get_data_year(year=2022)
-        data = data.data
-        with self.assertRaises(ValueError):
-            result = orgnrkontroll_module.orgnrkontroll_func(
-                data=self.data,
-                year=self.year,
-                orgnr_col_innfil="orgnr",
-                orgnrbed_col_innfil="orgnrbed_non",
                 fskolenr_col_innfil="fskolenr",
             )
 
     def test_missing_fskolenr_col_data_is_DataFrame(self):
-        data = self.get_data_year(year=2022)
+        data = self.get_data_year(year=self.year)
         data = data.data
         with self.assertRaises(ValueError):
             result = orgnrkontroll_module.orgnrkontroll_func(
                 data=self.data,
                 year=self.year,
                 orgnr_col_innfil="orgnr",
-                orgnrbed_col_innfil="orgnrbed",
                 fskolenr_col_innfil="fskolenr_non",
             )
 
     @suppress_type_checks
     def test_keep_col_is_list_or_set(self):
-        data = self.get_data_year(year=2022)
+        data = self.get_data_year(year=self.year)
         with self.assertRaises(TypeError):
             result = orgnrkontroll_module.orgnrkontroll_func(
                 data=self.data,
@@ -175,7 +138,7 @@ class Test_orgnrkontroll(unittest.TestCase):
             )
 
     def test_merge_on_specific_column(self):
-        data = self.get_data_year(year=2022)
+        data = self.get_data_year(year=self.year)
         # merge on specific columns from skolereg and vigo
         skolereg_keep_cols = ["skoletype"]
         vigo_keep_cols = ["vigo_var2"]
@@ -189,9 +152,9 @@ class Test_orgnrkontroll(unittest.TestCase):
         self.assertIn(vigo_keep_cols[0], list(result.data.columns))
 
     def test_verify_merge_result(self):
-        data = self.get_data_year(year=2022)
+        data = self.get_data_year(year=self.year)
         # general test
-        result = orgnrkontroll_module.orgnrkontroll_func(data=data, year=2022)
+        result = orgnrkontroll_module.orgnrkontroll_func(data=data, year=self.year)
         self.assertIn("_merge", list(result.data.columns))
         self.assertTrue(len(self.data.data.columns) < len(result.data.columns))
 
