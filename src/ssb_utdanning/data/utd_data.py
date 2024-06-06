@@ -65,7 +65,7 @@ class UtdData:
         self,
         data: pd.DataFrame | None = None,
         path: Path | GSPath | str = "",
-        glob_pattern: str = "",
+        glob_pattern_latest: str = "",
         exclude_keywords: list[str] | None = None,
     ) -> None:
         """Initializes the UtdData class with data and path parameters. If glob_pattern is used, it will use the latest file matching the pattern.
@@ -73,7 +73,7 @@ class UtdData:
         Args:
             data (pd.DataFrame | None): Initial dataframe to be used. If None, data will be loaded from the specified path.
             path (Union[Path, GSPath, str]): Path to the file or directory from which the data should be loaded.
-            glob_pattern (str): Glob pattern to find files if no direct path is given.
+            glob_pattern_latest (str): Glob pattern to find files if no direct path is given.
             exclude_keywords (List[str] | None): List of keywords to exclude while searching for files using glob pattern.
 
         Raises:
@@ -82,17 +82,17 @@ class UtdData:
         # defining global variables for file-suffix
         self.parquet_suffix = ".parquet"
         self.sas_suffix = ".sas7bdat"
-        if glob_pattern and path:
+        if glob_pattern_latest and path:
             utdanning_logger.logger.info(
                 "You set both glob pattern and path, will prioritize path."
             )
-        elif not path and not glob_pattern:
-            error_msg = "You must set either path, or glob_pattern."
+        elif not path and not glob_pattern_latest:
+            error_msg = "You must set either path, or glob_pattern_latest."
             raise ValueError(error_msg)
 
         # Gets a path using glob-pattern
-        if glob_pattern and not path:
-            path = self._find_last_glob(glob_pattern, exclude_keywords)
+        if glob_pattern_latest and not path:
+            path = self._find_last_glob(glob_pattern_latest, exclude_keywords)
         self._correct_check_path(path)
         if data is None:
             self.get_data()
@@ -169,18 +169,18 @@ class UtdData:
                 return None
 
     def _find_last_glob(
-        self, glob_pattern: str = "", exclude_keywords: list[str] | None = None
+        self, glob_pattern_latest: str = "", exclude_keywords: list[str] | None = None
     ) -> str:
         """Finds the last modified file that matches the glob pattern and does not include the excluded keywords.
 
         Args:
-            glob_pattern (str): The glob pattern to search for.
+            glob_pattern_latest (str): The glob pattern to search for.
             exclude_keywords (List[str] | None): Keywords to exclude from the search.
 
         Returns:
             str: The path to the last modified file matching the criteria.
         """
-        return get_path_latest(glob_pattern, exclude_keywords)
+        return get_path_latest(glob_pattern_latest, exclude_keywords)
 
     def get_similar_paths(self) -> list[str]:
         """Finds paths that are similar to the current path, excluding versions.

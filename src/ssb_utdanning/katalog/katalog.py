@@ -33,7 +33,7 @@ class UtdKatalog(UtdData):
         key_cols: list[str] | str,
         data: pd.DataFrame | None = None,
         path: Path | GSPath | str = "",
-        glob_pattern: str = "",
+        glob_pattern_latest: str = "",
         exclude_keywords: list[str] | None = None,
     ) -> None:
         """Initializes a UtdKatalog instance with specified key columns and optional data parameters.
@@ -42,13 +42,13 @@ class UtdKatalog(UtdData):
             key_cols (list[str] | str): The key column(s) used for merging and indexing within the catalog.
             data (pd.DataFrame | None): Data to be directly loaded into the UtdKatalog instance.
             path (Union[Path, GSPath, str]): File path for data loading.
-            glob_pattern (str): Glob pattern to identify data files if path is not specific.
+            glob_pattern_latest (str): Glob pattern to identify data files if path is not specific.
             exclude_keywords (list[str] | None): Keywords to exclude when searching for data files using the glob pattern.
 
         Raises:
             TypeError: If any non-string type is found within key_cols when it's provided as a list.
         """
-        super().__init__(data, path, glob_pattern, exclude_keywords)
+        super().__init__(data, path, glob_pattern_latest, exclude_keywords)
 
         if isinstance(key_cols, str):
             self.key_cols: list[str] = [key_cols]
