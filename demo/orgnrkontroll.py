@@ -3,22 +3,17 @@ from ssb_utdanning import orgnrkontroll_func
 from ssb_utdanning.orgnrkontroll import get_skolereg
 from ssb_utdanning.orgnrkontroll import get_vigo_skole
 
-get_skolereg().data
+skolereg = get_skolereg().data
 
 vigo = get_vigo_skole().data
 
-for var in vigo.columns:
-    print(var)
 
 path_inn = "/ssb/stamme01/utd_pii/grskavsl/wk16/MOD/ssb-prod-gro-grunnskole-produkt/klargjorte-data/"
 filename_inn = "kag_nudb_p2022_p2023_v1.parquet"
 inndata = UtdData(path=path_inn + filename_inn)
-inndata.data = inndata.data[
-    ["inn_fnr", "orgnr", "fskolenr"]
-]
+inndata.data = inndata.data[["inn_fnr", "orgnr", "fskolenr"]]
 inndata.data.drop_duplicates(subset="inn_fnr", inplace=True)
 
-inndata.data
 
 result = orgnrkontroll_func(
     data=inndata,
@@ -29,5 +24,3 @@ result = orgnrkontroll_func(
     fskolenr_col_innfil="fskolenr",
     skolereg_subcategory="",
 )
-
-result
