@@ -28,7 +28,6 @@ from typeguard import suppress_type_checks
     new=str(Path(os.getcwd()) / "mock_data"),
 )
 class Test_orgnrkontroll(unittest.TestCase):
-    # @mock.patch('ssb_utdanning.orgnrkontroll.orgnrkontroll.SKOLEREG_PATH', new=str(os.getcwd() + '/mock_data'))
     def setUp(self) -> None:
         # setting up folder to store formats
         template_dir = Path(os.getcwd())
