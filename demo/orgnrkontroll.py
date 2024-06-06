@@ -31,5 +31,3 @@ result = orgnrkontroll_func(
 )
 
 result
-
-rapporter antall skoler/orgnr som kobler/ikke kobler. antall rader per orgnr som ikke koblet

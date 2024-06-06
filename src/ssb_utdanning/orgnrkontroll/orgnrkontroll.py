@@ -123,7 +123,7 @@ def orgnrkontroll_func(
     vigo = get_vigo_skole(year=year)
 
     # initial checks
-    
+
     # verify that 'year'-variable is in correct format (YYYY)
     if year == "latest":
         pass
@@ -131,22 +131,18 @@ def orgnrkontroll_func(
         pass
     else:
         year = input("Formatet på aargangsvariabel er feil. Vi trenger YYYY:")
-        
+
     # verify that inn-data contains orgnr-cols and fskolenr-col
     if isinstance(data, UtdData):
         data_cols = list(data.data.columns)
         if orgnr_col_innfil not in data_cols:
-            raise ValueError(
-                f"Inndata does not contain {orgnr_col_innfil} variable"
-            )
+            raise ValueError(f"Inndata does not contain {orgnr_col_innfil} variable")
         if fskolenr_col_innfil not in data_cols:
             raise ValueError(f"Inndata does not contain variable {fskolenr_col_innfil}")
     else:
         data_cols = list(data.columns)
         if orgnr_col_innfil not in data_cols:
-            raise ValueError(
-                f"Inndata does not contain {orgnr_col_innfil} variable"
-            )
+            raise ValueError(f"Inndata does not contain {orgnr_col_innfil} variable")
         if fskolenr_col_innfil not in data_cols:
             raise ValueError(f"Inndata does not contain variable {fskolenr_col_innfil}")
 
@@ -220,8 +216,8 @@ def orgnrkontroll_func(
     ].copy()
 
     # concatenating partially merged datasets
-    skolereg_orgnr_merged["_merge"] = 'orgnr'
-    skolereg_orgnrbed_merged["_merge"] = 'orgnrbed'
+    skolereg_orgnr_merged["_merge"] = "orgnr"
+    skolereg_orgnrbed_merged["_merge"] = "orgnrbed"
     vigo_fskolenr_merged["_merge"] = fskolenr_col_innfil
     vigo_not_merged_fskolenr["_merge"] = None
     final = pd.concat(
@@ -239,11 +235,19 @@ def orgnrkontroll_func(
     print("-" * 80)
     utdanning_logger.logger.info("\n%s", final["_merge"].value_counts(dropna=False))
     print("-" * 80)
-    utdanning_logger.logger.info(f"{len(skolereg_not_merged_orgnr[orgnr_col_innfil].unique())} unike orgnr koblet ikke mot 'orgnr' i skolereg")
-    utdanning_logger.logger.info(f"{len(skolereg_not_merged[orgnr_col_innfil].unique())} unike orgnr koblet hverken mot 'orgnr' eller 'orgnrbed' i skolereg")
-    utdanning_logger.logger.info(f"{len(vigo_not_merged_fskolenr[orgnr_col_innfil].unique())} unike orgnr koblet hverken mot skolereg eller vigo")
+    utdanning_logger.logger.info(
+        f"{len(skolereg_not_merged_orgnr[orgnr_col_innfil].unique())} unike orgnr koblet ikke mot 'orgnr' i skolereg"
+    )
+    utdanning_logger.logger.info(
+        f"{len(skolereg_not_merged[orgnr_col_innfil].unique())} unike orgnr koblet hverken mot 'orgnr' eller 'orgnrbed' i skolereg"
+    )
+    utdanning_logger.logger.info(
+        f"{len(vigo_not_merged_fskolenr[orgnr_col_innfil].unique())} unike orgnr koblet hverken mot skolereg eller vigo"
+    )
     print("-" * 80)
-    utdanning_logger.logger.info(f"Kolonner påført datasett fra skolereg: {skolereg_keep_cols}")
+    utdanning_logger.logger.info(
+        f"Kolonner påført datasett fra skolereg: {skolereg_keep_cols}"
+    )
     utdanning_logger.logger.info(f"Kolonner påført datasett fra vigo: {vigo_keep_cols}")
     print("-" * 80)
     if len(final) > len(data):
