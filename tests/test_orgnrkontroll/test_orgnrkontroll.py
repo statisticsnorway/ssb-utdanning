@@ -163,23 +163,3 @@ class Test_orgnrkontroll(unittest.TestCase):
     def tearDown(self):
         # Clean up test files and folders after tests
         shutil.rmtree(self.path, ignore_errors=True)
-
-
-test = Test_orgnrkontroll()
-test.setUp()
-test.test_get_skolereg()
-test.test_get_skolereg_latest()
-test.test_get_skolereg_subcategory()
-test.test_get_vigo_skole()
-test.test_missing_orgnr_col_in_data()
-test.test_missing_fskolnr_col_in_data()
-test.test_missing_orgnr_col_data_is_DataFrame()
-test.test_missing_fskolenr_col_data_is_DataFrame()
-test.test_keep_skolereg_col_is_list_or_set()
-test.test_keep_vigo_col_is_list_or_set()
-test.test_merge_on_specific_column()
-test.test_verify_merge_result()
-
-
-
-
