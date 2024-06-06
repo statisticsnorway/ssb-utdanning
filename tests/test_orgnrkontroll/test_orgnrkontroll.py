@@ -60,7 +60,7 @@ class Test_orgnrkontroll(unittest.TestCase):
         )
         self.assertEqual(
             str(result.path).split(os.sep)[-1],
-            "skolereg_vgskoler_pself.year-10_v1.parquet",
+            f"skolereg_vgskoler_p{self.year}-10_v1.parquet",
         )
 
     def test_get_vigo_skole(self):
@@ -123,7 +123,7 @@ class Test_orgnrkontroll(unittest.TestCase):
             )
 
     @suppress_type_checks
-    def test_keep_col_is_list_or_set(self):
+    def test_keep_skolereg_col_is_list_or_set(self):
         data = self.get_data_year(year=self.year)
         with self.assertRaises(TypeError):
             result = orgnrkontroll_module.orgnrkontroll_func(
@@ -133,7 +133,7 @@ class Test_orgnrkontroll(unittest.TestCase):
             )
 
     @suppress_type_checks
-    def test_merge_on_specific_columns(self):
+    def test_keep_vigo_col_is_list_or_set(self):
         with self.assertRaises(TypeError):
             result = orgnrkontroll_module.orgnrkontroll_func(
                 data=self.data, year=self.year, vigo_keep_cols="not set or list"
@@ -155,7 +155,7 @@ class Test_orgnrkontroll(unittest.TestCase):
 
     def test_verify_merge_result(self):
         data = self.get_data_year(year=self.year)
-        # general test
+        # general test with mostly default parameters
         result = orgnrkontroll_module.orgnrkontroll_func(data=data, year=self.year)
         self.assertIn("_merge", list(result.data.columns))
         self.assertTrue(len(self.data.data.columns) < len(result.data.columns))
@@ -163,3 +163,23 @@ class Test_orgnrkontroll(unittest.TestCase):
     def tearDown(self):
         # Clean up test files and folders after tests
         shutil.rmtree(self.path, ignore_errors=True)
+
+
+test = Test_orgnrkontroll()
+test.setUp()
+test.test_get_skolereg()
+test.test_get_skolereg_latest()
+test.test_get_skolereg_subcategory()
+test.test_get_vigo_skole()
+test.test_missing_orgnr_col_in_data()
+test.test_missing_fskolnr_col_in_data()
+test.test_missing_orgnr_col_data_is_DataFrame()
+test.test_missing_fskolenr_col_data_is_DataFrame()
+test.test_keep_skolereg_col_is_list_or_set()
+test.test_keep_vigo_col_is_list_or_set()
+test.test_merge_on_specific_column()
+test.test_verify_merge_result()
+
+
+
+

@@ -164,7 +164,7 @@ def orgnrkontroll_func(
     if isinstance(vigo_keep_cols, list):
         vigo_keep_cols = set(vigo_keep_cols)
     elif isinstance(vigo_keep_cols, type(None)):
-        vigo_keep_cols = set(skolereg.data.columns)
+        vigo_keep_cols = set(vigo.data.columns)
         skolereg_keep_cols.discard("fskolenr")
 
     # merge skolereg on data on orgnr
