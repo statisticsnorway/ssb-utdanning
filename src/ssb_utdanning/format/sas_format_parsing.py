@@ -2,13 +2,14 @@ import glob
 import re
 from pathlib import Path
 
-from ssb_utdanning.config import PROD_FORMATS_PATH
+from ssb_utdanning import utdanning_logger
+from ssb_utdanning.config import FORMATS_PATH
 from ssb_utdanning.format.formats import UTDFORMAT_INPUT_TYPE
 from ssb_utdanning.format.formats import UtdFormat
 
 
 def batch_process_folder_sasfiles(
-    sas_files_path: str | Path, output_path: str | Path = PROD_FORMATS_PATH
+    sas_files_path: str | Path, output_path: str | Path = FORMATS_PATH
 ) -> None:
     """Finds all .sas files in folder, tries to extract formats from these.
 
@@ -23,12 +24,12 @@ def batch_process_folder_sasfiles(
         output_path = Path(output_path)
 
     for file in glob.glob(str(sas_files_path) + "/*.sas"):
-        print(f"Processing {file}.")
+        utdanning_logger.logger.info("Processing %s.", file)
         process_single_sasfile(file, output_path)
 
 
 def process_single_sasfile(
-    file: str | Path, output_path: str | Path = PROD_FORMATS_PATH
+    file: str | Path, output_path: str | Path = FORMATS_PATH
 ) -> None:
     """Get a single .sas file from storage, extracts formats and stores to disk as timestamped jsonfiles.
 
@@ -73,7 +74,7 @@ def parse_sas_script(sas_script_content: str) -> dict[str, dict[str, str]]:
             format_name, format_content = parse_value_part(value_part)
             formats_in_file[format_name] = format_content
     if not formats_in_file:
-        print(sas_script_content)
+        utdanning_logger.logger.info("%s", str(sas_script_content))
     return formats_in_file
 
 

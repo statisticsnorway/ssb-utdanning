@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ssb-utdanning"
-version = "0.0.2"
+version = "0.0.3"
 description = "SSB Utdanning Fellesfunksjoner"
 authors = ["Carl F. Corneil <cfc@ssb.no>"]
 license = "MIT"
@@ -9,6 +9,9 @@ homepage = "https://github.com/statisticsnorway/ssb-utdanning"
 repository = "https://github.com/statisticsnorway/ssb-utdanning"
 documentation = "https://statisticsnorway.github.io/ssb-utdanning"
 classifiers = ["Development Status :: 2 - Pre-Alpha"]
+packages = [
+    { include = "ssb_utdanning", from = "src" },
+]
 
 [tool.poetry.urls]
 Changelog = "https://github.com/statisticsnorway/ssb-utdanning/releases"
@@ -16,17 +19,25 @@ Changelog = "https://github.com/statisticsnorway/ssb-utdanning/releases"
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
 toml = ">=0.10.2"
-dapla-toolbelt = ">=2.0.12"
 python-dateutil = "^2.8.2"
+pandas = "^2.2.0"
+colorama = ">=0.4.6"
+cloudpathlib = { extras = ["gs"], version = ">=0.17.0" }
+dapla-toolbelt = ">=2.0.6"
 ssb-fagfunksjoner = ">=0.1.0"
+ipysheet = "^0.7.0"
+ssb-datadoc = "^0.12.0"
+
 # Stubs for Mypy
 pandas-stubs = ">=2.2.1.240316"
 types-python-dateutil = ">=2.8.19.14"
 types-toml = ">=0.10.8.7"
-nox = "^2023.4.22"
-nox-poetry = "^1.0.3"
+types-colorama = ">=0.4.15.20240205"
+
 
 [tool.poetry.group.dev.dependencies]
+nox = "^2023.4.22"
+nox-poetry = "^1.0.3"
 pygments = ">=2.10.0"
 black = { extras = ["jupyter"], version = ">=24.3.0" }
 coverage = { extras = ["toml"], version = ">=6.2" }
@@ -41,10 +52,19 @@ sphinx = ">=6.2.1"
 sphinx-autobuild = ">=2021.3.14"
 sphinx-autodoc-typehints = ">=1.24.0"
 sphinx-click = ">=3.0.2"
-typeguard = ">=2.13.3"
-xdoctest = { extras = ["colors"], version = ">=0.15.10" }
+typeguard = ">=4.3.0"
+xdoctest = {extras = ["colors"], version = ">=0.15.10" }
 myst-parser = { version = ">=0.16.1" }
 ipykernel = ">=6.0.0"
+
+
+
+
+
+
+
+
+
 
 
 
@@ -67,6 +87,7 @@ tests = ["tests", "*/tests"]
 [tool.coverage.run]
 branch = true
 source = ["ssb_utdanning", "tests"]
+relative_files = true
 
 [tool.coverage.report]
 show_missing = true
@@ -82,6 +103,7 @@ show_error_context = true
 [[tool.mypy.overrides]]
 module = [
     "fagfunksjoner.*",  # Fagfunksjoner er ikke typed enda - januar 2024
+    "gcsfs.*",
 ]
 ignore_missing_imports = true
 
@@ -90,10 +112,22 @@ force-exclude = true  # Apply excludes to pre-commit
 show-fixes = true
 src = ["src"]
 target-version = "py39"  # Minimum Python version supported
+include = ["*.py", "*.pyi", "**/pyproject.toml", "*.ipynb"]
+extend-exclude = [
+    "__pycache__",
+    "old",
+    ".ipynb_checkpoints",
+    "noxfile.py",
+    "docs/conf.py",
+    "tests"
+]
+
 
 # Ruff rules may be customized as desired: https://docs.astral.sh/ruff/rules/
+[tool.ruff.lint]
 select = [
     "A",    # prevent using keywords that clobber python builtins
+    "ANN",  # check type annotations
     "B",    # bugbear: security warnings
     "D",    # documentation
     "E",    # pycodestyle
@@ -105,42 +139,42 @@ select = [
 ]
 ignore = [
     "ANN101", # Supress missing-type-self.
+    "ANN102", # Supress missing-type-cls.
+    "ANN202", # Don't requiere return type annotation for private functions.
+    "ANN401", # Allow type annotation with type Any.
     "D100",   # Supress undocumented-public-module. Only doc of public api required.
     "E402",   # Supress module-import-not-at-top-of-file, needed in jupyter notebooks.
     "E501",   # Supress line-too-long warnings: trust black's judgement on this one.
 ]
-include = ["*.py", "*.pyi", "**/pyproject.toml", "*.ipynb"]
-extend-exclude = [
-    "__pycache__",
-    "old",
-    ".ipynb_checkpoints",
-    "noxfile.py",
-    "docs/conf.py",
-    "tests"
-]
 
-[tool.ruff.isort]
+
+[tool.ruff.lint.isort]
 force-single-line = true
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 15
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google"  # You can also use "numpy".
 
-[tool.ruff.pep8-naming]
+[tool.ruff.lint.pep8-naming]
 classmethod-decorators = ["classmethod", "validator", "root_validator", "pydantic.validator"]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "*/__init__.py" = ["F401"]
 "**/tests/*" = [
-    # asserts are encouraged in pytest
-    "S101",
-    # return annotations don't add value for test functions
-    "ANN201",
-    # docstrings are overkill for test functions
+    "ANN001",  # type annotations don't add value for test functions
+    "ANN002",  # type annotations don't add value for test functions
+    "ANN003",  # type annotations don't add value for test functions
+    "ANN201",  # type annotations don't add value for test functions
+    "ANN204",  # type annotations don't add value for test functions
+    "ANN205",  # type annotations don't add value for test functions
+    "ANN206",  # type annotations don't add value for test functions
+    "D100",    # docstrings are overkill for test functions
+    "D101",
+    "D102",
     "D103",
-    "D100",
+    "S101",    # asserts are encouraged in pytest
 ]
 
 [build-system]

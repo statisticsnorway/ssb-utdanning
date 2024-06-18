@@ -9,8 +9,9 @@ import dateutil.parser
 import pandas as pd
 from pandas._libs.missing import NAType
 
+from ssb_utdanning import utdanning_logger
 from ssb_utdanning.config import DATETIME_FORMAT
-from ssb_utdanning.config import PROD_FORMATS_PATH
+from ssb_utdanning.config import FORMATS_PATH
 
 UTDFORMAT_INPUT_TYPE = dict[str | int, Any] | dict[str, Any]
 
@@ -18,7 +19,7 @@ UTDFORMAT_INPUT_TYPE = dict[str | int, Any] | dict[str, Any]
 class UtdFormat(dict[Any, Any]):
     """Custom dictionary class designed to handle specific formatting conventions."""
 
-    def __init__(self, start_dict: UTDFORMAT_INPUT_TYPE | None = None):
+    def __init__(self, start_dict: UTDFORMAT_INPUT_TYPE | None = None) -> None:
         """Initializes the UtdFormat instance.
 
         Args:
@@ -29,6 +30,7 @@ class UtdFormat(dict[Any, Any]):
         if start_dict:
             for k, v in start_dict.items():
                 dict.__setitem__(self, k, v)
+
         self.update_format()
 
     def update_format(self) -> None:
@@ -58,7 +60,7 @@ class UtdFormat(dict[Any, Any]):
         """Overrides the '__missing__' method of dictionary to handle missing keys.
 
         Args:
-            key: Key that is missing in the dictionary.
+            key (str | int | float | NAType | None): Key that is missing in the dictionary.
 
         Returns:
             Any: Value of key in any special conditions: confusion int/str, in one of the ranges, NA or if other is defined.
@@ -205,7 +207,7 @@ class UtdFormat(dict[Any, Any]):
     def store(
         self,
         format_name: str,
-        output_path: str | Path = PROD_FORMATS_PATH,
+        output_path: str | Path = FORMATS_PATH,
         force: bool = False,
     ) -> None:
         """Stores the UtdFormat instance in a specified output path.
@@ -229,7 +231,7 @@ class UtdFormat(dict[Any, Any]):
 
 
 def info_stored_formats(
-    select_name: str = "", path_prod: str | Path = PROD_FORMATS_PATH
+    select_name: str = "", path_prod: str | Path = FORMATS_PATH
 ) -> pd.DataFrame:
     """In Prodsone, list all json-format-files in format folder.
 
@@ -285,7 +287,7 @@ def get_path(name: str, date: str = "latest") -> str | None:
     Returns:
         str: The path associated with the specified format and date, if found; otherwise, None.
     """
-    print(f"Finding path from date: {date}")
+    utdanning_logger.logger.info("Finding path from date: %s", date)
     if date != "latest":
         date_time = dateutil.parser.parse(date)
     elif date == "latest":
@@ -294,7 +296,9 @@ def get_path(name: str, date: str = "latest") -> str | None:
     df_info = df_info.sort_values("date_datetime", ascending=False)
     if len(df_info):
         for _, row in df_info.iterrows():
-            print(row["date_datetime"], date_time)
+            utdanning_logger.logger.info(
+                "%s %s", str(row["date_datetime"]), str(date_time)
+            )
             if row["date_datetime"] < date_time:
                 format_date = row["date_datetime"]
                 break
@@ -325,7 +329,7 @@ def get_format(
         raise ValueError("Please specify a name or filepath.")
     if not filepath:
         filepath = get_path(name, date)
-    print("Getting format from", filepath)
+    utdanning_logger.logger.info("Getting format from %s", filepath)
     if filepath:
         with open(filepath) as format_json:
             ord_dict = json.load(format_json)
@@ -335,7 +339,7 @@ def get_format(
 
 def store_format_prod(
     formats: dict[str, UtdFormat] | UtdFormat,
-    output_path: str | Path = PROD_FORMATS_PATH,
+    output_path: str | Path = FORMATS_PATH,
 ) -> None:
     """Takes a nested or unnested dictionary and saves it to prodsone-folder as a timestamped json.
 
@@ -344,7 +348,7 @@ def store_format_prod(
             Nested dictionary structure expected if multiple formats are passed. If nested, the first layer of keys should be the format-names.
             The values of the dictionary are the dict contents of the formats.¨
             If unnested, we assume, this is a single format, and we ask for the name using input().
-        output_path (str): Path to store the format data. Not including the filename itself, only the base folder. Defaults to PROD_FORMATS_PATH.
+        output_path (str): Path to store the format data. Not including the filename itself, only the base folder. Defaults to FORMATS_PATH.
 
     Raises:
         NotImplementedError: If the provided formats structure is neither nested nor unnested dictionaries of strings.
@@ -388,7 +392,7 @@ def is_different_from_last_time(format_name: str, format_content: UtdFormat) -> 
         bool: True if the current format content is different from the last saved version; otherwise, False.
     """
     path_latest = get_path(format_name, date="latest")
-    print(path_latest)
+    utdanning_logger.logger.info("Latest path: %s", str(path_latest))
     if path_latest:
         path = get_path(format_name, date="latest")
         if path:
@@ -399,5 +403,7 @@ def is_different_from_last_time(format_name: str, format_content: UtdFormat) -> 
     # No previous format found
     else:
         return True
-    print("Content of format looks the same as previous version, not saving.")
+    utdanning_logger.logger.info(
+        "Content of format looks the same as previous version, not saving."
+    )
     return False
