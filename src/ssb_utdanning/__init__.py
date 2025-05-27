@@ -9,13 +9,6 @@ import os
 import toml
 
 import ssb_utdanning.utdanning_logger
-from ssb_utdanning.data import UtdData
-from ssb_utdanning.format import UtdFormat
-from ssb_utdanning.katalog import UtdKatalog
-from ssb_utdanning.orgnrkontroll import orgnrkontroll_func
-
-# Mypy wants an "explicit export?"
-__all__ = ["UtdData", "UtdFormat", "UtdKatalog", "orgnrkontroll_func"]
 
 
 # Split into function for testing
