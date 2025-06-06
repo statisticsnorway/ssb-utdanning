@@ -20,3 +20,6 @@ from ssb_utdanning.register.bof import bof_skole
 bof = bof_skole()
 
 # %%
+from ssb_utdanning api.udir_nsr import map_uorgnr_foretak
+
+map_uorgnr_foretak()
